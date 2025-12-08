@@ -1,6 +1,7 @@
 package com.example.a7club.ui.navigation
 
 sealed class Routes(val route: String) {
+    object MainScreen : Routes("main_screen")
     object RoleSelection : Routes("role_selection")
     object StudentLogin : Routes("student_login")
     object InterestQuestion : Routes("interest_question/{index}") {
@@ -10,4 +11,5 @@ sealed class Routes(val route: String) {
     object Discover : Routes("discover")
     object Clubs : Routes("clubs")
     object Profile : Routes("profile")
+    object CreateVehicleRequest : Routes("create_vehicle_request")
 }

@@ -7,8 +7,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.a7club.ui.screens.CreateVehicleRequestScreen
 import com.example.a7club.ui.screens.EventsScreen
 import com.example.a7club.ui.screens.InterestQuestionScreen
+import com.example.a7club.ui.screens.MainScreen
 import com.example.a7club.ui.screens.RoleSelectionScreen
 import com.example.a7club.ui.screens.StudentFlowViewModel
 import com.example.a7club.ui.screens.StudentLoginScreen
@@ -18,7 +20,10 @@ fun NavGraph(showSnackbar: (String) -> Unit) {
     val navController = rememberNavController()
     val viewModel: StudentFlowViewModel = viewModel()
 
-    NavHost(navController = navController, startDestination = Routes.RoleSelection.route) {
+    NavHost(navController = navController, startDestination = Routes.MainScreen.route) {
+        composable(Routes.MainScreen.route) {
+            MainScreen(navController)
+        }
         composable(Routes.RoleSelection.route) {
             RoleSelectionScreen(navController, showSnackbar)
         }
@@ -34,6 +39,9 @@ fun NavGraph(showSnackbar: (String) -> Unit) {
         }
         composable(Routes.Events.route) {
             EventsScreen(navController, viewModel, showSnackbar)
+        }
+        composable(Routes.CreateVehicleRequest.route) {
+            CreateVehicleRequestScreen()
         }
     }
 }
