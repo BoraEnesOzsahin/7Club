@@ -43,11 +43,11 @@ fun RoleSelectionScreen(navController: NavController, showSnackbar: (String) -> 
             }
             Spacer(modifier = Modifier.height(32.dp))
             RoleButton(text = "Kulüp Yönetim Kurulu Girişi") {
-                showSnackbar("Henüz hazır değil")
+                navController.navigate(Routes.ClubCommitteeLogin.route)
             }
             Spacer(modifier = Modifier.height(32.dp))
             RoleButton(text = "Personel Girişi") {
-                showSnackbar("Henüz hazır değil")
+                navController.navigate(Routes.PersonnelLogin.route)
             }
         }
     }
