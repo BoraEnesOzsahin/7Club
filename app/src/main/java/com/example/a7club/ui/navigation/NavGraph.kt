@@ -7,7 +7,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.a7club.ui.screens.CreateEventScreen
 import com.example.a7club.ui.screens.CreateVehicleRequestScreen
+import com.example.a7club.ui.screens.EventDetailScreen
 import com.example.a7club.ui.screens.EventsScreen
 import com.example.a7club.ui.screens.InterestQuestionScreen
 import com.example.a7club.ui.screens.MainScreen
@@ -42,6 +44,16 @@ fun NavGraph(showSnackbar: (String) -> Unit) {
         }
         composable(Routes.CreateVehicleRequest.route) {
             CreateVehicleRequestScreen()
+        }
+        composable(Routes.CreateEvent.route) {
+            CreateEventScreen(navController, showSnackbar)
+        }
+        composable(
+            route = Routes.EventDetail.route,
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            EventDetailScreen(eventId = eventId)
         }
     }
 }
