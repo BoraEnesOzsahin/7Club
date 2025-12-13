@@ -40,6 +40,8 @@ fun NavGraph(showSnackbar: (String) -> Unit) {
         composable(Routes.Events.route) {
             EventsScreen(navController, viewModel, showSnackbar)
         }
+        // Öğrenci akışında araç talebi ekranına gerek yok, bu sadece kulüp yönetiminde olmalı.
+        // Ancak şu an için bu rotayı kaldırmak yerine sadece kulüp girişiyle erişilebilir yapacağız.
         composable(Routes.CreateVehicleRequest.route) {
             CreateVehicleRequestScreen()
         }
