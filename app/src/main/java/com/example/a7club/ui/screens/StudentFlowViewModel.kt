@@ -1,6 +1,5 @@
 package com.example.a7club.ui.screens
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.a7club.model.Event
@@ -8,7 +7,7 @@ import com.example.a7club.model.Event
 class StudentFlowViewModel : ViewModel() {
     val email = mutableStateOf("")
     val password = mutableStateOf("")
-    val interests = mutableStateListOf<Int?>()
+    val interests = mutableListOf<Int?>()
 
     private val allEvents = listOf(
         Event("1", "X kulübü Y etkinliği"),

@@ -31,6 +31,16 @@ fun MainScreen(navController: NavController) {
             Text("Submit Vehicle Request")
         }
 
-        // TODO: Add button for Create Event when the screen is ready
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(onClick = { navController.navigate(Routes.Events.route) }) {
+            Text("See All Events")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(onClick = { navController.navigate(Routes.CreateEvent.route) }) {
+            Text("Create an event")
+        }
     }
 }

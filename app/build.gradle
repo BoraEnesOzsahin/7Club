@@ -61,4 +61,6 @@ dependencies {
 
     // Firestore Veritabanı (Timestamp ve veritabanı işlemleri için)
     implementation("com.google.firebase:firebase-firestore")
+    // Firestore Kotlin Extensions (await() gibi fonksiyonlar için)
+    implementation("com.google.firebase:firebase-firestore-ktx")
 }

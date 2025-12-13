@@ -17,8 +17,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -42,15 +42,12 @@ fun RoleSelectionScreen(navController: NavController, showSnackbar: (String) -> 
                 navController.navigate(Routes.StudentLogin.route)
             }
             Spacer(modifier = Modifier.height(32.dp))
-            RoleButton(text = "Kulüp Yönetim\nKurulu Girişi") {
-                // Kulüp Yönetimi login ekranına yönlendirme
-                // İsteğe göre etkinlikler sayfasına yönlendiriyoruz
-                navController.navigate(Routes.Events.route) 
+            RoleButton(text = "Kulüp Yönetim Kurulu Girişi") {
+                showSnackbar("Henüz hazır değil")
             }
             Spacer(modifier = Modifier.height(32.dp))
-            RoleButton(text = "Personel\nGirişi") {
-                // Personel/Admin girişi için rota eklenebilir
-                showSnackbar("Personel Girişi: Henüz hazır değil")
+            RoleButton(text = "Personel Girişi") {
+                showSnackbar("Henüz hazır değil")
             }
         }
     }
@@ -69,11 +66,7 @@ fun RoleButton(text: String, onClick: () -> Unit) {
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = text, 
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
+            Text(text = text, style = MaterialTheme.typography.bodyLarge)
         }
     }
 }

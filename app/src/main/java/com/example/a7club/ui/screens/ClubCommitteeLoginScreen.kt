@@ -1,7 +1,6 @@
 package com.example.a7club.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,19 +26,17 @@ import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.viewmodels.AuthViewModel
 
 @Composable
-fun StudentLoginScreen(
+fun ClubCommitteeLoginScreen(
     navController: NavController,
-    viewModel: AuthViewModel, // Artık AuthViewModel kullanıyoruz
+    viewModel: AuthViewModel,
     showSnackbar: (String) -> Unit
 ) {
     val loginState by viewModel.loginState.collectAsState()
 
-    // Handle login state changes
     LaunchedEffect(loginState) {
         when (val state = loginState) {
             is Resource.Success -> {
-                showSnackbar("Giriş başarılı! Hoş geldin ${state.data?.email}")
-                // Başarılı giriş sonrası ana ekrana yönlendir ve geri gelinememesini sağla
+                showSnackbar("Kulüp Yönetim Kurulu olarak giriş yapıldı! Hoş geldin ${state.data?.email}")
                 navController.navigate(Routes.MainScreen.route) {
                     popUpTo(Routes.RoleSelection.route) { inclusive = true }
                 }
@@ -47,7 +44,7 @@ fun StudentLoginScreen(
             is Resource.Error -> {
                 showSnackbar(state.message ?: "Bilinmeyen bir hata oluştu.")
             }
-            else -> Unit // Loading veya null durumunda bir şey yapma
+            else -> Unit
         }
     }
 
@@ -58,7 +55,7 @@ fun StudentLoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Öğrenci Girişi")
+        Text("Kulüp Yönetim Kurulu Girişi")
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
@@ -66,7 +63,7 @@ fun StudentLoginScreen(
             onValueChange = { viewModel.email = it },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = loginState !is Resource.Loading // Yükleme sırasında devre dışı bırak
+            enabled = loginState !is Resource.Loading
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -76,7 +73,7 @@ fun StudentLoginScreen(
             label = { Text("Şifre") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
-            enabled = loginState !is Resource.Loading // Yükleme sırasında devre dışı bırak
+            enabled = loginState !is Resource.Loading
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -84,14 +81,14 @@ fun StudentLoginScreen(
             CircularProgressIndicator()
         } else {
             Button(
-                onClick = { viewModel.signIn(UserRole.STUDENT) },
+                onClick = { viewModel.signIn(UserRole.CLUB_COMMITTEE) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = loginState !is Resource.Loading
             ) {
                 Text("Giriş Yap")
             }
         }
-         Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(8.dp))
          Button(
             onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth(),
