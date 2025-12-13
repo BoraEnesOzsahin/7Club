@@ -1,6 +1,6 @@
 package com.example.a7club.model
 
 data class Event(
-    val id: Int,
+    val id: String,
     val title: String
 )
