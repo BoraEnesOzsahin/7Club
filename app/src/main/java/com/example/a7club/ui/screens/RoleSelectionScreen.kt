@@ -44,9 +44,8 @@ fun RoleSelectionScreen(navController: NavController, showSnackbar: (String) -> 
             Spacer(modifier = Modifier.height(32.dp))
             RoleButton(text = "Kulüp Yönetim\nKurulu Girişi") {
                 // Kulüp Yönetimi login ekranına yönlendirme
-                // Şimdilik direkt araç talep formuna gönderiyoruz veya bir login ekranı yapılabilir
-                // Örnek olarak direkt forma yönlendirdim, ileride buraya ClubLoginScreen eklenebilir.
-                navController.navigate(Routes.CreateVehicleRequest.route) 
+                // İsteğe göre etkinlikler sayfasına yönlendiriyoruz
+                navController.navigate(Routes.Events.route) 
             }
             Spacer(modifier = Modifier.height(32.dp))
             RoleButton(text = "Personel\nGirişi") {
