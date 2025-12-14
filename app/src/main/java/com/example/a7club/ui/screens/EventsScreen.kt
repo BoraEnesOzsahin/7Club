@@ -45,14 +45,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.a7club.data.Resource
-import com.example.a7club.data.models.Event
+import com.example.a7club.model.Event
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme._7ClubTheme
 
 @Composable
 fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel, showSnackbar: (String) -> Unit) {
     val eventsState by viewModel.eventsState
-    val searchQuery = viewModel.searchQuery
+    // Düzeltildi: searchQuery state'inin değerini (.value) alıyoruz.
+    val searchQuery = viewModel.searchQuery.value
 
     EventsScreenContent(
         navController = navController,

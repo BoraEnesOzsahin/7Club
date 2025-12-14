@@ -1,12 +1,10 @@
 package com.example.a7club.model
 
 data class Event(
-<<<<<<< HEAD
-    val id: String,
-    val title: String
+    val id: String = "",
+    val title: String = "",
+    val description: String = "",
+    val clubName: String = "",
+    val date: Long = 0L,
+    val imageUrl: String? = null
 )
-=======
-    val id: Int,
-    val title: String
-)
->>>>>>> 3cb380e87be89806b92c731169039784690ee0c8

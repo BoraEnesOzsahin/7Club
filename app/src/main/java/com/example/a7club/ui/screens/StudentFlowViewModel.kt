@@ -1,13 +1,25 @@
 package com.example.a7club.ui.screens
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.a7club.data.Resource
 import com.example.a7club.model.Event
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class StudentFlowViewModel : ViewModel() {
     val email = mutableStateOf("")
     val password = mutableStateOf("")
-    val interests = mutableListOf<Int?>()
+    val interests = mutableStateListOf<Int?>()
+
+    // Resource state for events loading/success/error
+    private val _eventsState = mutableStateOf<Resource<List<Event>>>(Resource.Loading())
+    val eventsState: State<Resource<List<Event>>> = _eventsState
+
+    val searchQuery = mutableStateOf("")
 
     private val allEvents = listOf(
         Event("1", "X kulübü Y etkinliği"),
@@ -27,13 +39,26 @@ class StudentFlowViewModel : ViewModel() {
         Event("15", "Doğa yürüyüşü")
     )
 
-    val searchQuery = mutableStateOf("")
-    val filteredEvents = mutableStateOf(allEvents)
+    init {
+        fetchEvents()
+    }
+
+    fun fetchEvents() {
+        viewModelScope.launch {
+            _eventsState.value = Resource.Loading()
+            try {
+                // Simulate network delay
+                delay(1000)
+                _eventsState.value = Resource.Success(allEvents)
+            } catch (e: Exception) {
+                _eventsState.value = Resource.Error("Etkinlikler yüklenirken bir hata oluştu: ${e.message}")
+            }
+        }
+    }
 
     fun onSearchQueryChanged(query: String) {
         searchQuery.value = query
-        filteredEvents.value = allEvents.filter {
-            it.title.contains(query, ignoreCase = true)
-        }
+        // Filtreleme artık UI tarafında yapılıyor veya buraya yeni bir filtreleme mantığı eklenebilir.
+        // Şimdilik sadece searchQuery state'ini güncelliyoruz.
     }
 }
