@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -10,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.a7club"
-        minSdk 33
+        minSdk 26
         targetSdk 36
         versionCode 1
         versionName "1.0"
@@ -46,6 +47,8 @@ dependencies {
     implementation libs.androidx.compose.ui.graphics
     implementation libs.androidx.compose.ui.tooling.preview
     implementation libs.androidx.compose.material3
+    implementation 'androidx.navigation:navigation-compose:2.7.7'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0'
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.espresso.core
@@ -53,4 +56,11 @@ dependencies {
     androidTestImplementation libs.androidx.compose.ui.test.junit4
     debugImplementation libs.androidx.compose.ui.tooling
     debugImplementation libs.androidx.compose.ui.test.manifest
+    // Firebase BoM (Versiyonları otomatik yönetir)
+    implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
+
+    // Firestore Veritabanı (Timestamp ve veritabanı işlemleri için)
+    implementation("com.google.firebase:firebase-firestore")
+    // Firestore Kotlin Extensions (await() gibi fonksiyonlar için)
+    implementation("com.google.firebase:firebase-firestore-ktx")
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "348316418826",
+    "project_id": "sevenclub-yeditepe",
+    "storage_bucket": "sevenclub-yeditepe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:348316418826:android:6cb0c7707ba738cbed70f3",
+        "android_client_info": {
+          "package_name": "com.example.a7club"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBtdgfJ-57sxD-fzCSNJCu3LVpgelE9VM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
