@@ -4,17 +4,19 @@ sealed class Routes(val route: String) {
     object MainScreen : Routes("main_screen")
     object RoleSelection : Routes("role_selection")
     object StudentLogin : Routes("student_login")
-    object ClubCommitteeLogin : Routes("club_committee_login") // Yeni eklendi
-    object PersonnelLogin : Routes("personnel_login")       // Yeni eklendi
+    object ClubLogin : Routes("club_login") // Yeni Rota
+    object AdminLogin : Routes("admin_login") // Yeni Rota
     object InterestQuestion : Routes("interest_question/{index}") {
         fun createRoute(index: Int) = "interest_question/$index"
     }
     object Events : Routes("events")
+    object CreateEvent : Routes("create_event")
     object Discover : Routes("discover")
     object Clubs : Routes("clubs")
     object Profile : Routes("profile")
     object CreateVehicleRequest : Routes("create_vehicle_request")
-    object CreateEvent : Routes("create_event")
+    object ClubCommitteeLogin : Routes("club_committee_login")
+    object PersonnelLogin : Routes("personnel_login")
     object EventDetail : Routes("event_detail/{eventId}") {
         fun createRoute(eventId: String) = "event_detail/$eventId"
     }
