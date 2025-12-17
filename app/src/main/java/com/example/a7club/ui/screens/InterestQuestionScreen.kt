@@ -28,7 +28,7 @@ import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme._7ClubTheme
 
 @Composable
-fun InterestQuestionScreen(navController: NavController, viewModel: StudentFlowViewModel, questionIndex: Int) {
+fun InterestQuestionScreen(navController: NavController, questionIndex: Int, onInterestSelected: (Int?) -> Unit) {
     val questionText = "İlgi alanı sorusu $questionIndex"
     val options = listOf("Seçenek 1", "Seçenek 2", "Seçenek 3", "Seçenek 4")
 
@@ -70,7 +70,7 @@ fun InterestQuestionScreen(navController: NavController, viewModel: StudentFlowV
                         .height(60.dp)
                         .padding(vertical = 4.dp)
                         .clickable {
-                            viewModel.interests.add(index)
+                            onInterestSelected(index)
                             navigateNext()
                         },
                     shape = RoundedCornerShape(16.dp),
@@ -85,7 +85,7 @@ fun InterestQuestionScreen(navController: NavController, viewModel: StudentFlowV
         }
         Button(
             onClick = {
-                viewModel.interests.add(null)
+                onInterestSelected(null) // Pass null for "geç"
                 navigateNext()
             },
             modifier = Modifier
@@ -106,7 +106,7 @@ fun InterestQuestionScreenPreview() {
     _7ClubTheme {
         InterestQuestionScreen(
             navController = rememberNavController(),
-            viewModel = StudentFlowViewModel(),
+            onInterestSelected = { /* In preview, do nothing */ },
             questionIndex = 1
         )
     }

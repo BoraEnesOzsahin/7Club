@@ -52,7 +52,11 @@ fun NavGraph(showSnackbar: (String) -> Unit) {
             arguments = listOf(navArgument("index") { type = NavType.IntType })
         ) { backStackEntry ->
             val index = backStackEntry.arguments?.getInt("index") ?: 1
-            InterestQuestionScreen(navController, studentFlowViewModel, index)
+            InterestQuestionScreen(
+                navController = navController, 
+                questionIndex = index,
+                onInterestSelected = { interest -> studentFlowViewModel.interests.add(interest) }
+            )
         }
         composable(Routes.Events.route) {
             EventsScreen(navController, studentFlowViewModel, showSnackbar)
