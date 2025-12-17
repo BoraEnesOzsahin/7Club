@@ -63,4 +63,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     // Firestore Kotlin Extensions (await() gibi fonksiyonlar için)
     implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // Coroutines Play Services (await() fonksiyonu için)
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1'
 }
