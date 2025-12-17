@@ -1,5 +1,5 @@
 package com.example.a7club.ui.screens
-
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,17 +7,37 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Groups
+// (Home ve Person zaten vardır)
+// Home ve Person zaten ekli olmalı
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.foundation.layout.offset
+// Diğer importların zaten vardır...
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.GenericShape
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Home
@@ -27,6 +47,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,6 +56,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -82,7 +104,44 @@ fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel, 
         showSnackbar = showSnackbar
     )
 }
+class BottomBarShape(private val fabRadius: Float, private val fabMargin: Float) : Shape {
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+    ): Outline {
+        return Outline.Generic(Path().apply {
+            val center = size.width / 2f
+            // Kesik yarıçapı = Buton yarıçapı + kenar boşluğu
+            val cutoutRadius = fabRadius + fabMargin
 
+            // Başlangıç noktası (Sol Üst)
+            moveTo(0f, 0f)
+
+            // Ortadaki oyuğa kadar düz çizgi
+            lineTo(center - cutoutRadius, 0f)
+
+            // Oyuk (Yarım daire - aşağı doğru)
+            arcTo(
+                rect = Rect(
+                    left = center - cutoutRadius,
+                    top = -cutoutRadius, // Yukarı taşması için eksi değer
+                    right = center + cutoutRadius,
+                    bottom = cutoutRadius
+                ),
+                startAngleDegrees = 180f,
+                sweepAngleDegrees = -180f, // Saat yönünün tersine oyuk
+                forceMoveTo = false
+            )
+
+            // Kalan kısmı tamamla
+            lineTo(size.width, 0f)
+            lineTo(size.width, size.height)
+            lineTo(0f, size.height)
+            close()
+        })
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventsScreenContent(
@@ -94,6 +153,39 @@ fun EventsScreenContent(
     var selectedCategory by remember { mutableStateOf("TÜMÜ") }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
+
+    // --- 1. OYUK ŞEKLİNİ TANIMLIYORUZ ---
+    val density = LocalDensity.current
+    val customBarShape = remember {
+        GenericShape { size, _ ->
+            val fabRadius = with(density) { 40.dp.toPx() } // Oyuk genişliği
+            val fabMargin = with(density) { 8.dp.toPx() }  // Kenar payı
+
+            val cutoutRadius = fabRadius + fabMargin
+            val center = size.width / 2f
+
+            moveTo(0f, 0f)
+            lineTo(center - cutoutRadius, 0f)
+
+            // Yarım daire oyuk
+            arcTo(
+                rect = Rect(
+                    left = center - cutoutRadius,
+                    top = -cutoutRadius,
+                    right = center + cutoutRadius,
+                    bottom = cutoutRadius
+                ),
+                startAngleDegrees = 180f,
+                sweepAngleDegrees = -180f,
+                forceMoveTo = false
+            )
+
+            lineTo(size.width, 0f)
+            lineTo(size.width, size.height)
+            lineTo(0f, size.height)
+            close()
+        }
+    }
 
     Scaffold(
         containerColor = Color(0xFFF3F1FF),
@@ -109,21 +201,87 @@ fun EventsScreenContent(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFFE8E5FF))
             )
         },
+        // --- 2. ORTA BUTON (İÇİ BOŞ VE OYUKTA) ---
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate(Routes.CreateEvent.route) },
+                onClick = { /* Tıklama işlemi */ },
                 shape = CircleShape,
-                containerColor = Color(0xFF000080), // Dark Blue
-                contentColor = Color.White,
-                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp)
+                containerColor = Color(0xFF000080), // Koyu Mavi
+                modifier = Modifier
+                    .size(65.dp)       // Buton boyutu
+                    .offset(y = 50.dp) // Butonu aşağı iterek oyuğa oturtma
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Yeni Etkinlik Oluştur")
+                // İÇİ BOŞ (İkon yok)
             }
         },
-        floatingActionButtonPosition = androidx.compose.material3.FabPosition.Center,
-        bottomBar = { BottomNav(navController, showSnackbar) }
+        floatingActionButtonPosition = FabPosition.Center,
+
+        // --- 3. ALT BAR (GÜNCELLENMİŞ İKONLARLA) ---
+        bottomBar = {
+            BottomAppBar(
+                containerColor = Color(0xFFE8E5FF),
+                modifier = Modifier.clip(customBarShape), // Oyuk şeklini uygula
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                // SOL 1: ANA SAYFA (Ev)
+                NavigationBarItem(
+                    selected = true,
+                    onClick = { /* Ana Sayfa */ },
+                    icon = {
+                        Icon(
+                            Icons.Default.Home,
+                            contentDescription = "Ana Sayfa",
+                            tint = Color(0xFF000080)
+                        )
+                    }
+                )
+
+                // SOL 2: KEŞFET (Pusula - Explore)
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { showSnackbar("Keşfet") },
+                    icon = {
+                        Icon(
+                            Icons.Default.Explore, // Pusula ikonu
+                            contentDescription = "Keşfet",
+                            tint = Color(0xFF000080)
+                        )
+                    }
+                )
+
+                // *** ORTA BOŞLUK (Spacer) ***
+                Spacer(Modifier.weight(1f))
+
+                // SAĞ 1: KULÜPLER (Grup - Groups)
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { showSnackbar("Kulüpler") },
+                    icon = {
+                        Icon(
+                            Icons.Default.Groups, // İnsan grubu ikonu
+                            contentDescription = "Kulüpler",
+                            tint = Color(0xFF000080)
+                        )
+                    }
+                )
+
+                // SAĞ 2: PROFİL (Kişi - Person)
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { showSnackbar("Profil") },
+                    icon = {
+                        Icon(
+                            Icons.Default.Person, // Profil ikonu
+                            contentDescription = "Profil",
+                            tint = Color(0xFF000080)
+                        )
+                    }
+                )
+            }
+        }
     ) { paddingValues ->
-        
+
+        // --- SAYFA İÇERİĞİ ---
         if (showDatePicker) {
             val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
             DatePickerDialog(
@@ -173,7 +331,7 @@ fun EventsScreenContent(
                     } else {
                         eventsState.data?.filter { event ->
                             val categoryWords = selectedCategory.split(" ")
-                            categoryWords.all { word -> 
+                            categoryWords.all { word ->
                                 event.clubName.contains(word, ignoreCase = true)
                             }
                         } ?: emptyList()
@@ -185,7 +343,9 @@ fun EventsScreenContent(
                     }
 
                     if (filteredByDate.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
+                        Box(modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp), contentAlignment = Alignment.Center) {
                             Text("Bu tarihte hiç etkinlik bulunmuyor.")
                         }
                     } else {
@@ -210,7 +370,6 @@ fun EventsScreenContent(
         }
     }
 }
-
 @Composable
 fun DateCard(date: LocalDate, onDateClick: () -> Unit, onPreviousDayClick: () -> Unit, onNextDayClick: () -> Unit) {
     Card(
@@ -221,7 +380,9 @@ fun DateCard(date: LocalDate, onDateClick: () -> Unit, onPreviousDayClick: () ->
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE8E5FF))
     ) {
         Row(
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(vertical = 8.dp, horizontal = 16.dp)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -255,7 +416,7 @@ fun SearchAndFilterBar(onSearchClick: () -> Unit, onFilterClick: () -> Unit) {
             Icon(Icons.Default.Search, contentDescription = "Arama", tint = Color.Gray)
         }
         IconButton(onClick = onFilterClick) {
-            Icon(Icons.Default.Settings, contentDescription = "Filtrele", tint = Color.Gray) // FilterList replaced with Settings
+            Icon(Icons.Default.Settings, contentDescription = "Filtrele", tint = Color.Gray)
         }
     }
 }
@@ -293,30 +454,90 @@ fun EventCard(event: Event, onClick: () -> Unit) {
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE8E5FF))
     ) {
-        Box(modifier = Modifier.padding(20.dp).fillMaxWidth()) {
-             Text(text = event.title, style = MaterialTheme.typography.titleMedium)
+        Column(modifier = Modifier
+            .padding(20.dp)
+            .fillMaxWidth()) {
+            Text(text = event.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = "Kulüp: ${event.clubName}", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = "Mekan: ${event.location}", style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
 
+// EventsScreen.kt içinde
+
 @Composable
 fun BottomNav(navController: NavController, showSnackbar: (String) -> Unit) {
-    BottomAppBar(
-        containerColor = Color(0xFFE8E5FF)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavigationBarItem(selected = true, onClick = { /* no-op */ }, icon = { Icon(Icons.Default.Home, "Ana Sayfa") })
-            NavigationBarItem(selected = false, onClick = { navController.navigate(Routes.Discover.route) }, icon = { Icon(Icons.Default.Search, "Keşfet") })
-            Spacer(modifier = Modifier.weight(0.2f)) // Placeholder for the FAB
-            NavigationBarItem(selected = false, onClick = { navController.navigate(Routes.Clubs.route) }, icon = { Icon(Icons.Default.Person, "Kulüpler") })
-            NavigationBarItem(selected = false, onClick = { navController.navigate(Routes.Profile.route) }, icon = { Icon(Icons.Default.Person, "Profil") })
+    val density = LocalDensity.current
+
+    // Barın şeklini (Oyuğu) oluşturan çizim kodu
+    val customBarShape = remember {
+        GenericShape { size, _ ->
+            val fabRadius = with(density) { 40.dp.toPx() } // Oyuğun yarıçapı
+            val fabMargin = with(density) { 8.dp.toPx() }  // Buton etrafındaki boşluk
+
+            val cutoutRadius = fabRadius + fabMargin
+            val center = size.width / 2f
+
+            moveTo(0f, 0f)
+            lineTo(center - cutoutRadius, 0f)
+
+            // Yarım daire (Oyuk) çizimi
+            arcTo(
+                rect = Rect(
+                    left = center - cutoutRadius,
+                    top = -cutoutRadius,
+                    right = center + cutoutRadius,
+                    bottom = cutoutRadius
+                ),
+                startAngleDegrees = 180f,
+                sweepAngleDegrees = -180f,
+                forceMoveTo = false
+            )
+
+            lineTo(size.width, 0f)
+            lineTo(size.width, size.height)
+            lineTo(0f, size.height)
+            close()
         }
     }
+
+    BottomAppBar(
+        containerColor = Color(0xFFE8E5FF),
+        modifier = Modifier.clip(customBarShape), // Oluşturulan şekli bara uygula
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        // SOL İKONLAR
+        NavigationBarItem(
+            selected = true,
+            onClick = { },
+            icon = { Icon(Icons.Default.Home, contentDescription = "Ana Sayfa") }
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = { showSnackbar("Keşfet") },
+            icon = { Icon(Icons.Default.Search, contentDescription = "Keşfet") }
+        )
+
+        // ORTA BOŞLUK (Buton için yer ayırır)
+        Spacer(Modifier.weight(1f))
+
+        // SAĞ İKONLAR (Fazla buton kaldırıldı)
+        NavigationBarItem(
+            selected = false,
+            onClick = { showSnackbar("Kulüpler") },
+            icon = { Icon(Icons.Default.Person, contentDescription = "Kulüpler") }
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = { showSnackbar("Profil") },
+            icon = { Icon(Icons.Default.Person, contentDescription = "Profil") }
+        )
+    }
 }
+
 
 @Preview(showBackground = true)
 @Composable
@@ -324,10 +545,8 @@ fun EventsScreenPreview_Success() {
     _7ClubTheme {
         val today = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val sampleEvents = listOf(
-            Event(id = "1", title = "Bahar Konseri", clubName = "SANAT", startTime = today),
-            Event(id = "2", title = "Yazılım Atölyesi", clubName = "BİLİŞİM", startTime = today),
-            Event(id = "3", title = "Dans Gecesi", clubName = "DANS KULÜBÜ", startTime = today),
-            Event(id = "4", title = "Parfüm Atölyesi", clubName = "KÜLTÜR VE ETKİNLİK", startTime = today)
+            Event(id = "1", title = "Bahar Konseri", clubName = "SANAT", startTime = today, location = "Amfi Tiyatro"),
+            Event(id = "2", title = "Yazılım Atölyesi", clubName = "BİLİŞİM", startTime = today, location = "Mühendislik Binası - 101"),
         )
         EventsScreenContent(
             navController = rememberNavController(),
