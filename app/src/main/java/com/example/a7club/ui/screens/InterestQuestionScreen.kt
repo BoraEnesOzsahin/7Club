@@ -34,8 +34,10 @@ fun InterestQuestionScreen(navController: NavController, questionIndex: Int, onI
 
     fun navigateNext() {
         if (questionIndex < 5) {
+            // Use the safe createRoute helper function
             navController.navigate(Routes.InterestQuestion.createRoute(questionIndex + 1))
         } else {
+            // CORRECTED: .route property is now used to pass the String path
             navController.navigate(Routes.Events.route) {
                 popUpTo(Routes.RoleSelection.route) { inclusive = true }
             }

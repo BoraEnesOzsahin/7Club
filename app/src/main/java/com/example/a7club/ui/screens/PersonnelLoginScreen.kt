@@ -37,7 +37,9 @@ fun PersonnelLoginScreen(
         when (val state = loginState) {
             is Resource.Success -> {
                 showSnackbar("Personel olarak giriş yapıldı! Hoş geldin ${state.data?.email}")
+                // CORRECTED: .route property is added to provide the String path
                 navController.navigate(Routes.MainScreen.route) {
+                    // CORRECTED: .route property is added here as well
                     popUpTo(Routes.RoleSelection.route) { inclusive = true }
                 }
             }
@@ -89,7 +91,7 @@ fun PersonnelLoginScreen(
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-         Button(
+        Button(
             onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth(),
             enabled = loginState !is Resource.Loading

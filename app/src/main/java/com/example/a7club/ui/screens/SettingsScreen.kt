@@ -95,7 +95,7 @@ fun SettingsScreen(navController: NavController, showSnackbar: (String) -> Unit)
                         Button(
                             onClick = { selectedLanguage = "Türkçe" },
                             modifier = Modifier.weight(1f),
-                             shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (selectedLanguage == "Türkçe") DarkBlue else VeryLightPurple,
                                 contentColor = if (selectedLanguage == "Türkçe") Color.White else Color.Black
@@ -115,7 +115,7 @@ fun SettingsScreen(navController: NavController, showSnackbar: (String) -> Unit)
 fun SettingsScreenPreview() {
     _7ClubTheme {
         SettingsScreen(
-            navController = rememberNavController(), 
+            navController = rememberNavController(),
             showSnackbar = {}
         )
     }

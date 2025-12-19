@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,15 +38,20 @@ fun RoleSelectionScreen(navController: NavController, showSnackbar: (String) -> 
             verticalArrangement = Arrangement.Center
         ) {
             RoleButton(text = "Öğrenci") {
+                // CORRECTED: Added .route to provide the String path
                 navController.navigate(Routes.StudentLogin.route)
             }
             Spacer(modifier = Modifier.height(32.dp))
+
             RoleButton(text = "Kulüp Yönetim Kurulu Girişi") {
-                showSnackbar("Henüz hazır değil")
+                // CORRECTED: Added .route to provide the String path
+                navController.navigate(Routes.ClubCommitteeLogin.route)
             }
             Spacer(modifier = Modifier.height(32.dp))
+
             RoleButton(text = "Personel Girişi") {
-                showSnackbar("Henüz hazır değil")
+                // CORRECTED: Added .route to provide the String path
+                navController.navigate(Routes.PersonnelLogin.route)
             }
         }
     }

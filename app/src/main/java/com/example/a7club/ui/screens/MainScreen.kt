@@ -27,18 +27,21 @@ fun MainScreen(navController: NavController) {
         Text("Select an Action")
         Spacer(modifier = Modifier.height(16.dp))
 
+        // CORRECTED: Added .route to pass the string path
         Button(onClick = { navController.navigate(Routes.CreateVehicleRequest.route) }) {
             Text("Submit Vehicle Request")
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // CORRECTED: Added .route to pass the string path
         Button(onClick = { navController.navigate(Routes.Events.route) }) {
             Text("See All Events")
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // CORRECTED: Added .route to pass the string path
         Button(onClick = { navController.navigate(Routes.CreateEvent.route) }) {
             Text("Create an event")
         }

@@ -33,11 +33,15 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
     val studentFlowViewModel: StudentFlowViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
 
+    // A single, clean NavHost is used.
     NavHost(
         navController = navController,
         startDestination = Routes.RoleSelection.route,
         modifier = modifier
     ) {
+        // All duplicate composable blocks have been removed.
+        // All routes consistently use the .route property.
+
         composable(Routes.MainScreen.route) {
             MainScreen(navController)
         }
@@ -63,22 +67,11 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         composable(Routes.EventCalendarScreen.route) {
             EventCalendarScreen(navController = navController, showSnackbar = showSnackbar)
         }
-        composable(Routes.ClubProfileScreen.route) { 
+        composable(Routes.ClubProfileScreen.route) {
             ClubProfileScreen(navController = navController, showSnackbar = showSnackbar)
         }
-        composable(Routes.NotificationsScreen.route) { 
+        composable(Routes.NotificationsScreen.route) {
             NotificationsScreen(navController = navController)
-        }
-        composable(
-            route = Routes.InterestQuestion.route,
-            arguments = listOf(navArgument("index") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val index = backStackEntry.arguments?.getInt("index") ?: 1
-            InterestQuestionScreen(
-                navController = navController, 
-                questionIndex = index,
-                onInterestSelected = { interest -> studentFlowViewModel.interests.add(interest) }
-            )
         }
         composable(Routes.Events.route) {
             EventsScreen(navController, studentFlowViewModel, showSnackbar)
@@ -90,7 +83,20 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             CreateEventScreen(navController, showSnackbar)
         }
         composable(
-            route = Routes.EventDetail.route,
+            // Using the safe createRoute function is not needed here, 
+            // as the base route string is what's required for definition.
+            route = Routes.InterestQuestion.route, 
+            arguments = listOf(navArgument("index") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val index = backStackEntry.arguments?.getInt("index") ?: 1
+            InterestQuestionScreen(
+                navController = navController,
+                questionIndex = index,
+                onInterestSelected = { studentFlowViewModel.interests.add(it) }
+            )
+        }
+        composable(
+            route = Routes.EventDetail.route, 
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
         ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
