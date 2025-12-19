@@ -1,91 +1,37 @@
 package com.example.a7club.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-// Explicit imports for all screens to avoid resolution issues
-import com.example.a7club.ui.screens.ClubCommitteeLoginScreen
-import com.example.a7club.ui.screens.ClubHomeScreen
-import com.example.a7club.ui.screens.ClubProfileScreen
-import com.example.a7club.ui.screens.CreateEventScreen
-import com.example.a7club.ui.screens.CreateVehicleRequestScreen
-import com.example.a7club.ui.screens.EventCalendarScreen
-import com.example.a7club.ui.screens.EventDetailScreen
-import com.example.a7club.ui.screens.EventsScreen
-import com.example.a7club.ui.screens.InterestQuestionScreen
-import com.example.a7club.ui.screens.MainScreen
-import com.example.a7club.ui.screens.NotificationsScreen
-import com.example.a7club.ui.screens.PersonnelLoginScreen
-import com.example.a7club.ui.screens.RoleSelectionScreen
-import com.example.a7club.ui.screens.SettingsScreen
-import com.example.a7club.ui.screens.StudentLoginScreen
+// DÜZELTME: Tüm ekranları tek bir import ile alıyoruz. 'screensimport' silindi.
+import com.example.a7club.ui.screens.*
 import com.example.a7club.ui.viewmodels.AuthViewModel
-import com.example.a7club.ui.viewmodels.StudentFlowViewModel
 
 @Composable
-fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
+fun NavGraph(showSnackbar: (String) -> Unit) {
     val navController = rememberNavController()
     val studentFlowViewModel: StudentFlowViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
 
-    // A single, clean NavHost is used.
-    NavHost(
-        navController = navController,
-        startDestination = Routes.RoleSelection.route,
-        modifier = modifier
-    ) {
-        // All duplicate composable blocks have been removed.
-        // All routes consistently use the .route property.
-
-        composable(Routes.MainScreen.route) {
-            MainScreen(navController)
-        }
-        composable(Routes.RoleSelection.route) {
+    NavHost(navController = navController, startDestination = Routes.RoleSelection) {
+        composable(Routes.MainScreen) { MainScreen(navController) }
+        composable(Routes.RoleSelection) {
             authViewModel.resetLoginState()
             RoleSelectionScreen(navController, showSnackbar)
         }
-        composable(Routes.StudentLogin.route) {
-            StudentLoginScreen(navController, authViewModel, showSnackbar)
-        }
-        composable(Routes.ClubCommitteeLogin.route) {
-            ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar)
-        }
-        composable(Routes.PersonnelLogin.route) {
-            PersonnelLoginScreen(navController, authViewModel, showSnackbar)
-        }
-        composable(Routes.ClubHomeScreen.route) {
-            ClubHomeScreen(navController = navController, showSnackbar = showSnackbar, viewModel = studentFlowViewModel)
-        }
-        composable(Routes.SettingsScreen.route) {
-            SettingsScreen(navController = navController, showSnackbar = showSnackbar)
-        }
-        composable(Routes.EventCalendarScreen.route) {
-            EventCalendarScreen(navController = navController, showSnackbar = showSnackbar)
-        }
-        composable(Routes.ClubProfileScreen.route) {
-            ClubProfileScreen(navController = navController, showSnackbar = showSnackbar)
-        }
-        composable(Routes.NotificationsScreen.route) {
-            NotificationsScreen(navController = navController)
-        }
-        composable(Routes.Events.route) {
-            EventsScreen(navController, studentFlowViewModel, showSnackbar)
-        }
-        composable(Routes.CreateVehicleRequest.route) {
-            CreateVehicleRequestScreen()
-        }
-        composable(Routes.CreateEvent.route) {
-            CreateEventScreen(navController, showSnackbar)
-        }
+        composable(Routes.StudentLogin) { StudentLoginScreen(navController, authViewModel, showSnackbar) }
+        composable(Routes.ClubCommitteeLogin) { ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar) }
+        composable(Routes.PersonnelLogin) { PersonnelLoginScreen(navController, authViewModel, showSnackbar) }
+        composable(Routes.Events) { EventsScreen(navController, studentFlowViewModel, showSnackbar) }
+        composable(Routes.Settings) { SettingsScreen(navController) }
+        composable(Routes.CreateVehicleRequest) { CreateVehicleRequestScreen() }
+        composable(Routes.CreateEvent) { CreateEventScreen(navController, showSnackbar) }
         composable(
-            // Using the safe createRoute function is not needed here, 
-            // as the base route string is what's required for definition.
-            route = Routes.InterestQuestion.route, 
+            route = "${Routes.InterestQuestion}/{index}",
             arguments = listOf(navArgument("index") { type = NavType.IntType })
         ) { backStackEntry ->
             val index = backStackEntry.arguments?.getInt("index") ?: 1
@@ -96,7 +42,7 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             )
         }
         composable(
-            route = Routes.EventDetail.route, 
+            route = "${Routes.EventDetail}/{eventId}",
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
         ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""

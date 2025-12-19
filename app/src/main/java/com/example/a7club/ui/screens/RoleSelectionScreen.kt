@@ -38,20 +38,20 @@ fun RoleSelectionScreen(navController: NavController, showSnackbar: (String) -> 
             verticalArrangement = Arrangement.Center
         ) {
             RoleButton(text = "Öğrenci") {
-                // CORRECTED: Added .route to provide the String path
-                navController.navigate(Routes.StudentLogin.route)
+                // DÜZELTME: .route silindi
+                navController.navigate(Routes.StudentLogin)
             }
             Spacer(modifier = Modifier.height(32.dp))
 
             RoleButton(text = "Kulüp Yönetim Kurulu Girişi") {
-                // CORRECTED: Added .route to provide the String path
-                navController.navigate(Routes.ClubCommitteeLogin.route)
+                // DÜZELTME: İlgili ekrana yönlendirme eklendi ve .route kullanılmadı
+                navController.navigate(Routes.ClubCommitteeLogin)
             }
             Spacer(modifier = Modifier.height(32.dp))
 
             RoleButton(text = "Personel Girişi") {
-                // CORRECTED: Added .route to provide the String path
-                navController.navigate(Routes.PersonnelLogin.route)
+                // DÜZELTME: İlgili ekrana yönlendirme eklendi ve .route kullanılmadı
+                navController.navigate(Routes.PersonnelLogin)
             }
         }
     }

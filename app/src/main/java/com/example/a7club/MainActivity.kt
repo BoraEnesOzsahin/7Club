@@ -48,6 +48,16 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     )
+                    // innerPadding parametresini kullanmak için Box içine aldık
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        NavGraph(
+                            showSnackbar = { message ->
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(message)
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }

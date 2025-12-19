@@ -36,7 +36,11 @@ fun InterestQuestionScreen(navController: NavController, questionIndex: Int, onI
         if (questionIndex < 5) {
             // Use the safe createRoute helper function
             navController.navigate(Routes.InterestQuestion.createRoute(questionIndex + 1))
+            navController.navigate("${Routes.InterestQuestion}/${questionIndex + 1}")
         } else {
+            // DÜZELTME BURADA YAPILDI: .route uzantıları kaldırıldı
+            navController.navigate(Routes.Events) {
+                popUpTo(Routes.RoleSelection) { inclusive = true }
             // CORRECTED: .route property is now used to pass the String path
             navController.navigate(Routes.Events.route) {
                 popUpTo(Routes.RoleSelection.route) { inclusive = true }
