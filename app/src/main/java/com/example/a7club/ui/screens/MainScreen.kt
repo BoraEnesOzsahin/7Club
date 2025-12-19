@@ -27,19 +27,22 @@ fun MainScreen(navController: NavController) {
         Text("Select an Action")
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = { navController.navigate(Routes.CreateVehicleRequest.route) }) {
+        // Fixed: Removed .route
+        Button(onClick = { navController.navigate(Routes.CreateVehicleRequest) }) {
             Text("Submit Vehicle Request")
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(onClick = { navController.navigate(Routes.Events.route) }) {
+        // Fixed: Removed .route
+        Button(onClick = { navController.navigate(Routes.Events) }) {
             Text("See All Events")
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(onClick = { navController.navigate(Routes.CreateEvent.route) }) {
+        // Fixed: Removed .route
+        Button(onClick = { navController.navigate(Routes.CreateEvent) }) {
             Text("Create an event")
         }
     }

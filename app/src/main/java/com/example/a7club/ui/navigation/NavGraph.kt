@@ -7,68 +7,42 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.a7club.ui.screens.ClubCommitteeLoginScreen
-import com.example.a7club.ui.screens.CreateEventScreen
-import com.example.a7club.ui.screens.CreateVehicleRequestScreen
-import com.example.a7club.ui.screens.EventDetailScreen
-import com.example.a7club.ui.screens.EventsScreen
-import com.example.a7club.ui.screens.InterestQuestionScreen
-import com.example.a7club.ui.screens.MainScreen
-import com.example.a7club.ui.screens.PersonnelLoginScreen
-import com.example.a7club.ui.screens.RoleSelectionScreen
-import com.example.a7club.ui.screens.StudentFlowViewModel
-import com.example.a7club.ui.screens.StudentLoginScreen
+// DÜZELTME: Tüm ekranları tek bir import ile alıyoruz. 'screensimport' silindi.
+import com.example.a7club.ui.screens.*
 import com.example.a7club.ui.viewmodels.AuthViewModel
 
 @Composable
 fun NavGraph(showSnackbar: (String) -> Unit) {
     val navController = rememberNavController()
     val studentFlowViewModel: StudentFlowViewModel = viewModel()
-    val authViewModel: AuthViewModel = viewModel() // Ortak AuthViewModel oluşturuldu
+    val authViewModel: AuthViewModel = viewModel()
 
-    // Uygulama başlangıç rotasını rol seçimine ayarlayalım
-    NavHost(navController = navController, startDestination = Routes.RoleSelection.route) {
-        composable(Routes.MainScreen.route) {
-            MainScreen(navController)
-        }
-        composable(Routes.RoleSelection.route) {
-            // ViewModel'i resetleyerek her giriş denemesinin temiz başlamasını sağla
+    NavHost(navController = navController, startDestination = Routes.RoleSelection) {
+        composable(Routes.MainScreen) { MainScreen(navController) }
+        composable(Routes.RoleSelection) {
             authViewModel.resetLoginState()
             RoleSelectionScreen(navController, showSnackbar)
         }
-        composable(Routes.StudentLogin.route) {
-            StudentLoginScreen(navController, authViewModel, showSnackbar)
-        }
-        composable(Routes.ClubCommitteeLogin.route) {
-            // DÜZELTİLDİ: AuthViewModel eklendi
-            ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar)
-        }
-        composable(Routes.PersonnelLogin.route) {
-             // DÜZELTİLDİ: AuthViewModel eklendi
-            PersonnelLoginScreen(navController, authViewModel, showSnackbar)
-        }
+        composable(Routes.StudentLogin) { StudentLoginScreen(navController, authViewModel, showSnackbar) }
+        composable(Routes.ClubCommitteeLogin) { ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar) }
+        composable(Routes.PersonnelLogin) { PersonnelLoginScreen(navController, authViewModel, showSnackbar) }
+        composable(Routes.Events) { EventsScreen(navController, studentFlowViewModel, showSnackbar) }
+        composable(Routes.Settings) { SettingsScreen(navController) }
+        composable(Routes.CreateVehicleRequest) { CreateVehicleRequestScreen() }
+        composable(Routes.CreateEvent) { CreateEventScreen(navController, showSnackbar) }
         composable(
-            route = Routes.InterestQuestion.route,
+            route = "${Routes.InterestQuestion}/{index}",
             arguments = listOf(navArgument("index") { type = NavType.IntType })
         ) { backStackEntry ->
             val index = backStackEntry.arguments?.getInt("index") ?: 1
             InterestQuestionScreen(
-                navController = navController, 
+                navController = navController,
                 questionIndex = index,
-                onInterestSelected = { interest -> studentFlowViewModel.interests.add(interest) }
+                onInterestSelected = { studentFlowViewModel.interests.add(it) }
             )
         }
-        composable(Routes.Events.route) {
-            EventsScreen(navController, studentFlowViewModel, showSnackbar)
-        }
-        composable(Routes.CreateVehicleRequest.route) {
-            CreateVehicleRequestScreen()
-        }
-        composable(Routes.CreateEvent.route) {
-            CreateEventScreen(navController, showSnackbar)
-        }
         composable(
-            route = Routes.EventDetail.route,
+            route = "${Routes.EventDetail}/{eventId}",
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
         ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
