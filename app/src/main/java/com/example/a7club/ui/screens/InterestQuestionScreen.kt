@@ -34,10 +34,11 @@ fun InterestQuestionScreen(navController: NavController, questionIndex: Int, onI
 
     fun navigateNext() {
         if (questionIndex < 5) {
-            navController.navigate(Routes.InterestQuestion.createRoute(questionIndex + 1))
+            navController.navigate("${Routes.InterestQuestion}/${questionIndex + 1}")
         } else {
-            navController.navigate(Routes.Events.route) {
-                popUpTo(Routes.RoleSelection.route) { inclusive = true }
+            // DÜZELTME BURADA YAPILDI: .route uzantıları kaldırıldı
+            navController.navigate(Routes.Events) {
+                popUpTo(Routes.RoleSelection) { inclusive = true }
             }
         }
     }

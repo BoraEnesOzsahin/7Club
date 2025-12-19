@@ -37,8 +37,9 @@ fun ClubCommitteeLoginScreen(
         when (val state = loginState) {
             is Resource.Success -> {
                 showSnackbar("Kulüp Yönetim Kurulu olarak giriş yapıldı! Hoş geldin ${state.data?.email}")
-                navController.navigate(Routes.MainScreen.route) {
-                    popUpTo(Routes.RoleSelection.route) { inclusive = true }
+                // DÜZELTİLDİ: .route uzantıları silindi
+                navController.navigate(Routes.MainScreen) {
+                    popUpTo(Routes.RoleSelection) { inclusive = true }
                 }
             }
             is Resource.Error -> {
@@ -89,7 +90,7 @@ fun ClubCommitteeLoginScreen(
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-         Button(
+        Button(
             onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth(),
             enabled = loginState !is Resource.Loading

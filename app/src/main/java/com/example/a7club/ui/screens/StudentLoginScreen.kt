@@ -53,8 +53,10 @@ fun StudentLoginScreen(
                 showSnackbar("Giriş başarılı! Hoş geldin ${state.data?.email}")
                 // Öğrenciler sadece etkinlikleri ve kulüpleri görebilir, araç talep edemez.
                 // Bu yüzden doğrudan Etkinlikler (Events) sayfasına yönlendiriyoruz.
-                navController.navigate(Routes.Events.route) {
-                    popUpTo(Routes.RoleSelection.route) { inclusive = true }
+
+                // DÜZELTME: .route uzantıları kaldırıldı
+                navController.navigate(Routes.Events) {
+                    popUpTo(Routes.RoleSelection) { inclusive = true }
                 }
             }
             is Resource.Error -> {
@@ -115,7 +117,7 @@ fun StudentLoginScreen(
                 )
             )
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             if (loginState is Resource.Loading) {
                 CircularProgressIndicator()
             } else {
