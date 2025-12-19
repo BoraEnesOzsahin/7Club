@@ -3,16 +3,14 @@ package com.example.a7club.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -26,7 +24,9 @@ import com.example.a7club.ui.theme.VeryLightPurple
 import com.example.a7club.ui.theme._7ClubTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composableun NotificationsScreen(navController: NavController) {
+// CORRECTED: The invalid character between @Composable and fun is removed.
+@Composable
+fun NotificationsScreen(navController: NavController) {
     Scaffold(
         containerColor = VeryLightPurple,
         topBar = {
@@ -34,7 +34,7 @@ import com.example.a7club.ui.theme._7ClubTheme
                 title = { Text("Bildirimler", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(

@@ -17,6 +17,11 @@ sealed class Routes(val route: String) {
     object CreateVehicleRequest : Routes("create_vehicle_request")
     object ClubCommitteeLogin : Routes("club_committee_login")
     object PersonnelLogin : Routes("personnel_login")
+    object ClubHomeScreen : Routes("club_home_screen")
+    object SettingsScreen : Routes("settings_screen")
+    object EventCalendarScreen : Routes("event_calendar_screen")
+    object ClubProfileScreen : Routes("club_profile_screen")
+    object NotificationsScreen : Routes("notifications_screen")
     object EventDetail : Routes("event_detail/{eventId}") {
         fun createRoute(eventId: String) = "event_detail/$eventId"
     }

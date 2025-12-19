@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,9 +19,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.a7club.ui.theme.DarkBlue
+import com.example.a7club.ui.theme.LightPurple
+import com.example.a7club.ui.theme.VeryLightPurple
+import com.example.a7club.ui.theme._7ClubTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,13 +35,13 @@ fun SettingsScreen(navController: NavController, showSnackbar: (String) -> Unit)
     var selectedLanguage by remember { mutableStateOf("Türkçe") }
 
     Scaffold(
-        containerColor = veryLightPurple,
+        containerColor = VeryLightPurple,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Ayarlar", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
                     }
                 },
                 actions = {
@@ -44,7 +50,7 @@ fun SettingsScreen(navController: NavController, showSnackbar: (String) -> Unit)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = lightPurple
+                    containerColor = LightPurple
                 )
             )
         }
@@ -61,7 +67,7 @@ fun SettingsScreen(navController: NavController, showSnackbar: (String) -> Unit)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = lightPurple)
+                colors = CardDefaults.cardColors(containerColor = LightPurple)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -79,7 +85,7 @@ fun SettingsScreen(navController: NavController, showSnackbar: (String) -> Unit)
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedLanguage == "İngilizce") darkBlue else veryLightPurple,
+                                containerColor = if (selectedLanguage == "İngilizce") DarkBlue else VeryLightPurple,
                                 contentColor = if (selectedLanguage == "İngilizce") Color.White else Color.Black
                             )
                         ) {
@@ -91,7 +97,7 @@ fun SettingsScreen(navController: NavController, showSnackbar: (String) -> Unit)
                             modifier = Modifier.weight(1f),
                              shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedLanguage == "Türkçe") darkBlue else veryLightPurple,
+                                containerColor = if (selectedLanguage == "Türkçe") DarkBlue else VeryLightPurple,
                                 contentColor = if (selectedLanguage == "Türkçe") Color.White else Color.Black
                             )
                         ) {
@@ -101,5 +107,16 @@ fun SettingsScreen(navController: NavController, showSnackbar: (String) -> Unit)
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Settings Screen")
+@Composable
+fun SettingsScreenPreview() {
+    _7ClubTheme {
+        SettingsScreen(
+            navController = rememberNavController(), 
+            showSnackbar = {}
+        )
     }
 }

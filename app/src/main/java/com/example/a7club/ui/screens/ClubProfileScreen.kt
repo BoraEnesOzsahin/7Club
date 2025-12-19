@@ -21,20 +21,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.a7club.ui.navigation.Routes
+import com.example.a7club.ui.theme.DarkBlue
+import com.example.a7club.ui.theme.LightPurple
+import com.example.a7club.ui.theme.VeryLightPurple
+import com.example.a7club.ui.theme._7ClubTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Unit) {
     Scaffold(
-        containerColor = veryLightPurple,
+        containerColor = VeryLightPurple,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Profilim", fontWeight = FontWeight.Bold) },
-                // We might not need a hamburger here, but keeping for consistency
                 navigationIcon = {
                     IconButton(onClick = { /* Maybe open drawer or pop back */ }) {
                         Icon(Icons.Default.Menu, contentDescription = "Menu")
@@ -45,10 +50,9 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
                         Icon(Icons.Default.Notifications, contentDescription = "Bildirimler")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = lightPurple)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)
             )
         },
-        // We reuse the bottom app bar for consistent navigation
         bottomBar = {
              ClubBottomAppBar(navController = navController)
         },
@@ -56,7 +60,7 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
              FloatingActionButton(
                 onClick = { /* No action */ },
                 shape = CircleShape,
-                containerColor = darkBlue,
+                containerColor = DarkBlue,
             ) {}
         },
         floatingActionButtonPosition = FabPosition.Center
@@ -69,21 +73,19 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Profile Picture Placeholder
             Box(
                 modifier = Modifier
                     .size(150.dp)
                     .clip(CircleShape)
-                    .background(lightPurple)
+                    .background(LightPurple)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Club Name Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = lightPurple)
+                colors = CardDefaults.cardColors(containerColor = LightPurple)
             ) {
                 Box(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
                     Text("Kulüp Adı", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
@@ -92,10 +94,8 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Log Out Button
             Button(
                 onClick = {
-                    // Navigate back to the very first screen, clearing everything
                     navController.navigate(Routes.RoleSelection.route) {
                         popUpTo(navController.graph.startDestinationId) { inclusive = true }
                     }
@@ -103,12 +103,23 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = lightPurple,
-                    contentColor = darkBlue
+                    containerColor = LightPurple,
+                    contentColor = DarkBlue
                 )
             ) {
                 Text("Oturumu Kapat", fontSize = 18.sp)
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Club Profile Screen Preview")
+@Composable
+fun ClubProfileScreenPreview() {
+    _7ClubTheme {
+        ClubProfileScreen(
+            navController = rememberNavController(), 
+            showSnackbar = {}
+        )
     }
 }
