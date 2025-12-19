@@ -29,6 +29,7 @@ import com.example.a7club.ui.viewmodels.AuthViewModel
 fun ClubCommitteeLoginScreen(
     navController: NavController,
     viewModel: AuthViewModel,
+    
     showSnackbar: (String) -> Unit
 ) {
     val loginState by viewModel.loginState.collectAsState()
@@ -37,9 +38,10 @@ fun ClubCommitteeLoginScreen(
         when (val state = loginState) {
             is Resource.Success -> {
                 showSnackbar("Kulüp Yönetim Kurulu olarak giriş yapıldı! Hoş geldin ${state.data?.email}")
-                // DÜZELTİLDİ: .route uzantıları silindi
-                navController.navigate(Routes.MainScreen) {
-                    popUpTo(Routes.RoleSelection) { inclusive = true }
+                // CORRECTED: Added .route to pass the String path
+                navController.navigate(Routes.MainScreen.route) {
+                    // CORRECTED: Added .route here as well
+                    popUpTo(Routes.RoleSelection.route) { inclusive = true }
                 }
             }
             is Resource.Error -> {

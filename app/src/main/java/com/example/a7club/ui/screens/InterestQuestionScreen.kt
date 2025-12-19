@@ -28,20 +28,20 @@ import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme._7ClubTheme
 
 @Composable
-fun InterestQuestionScreen(navController: NavController, questionIndex: Int, onInterestSelected: (Int?) -> Unit) {
+fun InterestQuestionScreen(
+    navController: NavController, 
+    questionIndex: Int, 
+    onInterestSelected: (Int?) -> Unit
+) {
     val questionText = "İlgi alanı sorusu $questionIndex"
     val options = listOf("Seçenek 1", "Seçenek 2", "Seçenek 3", "Seçenek 4")
 
+    // This function is defined inside the Composable to have access to its parameters.
     fun navigateNext() {
         if (questionIndex < 5) {
-            // Use the safe createRoute helper function
             navController.navigate(Routes.InterestQuestion.createRoute(questionIndex + 1))
-            navController.navigate("${Routes.InterestQuestion}/${questionIndex + 1}")
         } else {
-            // DÜZELTME BURADA YAPILDI: .route uzantıları kaldırıldı
-            navController.navigate(Routes.Events) {
-                popUpTo(Routes.RoleSelection) { inclusive = true }
-            // CORRECTED: .route property is now used to pass the String path
+            // Use the .route property to pass the String path
             navController.navigate(Routes.Events.route) {
                 popUpTo(Routes.RoleSelection.route) { inclusive = true }
             }
@@ -55,7 +55,8 @@ fun InterestQuestionScreen(navController: NavController, questionIndex: Int, onI
             .padding(16.dp),
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Card(
                 modifier = Modifier
@@ -68,27 +69,16 @@ fun InterestQuestionScreen(navController: NavController, questionIndex: Int, onI
                     Text(text = questionText)
                 }
             }
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+            
             options.forEachIndexed { index, text ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .padding(vertical = 4.dp)
-                        .clickable {
-                            onInterestSelected(index)
-                            navigateNext()
-                        },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0))
-                ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = text)
-                    }
+                OptionCard(text = text) {
+                    onInterestSelected(index)
+                    navigateNext()
                 }
             }
-
         }
+        
         Button(
             onClick = {
                 onInterestSelected(null) // Pass null for "geç"
@@ -99,9 +89,24 @@ fun InterestQuestionScreen(navController: NavController, questionIndex: Int, onI
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE0E0E0))
-
         ) {
             Text("geç", color = Color.Black)
+        }
+    }
+}
+
+@Composable
+private fun OptionCard(text: String, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0))
+    ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = text)
         }
     }
 }
@@ -112,7 +117,7 @@ fun InterestQuestionScreenPreview() {
     _7ClubTheme {
         InterestQuestionScreen(
             navController = rememberNavController(),
-            onInterestSelected = { /* In preview, do nothing */ },
+            onInterestSelected = {},
             questionIndex = 1
         )
     }
