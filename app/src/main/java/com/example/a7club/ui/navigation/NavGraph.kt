@@ -1,6 +1,7 @@
 package com.example.a7club.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -21,13 +22,17 @@ import com.example.a7club.ui.screens.StudentLoginScreen
 import com.example.a7club.ui.viewmodels.AuthViewModel
 
 @Composable
-fun NavGraph(showSnackbar: (String) -> Unit) {
+fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
     val navController = rememberNavController()
     val studentFlowViewModel: StudentFlowViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel() // Ortak AuthViewModel oluşturuldu
 
     // Uygulama başlangıç rotasını rol seçimine ayarlayalım
-    NavHost(navController = navController, startDestination = Routes.RoleSelection.route) {
+    NavHost(
+        navController = navController,
+        startDestination = Routes.RoleSelection.route,
+        modifier = modifier
+    ) {
         composable(Routes.MainScreen.route) {
             MainScreen(navController)
         }

@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
                 ) { innerPadding ->
                     NavGraph(
+                        modifier = Modifier.padding(innerPadding),
                         showSnackbar = { message ->
                             scope.launch {
                                 snackbarHostState.showSnackbar(message)
