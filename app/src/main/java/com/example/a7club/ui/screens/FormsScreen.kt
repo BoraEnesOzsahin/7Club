@@ -1,12 +1,14 @@
 package com.example.a7club.ui.screens
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,10 +30,9 @@ fun FormsScreen(navController: NavController) {
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     var showSelectionDialog by remember { mutableStateOf(false) }
 
-    // Listeler
     val pendingEvents = listOf("Quiz Night", "Seramik Atölyesi")
     val pastEvents = listOf("Yaratıcı Yazarlık Atölyesi", "Coffee Talks", "90's Event", "İstiklal Gezisi")
-    val rejectedEvents = listOf("Takı Atölyesi", "Oyun Gecesi") // YENİ
+    val rejectedEvents = listOf("Takı Atölyesi", "Oyun Gecesi")
 
     if (showSelectionDialog) {
         AlertDialog(
@@ -56,6 +57,16 @@ fun FormsScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD1C4E9), contentColor = DarkBlue)
                     ) { Text("Araç Talep Formu") }
+
+                    // DÜZELTİLDİ: Boolean parametre (true) eklenerek yönlendirme yapıldı
+                    Button(
+                        onClick = { 
+                            showSelectionDialog = false
+                            navController.navigate(Routes.ParticipantInfoForm.createRoute(fromNewForm = true)) 
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD1C4E9), contentColor = DarkBlue)
+                    ) { Text("Katılımcı Bilgileri Formu") }
                 }
             },
             confirmButton = {},
@@ -77,7 +88,9 @@ fun FormsScreen(navController: NavController) {
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)
             )
         },
-        bottomBar = { ClubBottomAppBar(navController = navController) }
+        bottomBar = { 
+            FormsBottomAppBar(navController = navController) 
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -89,7 +102,6 @@ fun FormsScreen(navController: NavController) {
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Üstteki İki Buton
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 FormMenuButton(text = "Geçmiş Etkinlik\nFormları", isSelected = selectedCategory == "PAST") { 
                     selectedCategory = if (selectedCategory == "PAST") null else "PAST"
@@ -101,10 +113,8 @@ fun FormsScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Alttaki İki Buton
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 FormMenuButton(text = "Yeni Form Oluştur") { showSelectionDialog = true }
-                // DÜZELTİLDİ: Reddedilenler butonu artık aktif
                 FormMenuButton(text = "Reddedilen Etkinlik\nFormları", isSelected = selectedCategory == "REJECTED") { 
                     selectedCategory = if (selectedCategory == "REJECTED") null else "REJECTED"
                 }
@@ -112,7 +122,6 @@ fun FormsScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // ALTTA BELİREN LİSTE
             val currentList = when (selectedCategory) {
                 "PAST" -> pastEvents
                 "PENDING" -> pendingEvents
@@ -124,6 +133,7 @@ fun FormsScreen(navController: NavController) {
                 Button(
                     onClick = { 
                         when(selectedCategory) {
+                            // DÜZELTİLDİ: Görüntüleme modunda parametre (false) olarak gidilir
                             "PAST" -> navController.navigate(Routes.PastEventDetail.createRoute(eventName))
                             "PENDING" -> navController.navigate(Routes.PendingEventDetail.createRoute(eventName))
                             "REJECTED" -> navController.navigate(Routes.RejectedEventDetail.createRoute(eventName))
@@ -139,6 +149,58 @@ fun FormsScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
+    }
+}
+
+@Composable
+fun FormsBottomAppBar(navController: NavController) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(75.dp)
+                .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
+            color = LightPurple
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FormsNavItem(Icons.Default.Groups, "Kulübüm") { navController.navigate(Routes.ClubProfileScreen.route) }
+                FormsNavItem(Icons.Default.Assignment, "Formlar") { /* Zaten buradayız */ }
+                Spacer(modifier = Modifier.width(90.dp))
+                FormsNavItem(Icons.Default.Collections, "Gönderiler") { /* Aksiyon */ }
+                FormsNavItem(Icons.Default.EventAvailable, "Etkinlikler") { navController.navigate(Routes.EventCalendarScreen.route) }
+            }
+        }
+        Surface(
+            modifier = Modifier
+                .size(90.dp)
+                .align(Alignment.TopCenter)
+                .border(6.dp, Color.White, CircleShape)
+                .clickable { navController.navigate(Routes.ClubHomeScreen.route) },
+            shape = CircleShape,
+            color = DarkBlue,
+            shadowElevation = 8.dp
+        ) {}
+    }
+}
+
+@Composable
+fun FormsNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Icon(icon, contentDescription = label, tint = DarkBlue, modifier = Modifier.size(28.dp))
+        Text(text = label, color = DarkBlue, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
 

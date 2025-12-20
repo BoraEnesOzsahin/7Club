@@ -1,17 +1,16 @@
 package com.example.a7club.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
 
@@ -35,7 +35,6 @@ data class ContactInfo(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactInfoScreen(navController: NavController) {
-    // Dinamik Liste (YK üyeleri ekleme/çıkarma yapabilir)
     val contactList = remember { 
         mutableStateListOf(
             ContactInfo(1, "Kulüp Whatsapp Grubu Linki", "https://chat.whatsapp.com/HF4rJ84rlu42x6ybbacv7W"),
@@ -44,10 +43,8 @@ fun ContactInfoScreen(navController: NavController) {
         )
     }
 
-    // Diyalog State'leri
     var showAddEditDialog by remember { mutableStateOf(false) }
     var dialogTitle by remember { mutableStateOf("") }
-    var inputLabel by remember { mutableStateOf("") }
     var inputValue by remember { mutableStateOf("") }
     var currentEditingId by remember { mutableIntStateOf(-1) }
     var isNewItem by remember { mutableStateOf(false) }
@@ -111,7 +108,10 @@ fun ContactInfoScreen(navController: NavController) {
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)
             )
         },
-        bottomBar = { ClubBottomAppBar(navController = navController) }
+        bottomBar = { 
+            // DÜZELTİLDİ: Yönetici alt barı eklendi
+            AdminContactBottomAppBar(navController = navController) 
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -127,7 +127,6 @@ fun ContactInfoScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Dinamik Kart Listesi
             contactList.forEach { info ->
                 ContactCard(
                     title = info.title,
@@ -146,7 +145,6 @@ fun ContactInfoScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // YENİ EKLE BUTONU
             Button(
                 onClick = {
                     isNewItem = true
@@ -165,6 +163,58 @@ fun ContactInfoScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+@Composable
+fun AdminContactBottomAppBar(navController: NavController) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(75.dp)
+                .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
+            color = LightPurple
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AdminContactNavItem(Icons.Default.Groups, "Kulübüm") { navController.navigate(Routes.ClubProfileScreen.route) }
+                AdminContactNavItem(Icons.Default.Assignment, "Formlar") { navController.navigate(Routes.Forms.route) }
+                Spacer(modifier = Modifier.width(90.dp))
+                AdminContactNavItem(Icons.Default.Collections, "Gönderiler") { /* Aksiyon */ }
+                AdminContactNavItem(Icons.Default.EventAvailable, "Etkinlikler") { navController.navigate(Routes.EventCalendarScreen.route) }
+            }
+        }
+        Surface(
+            modifier = Modifier
+                .size(90.dp)
+                .align(Alignment.TopCenter)
+                .border(6.dp, Color.White, CircleShape)
+                .clickable { navController.navigate(Routes.ClubHomeScreen.route) },
+            shape = CircleShape,
+            color = DarkBlue,
+            shadowElevation = 8.dp
+        ) {}
+    }
+}
+
+@Composable
+fun AdminContactNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Icon(icon, contentDescription = label, tint = DarkBlue, modifier = Modifier.size(28.dp))
+        Text(text = label, color = DarkBlue, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -190,9 +240,7 @@ fun ContactCard(title: String, value: String, onEdit: () -> Unit, onDelete: () -
                 }
             }
         }
-
         Spacer(modifier = Modifier.height(8.dp))
-
         Card(
             modifier = Modifier.fillMaxWidth(0.85f),
             shape = RoundedCornerShape(16.dp),

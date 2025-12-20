@@ -81,7 +81,10 @@ fun ClubHomeScreen(
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)
                 )
             },
-            bottomBar = { ClubBottomAppBar(navController = navController) }
+            bottomBar = { 
+                // DÜZELTİLDİ: Fonksiyon ismi doğru eşleştirildi
+                MainInitialBottomAppBar(navController = navController) 
+            }
         ) { paddingValues ->
             ClubHomeContent(
                 modifier = Modifier.padding(paddingValues),
@@ -94,7 +97,7 @@ fun ClubHomeScreen(
 }
 
 @Composable
-fun ClubBottomAppBar(navController: NavController) {
+fun MainInitialBottomAppBar(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -113,15 +116,11 @@ fun ClubBottomAppBar(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ClubNavItem(Icons.Default.Groups, "Kulübüm") { navController.navigate(Routes.ClubProfileScreen.route) }
-                
-                // DÜZELTİLDİ: Formlar butonuna tıklandığında FormsScreen'e gider
-                ClubNavItem(Icons.Default.Assignment, "Formlar") { navController.navigate(Routes.Forms.route) }
-                
+                ClubMainNavItem(Icons.Default.Home, "Etkinlikler") { /* Zaten buradayız */ }
+                ClubMainNavItem(Icons.Default.Explore, "Keşfet") { /* Keşfet Aksiyon */ }
                 Spacer(modifier = Modifier.width(90.dp))
-                
-                ClubNavItem(Icons.Default.Collections, "Gönderiler") { /* Aksiyon */ }
-                ClubNavItem(Icons.Default.EventAvailable, "Etkinlikler") { /* Aksiyon */ }
+                ClubMainNavItem(Icons.Default.Groups, "Kulüpler") { /* Kulüpler Aksiyon */ }
+                ClubMainNavItem(Icons.Default.Person, "Profil") { /* Profil Aksiyon */ }
             }
         }
 
@@ -139,7 +138,7 @@ fun ClubBottomAppBar(navController: NavController) {
 }
 
 @Composable
-fun ClubNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+fun ClubMainNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -238,7 +237,7 @@ fun ClubDateCard(date: LocalDate, onDateClick: () -> Unit, onPreviousDayClick: (
             IconButton(onClick = onPreviousDayClick) { Icon(Icons.Default.ArrowBack, "Önceki Gün") }
             Text(date.dayOfMonth.toString(), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = DarkBlue)
             Text(date.month.getDisplayName(TextStyle.FULL, Locale("tr")), fontSize = 16.sp, color = DarkBlue)
-            IconButton(onClick = onNextDayClick) { Icon(Icons.Default.ArrowForward, "Sonraki Gün") }
+            IconButton(onClick = { /* Sonraki Gün */ }) { Icon(Icons.Default.ArrowForward, "Sonraki Gün") }
         }
     }
 }

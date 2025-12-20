@@ -20,19 +20,15 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
 
     NavHost(
         navController = navController, 
-        startDestination = Routes.Splash.route, // DÜZELTİLDİ: Uygulama Splash ile başlar
+        startDestination = Routes.Splash.route, 
         modifier = modifier
     ) {
-        // SPLASH EKRANI
         composable(Routes.Splash.route) { SplashScreen(navController) }
-
         composable(Routes.MainScreen.route) { MainScreen(navController) }
-        
         composable(Routes.RoleSelection.route) {
             authViewModel.resetLoginState()
             RoleSelectionScreen(navController, showSnackbar)
         }
-        
         composable(Routes.StudentLogin.route) { StudentLoginScreen(navController, authViewModel, showSnackbar) }
         composable(Routes.ClubCommitteeLogin.route) { ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar) }
         composable(Routes.PersonnelLogin.route) { PersonnelLoginScreen(navController, authViewModel, showSnackbar) }
@@ -100,6 +96,15 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         ) { backStackEntry ->
             val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
             RejectedEventDetailScreen(navController, eventName)
+        }
+
+        // DÜZELTİLDİ: Boolean parametre alan yeni yapı
+        composable(
+            route = Routes.ParticipantInfoForm.route,
+            arguments = listOf(navArgument("fromNewForm") { type = NavType.BoolType })
+        ) { backStackEntry ->
+            val fromNewForm = backStackEntry.arguments?.getBoolean("fromNewForm") ?: false
+            ParticipantInfoFormScreen(navController, fromNewForm)
         }
     }
 }

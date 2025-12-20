@@ -1,7 +1,7 @@
 package com.example.a7club.ui.navigation
 
 sealed class Routes(val route: String) {
-    object Splash : Routes("splash") // YENİ
+    object Splash : Routes("splash")
     object MainScreen : Routes("main_screen")
     object RoleSelection : Routes("role_selection")
     object StudentLogin : Routes("student_login")
@@ -40,6 +40,12 @@ sealed class Routes(val route: String) {
     }
     object EventRequestForm : Routes("event_request_form")
     object VehicleRequestForm : Routes("vehicle_request_form")
+    
+    // GÜNCELLENDİ: Boolean parametre eklendi
+    object ParticipantInfoForm : Routes("participant_info_form/{fromNewForm}") {
+        fun createRoute(fromNewForm: Boolean) = "participant_info_form/$fromNewForm"
+    }
+    
     object EventDetail : Routes("event_detail/{eventId}") {
         fun createRoute(eventId: String) = "event_detail/$eventId"
     }
