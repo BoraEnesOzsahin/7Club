@@ -2,7 +2,10 @@ package com.example.a7club.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Default Theme Colors (Restored)
+val BrandDarkBlue = Color(0xFF160092)
+val BrandLightPurple = Color(0xFFCCC2FF)
+val BrandBackground = Color(0xFFEEEBFF)
+val BrandSoftPurple = Color(0xFFE6E3F6)// Default Theme Colors (Restored)
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)
