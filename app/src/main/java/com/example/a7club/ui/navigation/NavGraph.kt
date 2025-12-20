@@ -13,24 +13,26 @@ import com.example.a7club.ui.viewmodels.AuthViewModel
 import com.example.a7club.ui.viewmodels.StudentFlowViewModel
 
 @Composable
-// CORRECTED: Added the modifier parameter
 fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
     val navController = rememberNavController()
     val studentFlowViewModel: StudentFlowViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
 
-    // CORRECTED: Applied the modifier and fixed the startDestination
     NavHost(
         navController = navController, 
-        startDestination = Routes.RoleSelection.route, 
+        startDestination = Routes.Splash.route, // DÜZELTİLDİ: Uygulama Splash ile başlar
         modifier = modifier
     ) {
-        // CORRECTED: All routes now correctly use the .route property
+        // SPLASH EKRANI
+        composable(Routes.Splash.route) { SplashScreen(navController) }
+
         composable(Routes.MainScreen.route) { MainScreen(navController) }
+        
         composable(Routes.RoleSelection.route) {
             authViewModel.resetLoginState()
             RoleSelectionScreen(navController, showSnackbar)
         }
+        
         composable(Routes.StudentLogin.route) { StudentLoginScreen(navController, authViewModel, showSnackbar) }
         composable(Routes.ClubCommitteeLogin.route) { ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar) }
         composable(Routes.PersonnelLogin.route) { PersonnelLoginScreen(navController, authViewModel, showSnackbar) }
@@ -38,36 +40,66 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         composable(Routes.SettingsScreen.route) { SettingsScreen(navController = navController, showSnackbar = showSnackbar) }
         composable(Routes.CreateVehicleRequest.route) { CreateVehicleRequestScreen() }
         composable(Routes.CreateEvent.route) { CreateEventScreen(navController, showSnackbar) }
+        
         composable(
             route = Routes.InterestQuestion.route,
             arguments = listOf(navArgument("index") { type = NavType.IntType })
         ) { backStackEntry ->
             val index = backStackEntry.arguments?.getInt("index") ?: 1
-            InterestQuestionScreen(
-                navController = navController,
-                questionIndex = index,
-                onInterestSelected = { studentFlowViewModel.interests.add(it) }
-            )
+            InterestQuestionScreen(navController, index, { studentFlowViewModel.interests.add(it) })
         }
+        
         composable(
             route = Routes.EventDetail.route,
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
         ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
-            EventDetailScreen(eventId = eventId, navController = navController, showSnackbar = showSnackbar)
+            EventDetailScreen(eventId, navController, showSnackbar)
         }
-        // ADDED Missing screens from the Club flow
+
         composable(Routes.ClubHomeScreen.route) {
-            ClubHomeScreen(navController = navController, showSnackbar = showSnackbar, viewModel = studentFlowViewModel)
+            ClubHomeScreen(navController, showSnackbar, studentFlowViewModel)
         }
         composable(Routes.EventCalendarScreen.route) {
-            EventCalendarScreen(navController = navController, showSnackbar = showSnackbar)
+            EventCalendarScreen(navController, showSnackbar)
         }
         composable(Routes.ClubProfileScreen.route) { 
-            ClubProfileScreen(navController = navController, showSnackbar = showSnackbar)
+            ClubProfileScreen(navController, showSnackbar)
         }
         composable(Routes.NotificationsScreen.route) { 
-            NotificationsScreen(navController = navController)
+            NotificationsScreen(navController)
+        }
+        composable(Routes.MembersScreen.route) { MembersScreen(navController) }
+        composable(Routes.ContactInfoScreen.route) { ContactInfoScreen(navController) }
+        composable(Routes.Forms.route) { FormsScreen(navController) }
+        composable(Routes.EventRequestForm.route) { EventRequestFormScreen(navController) }
+        composable(Routes.VehicleRequestForm.route) { VehicleRequestFormScreen(navController) }
+        composable(Routes.PastEventForms.route) { PastEventFormsScreen(navController) }
+        
+        composable(
+            route = Routes.PastEventDetail.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            PastEventDetailScreen(navController, eventName)
+        }
+
+        composable(Routes.PendingEventForms.route) { PendingEventFormsScreen(navController) }
+        composable(
+            route = Routes.PendingEventDetail.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            PendingEventDetailScreen(navController, eventName)
+        }
+        
+        composable(Routes.RejectedEventForms.route) { RejectedEventFormsScreen(navController) }
+        composable(
+            route = Routes.RejectedEventDetail.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            RejectedEventDetailScreen(navController, eventName)
         }
     }
 }

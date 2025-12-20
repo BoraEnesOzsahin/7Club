@@ -1,5 +1,7 @@
 package com.example.a7club.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,32 +47,6 @@ fun ClubHomeScreen(
     val scope = rememberCoroutineScope()
     val eventsState by viewModel.eventsState
 
-    var showJoinDialog by remember { mutableStateOf<Event?>(null) }
-
-    if (showJoinDialog != null) {
-        AlertDialog(
-            onDismissRequest = { showJoinDialog = null },
-            title = { Text(text = "Onay", color = DarkBlue) },
-            text = { Text("${showJoinDialog?.title} etkinliğine katılmak istediğinize emin misiniz?") },
-            confirmButton = {
-                Button(
-                    onClick = { 
-                        showSnackbar("${showJoinDialog?.title} etkinliğine katıldınız!")
-                        showJoinDialog = null 
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
-                ) { Text("Evet") }
-            },
-            dismissButton = {
-                 Button(
-                    onClick = { showJoinDialog = null },
-                    colors = ButtonDefaults.buttonColors(containerColor = LightPurple)
-                ) { Text("Hayır", color = DarkBlue) }
-            },
-            containerColor = VeryLightPurple
-        )
-    }
-
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -87,16 +64,6 @@ fun ClubHomeScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
                 ) { Text("Ayarlar") }
-                Spacer(Modifier.height(8.dp))
-                Button(
-                    onClick = { 
-                        navController.navigate(Routes.EventCalendarScreen.route)
-                        scope.launch { drawerState.close() }
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
-                ) { Text("Etkinlik Takvimi") }
             }
         }
     ) {
@@ -107,7 +74,6 @@ fun ClubHomeScreen(
                     title = { Text("Etkinlikler", fontWeight = FontWeight.Bold) },
                     navigationIcon = { IconButton(onClick = { scope.launch { drawerState.open() } }) { Icon(Icons.Default.Menu, "Menu") } },
                     actions = { 
-                        // UPDATED: Navigate to NotificationsScreen
                         IconButton(onClick = { navController.navigate(Routes.NotificationsScreen.route) }) { 
                             Icon(Icons.Default.Notifications, "Notifications") 
                         }
@@ -115,20 +81,76 @@ fun ClubHomeScreen(
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)
                 )
             },
-            bottomBar = { ClubBottomAppBar(navController = navController) },
-            floatingActionButton = { FloatingActionButton(onClick = {}, shape = CircleShape, containerColor = DarkBlue) {} },
-            floatingActionButtonPosition = FabPosition.Center
+            bottomBar = { ClubBottomAppBar(navController = navController) }
         ) { paddingValues ->
             ClubHomeContent(
                 modifier = Modifier.padding(paddingValues),
                 eventsState = eventsState,
                 onRetry = viewModel::fetchEvents,
-                onEventClick = { event -> showJoinDialog = event }
+                onEventClick = { /* Aksiyon */ }
             )
         }
     }
 }
 
+@Composable
+fun ClubBottomAppBar(navController: NavController) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(75.dp)
+                .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
+            color = LightPurple
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ClubNavItem(Icons.Default.Groups, "Kulübüm") { navController.navigate(Routes.ClubProfileScreen.route) }
+                
+                // DÜZELTİLDİ: Formlar butonuna tıklandığında FormsScreen'e gider
+                ClubNavItem(Icons.Default.Assignment, "Formlar") { navController.navigate(Routes.Forms.route) }
+                
+                Spacer(modifier = Modifier.width(90.dp))
+                
+                ClubNavItem(Icons.Default.Collections, "Gönderiler") { /* Aksiyon */ }
+                ClubNavItem(Icons.Default.EventAvailable, "Etkinlikler") { /* Aksiyon */ }
+            }
+        }
+
+        Surface(
+            modifier = Modifier
+                .size(90.dp)
+                .align(Alignment.TopCenter)
+                .border(6.dp, Color.White, CircleShape)
+                .clickable { navController.navigate(Routes.ClubProfileScreen.route) },
+            shape = CircleShape,
+            color = DarkBlue,
+            shadowElevation = 8.dp
+        ) {}
+    }
+}
+
+@Composable
+fun ClubNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Icon(icon, contentDescription = label, tint = DarkBlue, modifier = Modifier.size(28.dp))
+        Text(text = label, color = DarkBlue, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+// ... (Geri kalan içerik kodu aynı kalıyor)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClubHomeContent(
@@ -264,64 +286,5 @@ fun ClubEventCard(event: Event, onClick: () -> Unit) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = event.clubName, style = MaterialTheme.typography.bodyMedium)
         }
-    }
-}
-
-@Composable
-fun ClubBottomAppBar(navController: NavController) {
-    BottomAppBar(containerColor = LightPurple, contentColor = DarkBlue) {
-        NavigationBarItem(selected = true, onClick = {}, icon = { Icon(Icons.Default.Home, "Ana Sayfa") }, colors = NavigationBarItemDefaults.colors(selectedIconColor = DarkBlue))
-        NavigationBarItem(selected = false, onClick = { /* to Duyurular */ }, icon = { Icon(Icons.Default.Campaign, "Duyurular") }, colors = NavigationBarItemDefaults.colors(unselectedIconColor = DarkBlue.copy(alpha = 0.7f)))
-        Spacer(Modifier.weight(1f))
-        NavigationBarItem(selected = false, onClick = { /* to Kulüpler */ }, icon = { Icon(Icons.Default.Groups, "Kulüpler") }, colors = NavigationBarItemDefaults.colors(unselectedIconColor = DarkBlue.copy(alpha = 0.7f)))
-        NavigationBarItem(
-            selected = false, 
-            onClick = { navController.navigate(Routes.ClubProfileScreen.route) },
-            icon = { Icon(Icons.Default.Person, "Profilim") }, 
-            colors = NavigationBarItemDefaults.colors(unselectedIconColor = DarkBlue.copy(alpha = 0.7f))
-        )
-    }
-}
-
-// Corrected Preview: Now calls the stateless ClubHomeContent directly with fake data.
-@Preview(showBackground = true, name = "Club Home Screen - Success")
-@Composable
-fun ClubHomeScreenPreview_Success() {
-    _7ClubTheme {
-        ClubHomeContent(
-            eventsState = Resource.Success(
-                listOf(
-                    Event(id = "1", title = "Yaratıcı Yazarlık Atölyesi", clubName = "Kültür ve Etkinlik Kulübü", location = "B-101", startTime = System.currentTimeMillis()),
-                    Event(id = "2", title = "Müzik Kulübü Karaoke Gecesi", clubName = "Müzik Kulübü", location = "Konferans Salonu", startTime = System.currentTimeMillis()),
-                    Event(id = "3", title = "X Kulübü Y Etkinliği", clubName = "X Kulübü", location = "Amfi Tiyatro", startTime = System.currentTimeMillis())
-                )
-            ),
-            onRetry = {},
-            onEventClick = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Club Home Screen - Empty")
-@Composable
-fun ClubHomeScreenPreview_Empty() {
-    _7ClubTheme {
-        ClubHomeContent(
-            eventsState = Resource.Success(emptyList()),
-            onRetry = {},
-            onEventClick = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Club Home Screen - Loading")
-@Composable
-fun ClubHomeScreenPreview_Loading() {
-    _7ClubTheme {
-        ClubHomeContent(
-            eventsState = Resource.Loading(),
-            onRetry = {},
-            onEventClick = {}
-        )
     }
 }

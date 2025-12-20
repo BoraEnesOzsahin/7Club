@@ -1,11 +1,12 @@
 package com.example.a7club.ui.navigation
 
 sealed class Routes(val route: String) {
+    object Splash : Routes("splash") // YENİ
     object MainScreen : Routes("main_screen")
     object RoleSelection : Routes("role_selection")
     object StudentLogin : Routes("student_login")
-    object ClubLogin : Routes("club_login") // Yeni Rota
-    object AdminLogin : Routes("admin_login") // Yeni Rota
+    object ClubLogin : Routes("club_login")
+    object AdminLogin : Routes("admin_login")
     object InterestQuestion : Routes("interest_question/{index}") {
         fun createRoute(index: Int) = "interest_question/$index"
     }
@@ -22,6 +23,23 @@ sealed class Routes(val route: String) {
     object EventCalendarScreen : Routes("event_calendar_screen")
     object ClubProfileScreen : Routes("club_profile_screen")
     object NotificationsScreen : Routes("notifications_screen")
+    object MembersScreen : Routes("members_screen")
+    object ContactInfoScreen : Routes("contact_info_screen")
+    object Forms : Routes("forms")
+    object PastEventForms : Routes("past_event_forms")
+    object PastEventDetail : Routes("past_event_detail/{eventName}") {
+        fun createRoute(eventName: String) = "past_event_detail/$eventName"
+    }
+    object PendingEventForms : Routes("pending_event_forms")
+    object PendingEventDetail : Routes("pending_event_detail/{eventName}") {
+        fun createRoute(eventName: String) = "pending_event_detail/$eventName"
+    }
+    object RejectedEventForms : Routes("rejected_event_forms")
+    object RejectedEventDetail : Routes("rejected_event_detail/{eventName}") {
+        fun createRoute(eventName: String) = "rejected_event_detail/$eventName"
+    }
+    object EventRequestForm : Routes("event_request_form")
+    object VehicleRequestForm : Routes("vehicle_request_form")
     object EventDetail : Routes("event_detail/{eventId}") {
         fun createRoute(eventId: String) = "event_detail/$eventId"
     }

@@ -1,16 +1,7 @@
 package com.example.a7club.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -18,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
@@ -26,19 +18,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.a7club.data.Resource
 import com.example.a7club.data.models.Event
 import com.example.a7club.ui.navigation.Routes
+import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
 import com.example.a7club.ui.theme.VeryLightPurple
 import com.example.a7club.ui.theme._7ClubTheme
-// CORRECTED: ViewModel is now imported from the correct package
+import com.example.a7club.ui.viewmodels.AuthViewModel
 import com.example.a7club.ui.viewmodels.StudentFlowViewModel
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -48,7 +43,12 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel, showSnackbar: (String) -> Unit) {
+fun EventsScreen(
+    navController: NavController, 
+    viewModel: StudentFlowViewModel, 
+    showSnackbar: (String) -> Unit,
+    authViewModel: AuthViewModel = viewModel()
+) {
     val eventsState by viewModel.eventsState
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -56,8 +56,62 @@ fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel, 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
-                Text("Drawer Content", modifier = Modifier.padding(16.dp))
+            ModalDrawerSheet(
+                drawerContainerColor = VeryLightPurple,
+                modifier = Modifier.fillMaxWidth(0.7f)
+            ) {
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    "Menü", 
+                    modifier = Modifier.padding(16.dp), 
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = DarkBlue,
+                    fontWeight = FontWeight.Bold
+                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = LightPurple)
+                Spacer(Modifier.height(16.dp))
+
+                // Ayarlar Butonu
+                NavigationDrawerItem(
+                    label = { Text("Ayarlar") },
+                    selected = false,
+                    onClick = {
+                        navController.navigate(Routes.SettingsScreen.route)
+                        scope.launch { drawerState.close() }
+                    },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                    colors = NavigationDrawerItemDefaults.colors(
+                        unselectedContainerColor = Color.Transparent,
+                        unselectedTextColor = DarkBlue,
+                        unselectedIconColor = DarkBlue
+                    )
+                )
+
+                Spacer(Modifier.weight(1f)) // Alt kısma yaslamak için boşluk
+
+                // Oturumu Kapat Butonu
+                NavigationDrawerItem(
+                    label = { Text("Oturumu Kapat") },
+                    selected = false,
+                    onClick = {
+                        scope.launch {
+                            drawerState.close()
+                            authViewModel.resetLoginState()
+                            navController.navigate(Routes.RoleSelection.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    },
+                    icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                    colors = NavigationDrawerItemDefaults.colors(
+                        unselectedContainerColor = Color.Transparent,
+                        unselectedTextColor = Color.Red,
+                        unselectedIconColor = Color.Red
+                    )
+                )
+                Spacer(Modifier.height(16.dp))
             }
         }
     ) {
@@ -96,7 +150,7 @@ fun EventsScreenContent(
         },
         bottomBar = {
             BottomAppBar(containerColor = LightPurple) {
-                Text("Student Bottom Nav Placeholder")
+                Text("Student Bottom Nav Placeholder", modifier = Modifier.padding(horizontal = 16.dp))
             }
         }
     ) { paddingValues ->
