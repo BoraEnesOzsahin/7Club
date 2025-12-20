@@ -12,12 +12,16 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen // EKLENDİ
 import com.example.a7club.ui.navigation.NavGraph
 import com.example.a7club.ui.theme._7ClubTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Sistem splash ekranını (o beyaz ekranı) yükle ve yönet
+        installSplashScreen() // EKLENDİ
+        
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
@@ -29,8 +33,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
                 ) { innerPadding ->
-                    // CORRECTED: NavGraph should be called only once.
-                    // The innerPadding from the Scaffold is applied as a modifier.
                     NavGraph(
                         modifier = Modifier.padding(innerPadding),
                         showSnackbar = { message ->
