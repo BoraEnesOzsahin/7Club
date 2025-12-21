@@ -98,13 +98,16 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             RejectedEventDetailScreen(navController, eventName)
         }
 
-        // DÜZELTİLDİ: Boolean parametre alan yeni yapı
         composable(
             route = Routes.ParticipantInfoForm.route,
             arguments = listOf(navArgument("fromNewForm") { type = NavType.BoolType })
         ) { backStackEntry ->
             val fromNewForm = backStackEntry.arguments?.getBoolean("fromNewForm") ?: false
             ParticipantInfoFormScreen(navController, fromNewForm)
+        }
+
+        composable(Routes.ClubPosts.route) {
+            ClubPostsScreen(navController)
         }
     }
 }

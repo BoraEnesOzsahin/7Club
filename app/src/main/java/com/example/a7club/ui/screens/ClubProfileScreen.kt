@@ -50,7 +50,6 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
             )
         },
         bottomBar = {
-             // DÜZELTİLDİ: Bu sayfa yönetici paneli olduğu için yönetici alt barını gösteriyoruz
              ClubAdminBottomAppBar(navController = navController)
         }
     ) { paddingValues ->
@@ -62,7 +61,6 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Kulüp Logosu (Kahverengi YUKEK dairesi)
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -74,14 +72,12 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Üyeler Butonu
             ClubAdminButton(text = "Üyeler") {
                 navController.navigate(Routes.MembersScreen.route)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // İletişim Bilgileri Butonu
             ClubAdminButton(text = "İletişim Bilgileri") {
                 navController.navigate(Routes.ContactInfoScreen.route)
             }
@@ -109,10 +105,11 @@ fun ClubAdminBottomAppBar(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AdminNavItem(Icons.Default.Groups, "Kulübüm") { /* Zaten buradayız */ }
+                AdminNavItem(Icons.Default.Groups, "Kulübüm") { /* Buradayız */ }
                 AdminNavItem(Icons.Default.Assignment, "Formlar") { navController.navigate(Routes.Forms.route) }
                 Spacer(modifier = Modifier.width(90.dp))
-                AdminNavItem(Icons.Default.Collections, "Gönderiler") { /* Aksiyon */ }
+                // GÜNCELLENDİ: "Gönderiler" butonu artık yeni sayfaya gidiyor
+                AdminNavItem(Icons.Default.Collections, "Gönderiler") { navController.navigate(Routes.ClubPosts.route) }
                 AdminNavItem(Icons.Default.EventAvailable, "Etkinlikler") { navController.navigate(Routes.EventCalendarScreen.route) }
             }
         }
@@ -122,7 +119,7 @@ fun ClubAdminBottomAppBar(navController: NavController) {
                 .align(Alignment.TopCenter)
                 .border(6.dp, Color.White, CircleShape)
                 .clickable { 
-                    // Ortadaki tuşa basınca ana etkinlikler sayfasına döner
+                    // Orta tuş: Ana Sayfaya (Öğrenci Görünümüne) geri döner
                     navController.navigate(Routes.ClubHomeScreen.route) 
                 },
             shape = CircleShape,
@@ -159,13 +156,5 @@ fun ClubAdminButton(text: String, onClick: () -> Unit) {
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
     ) {
         Text(text = text, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ClubProfileScreenPreview() {
-    _7ClubTheme {
-        ClubProfileScreen(rememberNavController(), {})
     }
 }
