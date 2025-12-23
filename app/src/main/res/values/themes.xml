@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <!-- Ana Uygulama Teması -->
     <style name="Theme._7Club" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Yeni Açılış (Splash) Teması -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Beyaz ekranı senin belirlediğin bebek mavisine çekiyoruz -->
+        <item name="windowSplashScreenBackground">#E1EEF7</item>
+        
+        <!-- İkon olarak senin logon görünecek -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logoooo</item>
+        
+        <!-- Yükleme bittikten sonra ana temaya geç -->
+        <item name="postSplashScreenTheme">@style/Theme._7Club</item>
+    </style>
 </resources>
