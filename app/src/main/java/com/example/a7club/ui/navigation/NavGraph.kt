@@ -19,12 +19,12 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
     val authViewModel: AuthViewModel = viewModel()
 
     NavHost(
-        navController = navController, 
-        startDestination = Routes.Splash.route, 
+        navController = navController,
+        startDestination = Routes.Splash.route,
         modifier = modifier
     ) {
+        // --- BAŞLANGIÇ & GİRİŞ EKRANLARI ---
         composable(Routes.Splash.route) { SplashScreen(navController) }
-        composable(Routes.MainScreen.route) { MainScreen(navController) }
         composable(Routes.RoleSelection.route) {
             authViewModel.resetLoginState()
             RoleSelectionScreen(navController, showSnackbar)
@@ -32,11 +32,44 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         composable(Routes.StudentLogin.route) { StudentLoginScreen(navController, authViewModel, showSnackbar) }
         composable(Routes.ClubCommitteeLogin.route) { ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar) }
         composable(Routes.PersonnelLogin.route) { PersonnelLoginScreen(navController, authViewModel, showSnackbar) }
+
+        // --- PERSONEL ROLÜ ---
+
+        // DÜZELTME: PersonnelHome yerine Routes dosyasındaki yeni isim PersonnelHomeScreen kullanıldı
+        composable(Routes.PersonnelHomeScreen.route) {
+            PersonnelHomeScreen(navController, authViewModel)
+        }
+
+
+
+
+        composable(
+            route = Routes.PersonnelEventDetail.route,
+            arguments = listOf(
+                navArgument("eventName") { type = NavType.StringType },
+                navArgument("clubName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            val clubName = backStackEntry.arguments?.getString("clubName") ?: ""
+            PersonnelEventDetailScreen(navController, eventName, clubName)
+        }
+
+        composable(
+            route = Routes.PersonnelClubDetail.route,
+            arguments = listOf(navArgument("clubName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val clubName = backStackEntry.arguments?.getString("clubName") ?: ""
+            PersonnelClubDetailScreen(navController, clubName)
+        }
+
+        composable(Routes.Profile.route) {
+            PersonnelProfileScreen(navController, authViewModel)
+        }
+
+        // --- ÖĞRENCİ AKIŞI ---
+        composable(Routes.MainScreen.route) { MainScreen(navController) }
         composable(Routes.Events.route) { EventsScreen(navController, studentFlowViewModel, showSnackbar) }
-        composable(Routes.SettingsScreen.route) { SettingsScreen(navController = navController, showSnackbar = showSnackbar) }
-        composable(Routes.CreateVehicleRequest.route) { CreateVehicleRequestScreen() }
-        composable(Routes.CreateEvent.route) { CreateEventScreen(navController, showSnackbar) }
-        
         composable(
             route = Routes.InterestQuestion.route,
             arguments = listOf(navArgument("index") { type = NavType.IntType })
@@ -44,7 +77,6 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             val index = backStackEntry.arguments?.getInt("index") ?: 1
             InterestQuestionScreen(navController, index, { studentFlowViewModel.interests.add(it) })
         }
-        
         composable(
             route = Routes.EventDetail.route,
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
@@ -53,25 +85,24 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             EventDetailScreen(eventId, navController, showSnackbar)
         }
 
+        // --- KULÜP YÖNETİMİ & FORMLAR ---
         composable(Routes.ClubHomeScreen.route) {
             ClubHomeScreen(navController, showSnackbar, studentFlowViewModel)
         }
-        composable(Routes.EventCalendarScreen.route) {
-            EventCalendarScreen(navController, showSnackbar)
-        }
-        composable(Routes.ClubProfileScreen.route) { 
-            ClubProfileScreen(navController, showSnackbar)
-        }
-        composable(Routes.NotificationsScreen.route) { 
-            NotificationsScreen(navController)
-        }
+        composable(Routes.SettingsScreen.route) { SettingsScreen(navController = navController, showSnackbar = showSnackbar) }
+        composable(Routes.CreateVehicleRequest.route) { CreateVehicleRequestScreen() }
+        composable(Routes.CreateEvent.route) { CreateEventScreen(navController, showSnackbar) }
+        composable(Routes.EventCalendarScreen.route) { EventCalendarScreen(navController, showSnackbar) }
+        composable(Routes.ClubProfileScreen.route) { ClubProfileScreen(navController, showSnackbar) }
+        composable(Routes.NotificationsScreen.route) { NotificationsScreen(navController) }
         composable(Routes.MembersScreen.route) { MembersScreen(navController) }
         composable(Routes.ContactInfoScreen.route) { ContactInfoScreen(navController) }
         composable(Routes.Forms.route) { FormsScreen(navController) }
         composable(Routes.EventRequestForm.route) { EventRequestFormScreen(navController) }
         composable(Routes.VehicleRequestForm.route) { VehicleRequestFormScreen(navController) }
+
+        // Form Geçmişi ve Detaylar
         composable(Routes.PastEventForms.route) { PastEventFormsScreen(navController) }
-        
         composable(
             route = Routes.PastEventDetail.route,
             arguments = listOf(navArgument("eventName") { type = NavType.StringType })
@@ -88,7 +119,7 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
             PendingEventDetailScreen(navController, eventName)
         }
-        
+
         composable(Routes.RejectedEventForms.route) { RejectedEventFormsScreen(navController) }
         composable(
             route = Routes.RejectedEventDetail.route,

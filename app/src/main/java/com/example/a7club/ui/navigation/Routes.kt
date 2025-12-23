@@ -40,15 +40,24 @@ sealed class Routes(val route: String) {
     }
     object EventRequestForm : Routes("event_request_form")
     object VehicleRequestForm : Routes("vehicle_request_form")
+    
+    // PERSONEL ROTALARI
+    object PersonnelHomeScreen : Routes("personnel_home_screen")
+    object PersonnelEventDetail : Routes("personnel_event_detail/{eventName}/{clubName}") {
+        fun createRoute(eventName: String, clubName: String) = "personnel_event_detail/$eventName/$clubName"
+    }
+    object PersonnelClubDetail : Routes("personnel_club_detail/{clubName}") {
+        fun createRoute(clubName: String) = "personnel_club_detail/$clubName"
+    }
+
     object ParticipantInfoForm : Routes("participant_info_form/{fromNewForm}") {
         fun createRoute(fromNewForm: Boolean) = "participant_info_form/$fromNewForm"
     }
+    
     object EventDetail : Routes("event_detail/{eventId}") {
         fun createRoute(eventId: String) = "event_detail/$eventId"
     }
     object ClubPosts : Routes("club_posts")
-
-    // YENİ: Etkinlik bazlı form sayfası
     object ClubEventForms : Routes("club_event_forms/{eventName}") {
         fun createRoute(eventName: String) = "club_event_forms/$eventName"
     }
