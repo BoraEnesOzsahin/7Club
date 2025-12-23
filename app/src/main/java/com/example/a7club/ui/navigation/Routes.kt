@@ -40,15 +40,16 @@ sealed class Routes(val route: String) {
     }
     object EventRequestForm : Routes("event_request_form")
     object VehicleRequestForm : Routes("vehicle_request_form")
-    
-    // GÜNCELLENDİ: Boolean parametre eklendi
     object ParticipantInfoForm : Routes("participant_info_form/{fromNewForm}") {
         fun createRoute(fromNewForm: Boolean) = "participant_info_form/$fromNewForm"
     }
-    
     object EventDetail : Routes("event_detail/{eventId}") {
         fun createRoute(eventId: String) = "event_detail/$eventId"
     }
-
     object ClubPosts : Routes("club_posts")
+
+    // YENİ: Etkinlik bazlı form sayfası
+    object ClubEventForms : Routes("club_event_forms/{eventName}") {
+        fun createRoute(eventName: String) = "club_event_forms/$eventName"
+    }
 }

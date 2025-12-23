@@ -109,5 +109,14 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         composable(Routes.ClubPosts.route) {
             ClubPostsScreen(navController)
         }
+
+        // YENİ: Etkinlik bazlı formlar navigasyonu
+        composable(
+            route = Routes.ClubEventForms.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            ClubEventFormsScreen(navController, eventName)
+        }
     }
 }
