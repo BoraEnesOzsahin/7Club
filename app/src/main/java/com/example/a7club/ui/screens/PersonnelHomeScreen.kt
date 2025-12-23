@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.a7club.R // R.drawable için gerekli
+import com.example.a7club.R
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
@@ -50,92 +49,42 @@ fun PersonnelHomeScreen(
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-
-    // 0: Etkinlikler, 1: Keşfet, 2: Kulüpler
     var selectedBottomTabIndex by remember { mutableIntStateOf(0) }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                drawerContainerColor = VeryLightPurple, // #EEEBFF
+                drawerContainerColor = VeryLightPurple,
                 modifier = Modifier.fillMaxWidth(0.72f),
-                // Menüye sağdan kavis vererek daha modern bir hava katıyoruz
                 drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
             ) {
-                // Ana konteyner: Tüm içeriği dikeyde yayar
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // 1. Üst kısımda geniş bir boşluk (Görseldeki gibi)
+                Column(modifier = Modifier.fillMaxSize()) {
                     Spacer(Modifier.weight(1f))
-
-                    // 2. BUTONLARIN OLDUĞU MERKEZİ ALAN (Tam Ortada)
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp) // Butonlar arası boşluk
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        // AYARLAR BUTONU (Görseldeki gibi lacivert kutu)
                         Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(65.dp) // Kutu yüksekliği
-                                .clickable {
-                                    navController.navigate(Routes.SettingsScreen.route)
-                                    scope.launch { drawerState.close() }
-                                },
-                            color = DarkBlue, // #160092
-                            shape = RoundedCornerShape(16.dp), // Yuvarlatılmış köşeler
-                            shadowElevation = 8.dp // Hafif derinlik efekti
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = "Ayarlar",
-                                    color = Color.White,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-
-                        // ETKİNLİK TAKVİMİ BUTONU (Görseldeki gibi lacivert kutu)
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(65.dp)
-                                .clickable {
-                                    // Takvim yönlendirmesi buraya
-                                    scope.launch { drawerState.close() }
-                                },
-                            color = DarkBlue, // #160092
+                            modifier = Modifier.fillMaxWidth().height(65.dp).clickable {
+                                navController.navigate(Routes.SettingsScreen.route)
+                                scope.launch { drawerState.close() }
+                            },
+                            color = DarkBlue,
                             shape = RoundedCornerShape(16.dp),
                             shadowElevation = 8.dp
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = "Etkinlik Takvimi",
-                                    color = Color.White,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
+                        ) { Box(contentAlignment = Alignment.Center) { Text("Ayarlar", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) } }
 
-                    // 3. Alt kısma itmek için ağırlık veriyoruz
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().height(65.dp).clickable { scope.launch { drawerState.close() } },
+                            color = DarkBlue,
+                            shape = RoundedCornerShape(16.dp),
+                            shadowElevation = 8.dp
+                        ) { Box(contentAlignment = Alignment.Center) { Text("Etkinlik Takvimi", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) } }
+                    }
                     Spacer(Modifier.weight(1f))
-
-                    // 4. DALGA EFEKTİ (Görseldeki Wave yapısı)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
-                    ) {
-                        PersonnelWaveBackground(modifier = Modifier.align(Alignment.BottomCenter))
-                    }
+                    Box(modifier = Modifier.fillMaxWidth().height(140.dp)) { PersonnelWaveBackground(modifier = Modifier.align(Alignment.BottomCenter)) }
                 }
             }
         }
@@ -160,7 +109,7 @@ fun PersonnelHomeScreen(
                 PersonnelMainBottomBar(
                     selectedIndex = selectedBottomTabIndex,
                     onIndexSelected = { index -> selectedBottomTabIndex = index },
-                    onCenterClick = { }
+                    onCenterClick = { navController.navigate(Routes.ClubHomeScreen.route) }
                 )
             }
         ) { paddingValues ->
@@ -176,9 +125,70 @@ fun PersonnelHomeScreen(
     }
 }
 
-// ----------------------------------------------------
-// SEKME 1: ETKİNLİKLER (Events)
-// ----------------------------------------------------
+@Composable
+fun PersonnelMainBottomBar(selectedIndex: Int, onIndexSelected: (Int) -> Unit, onCenterClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(75.dp)
+                .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
+            color = LightPurple
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                PersonnelNavItem(Icons.Default.Home, "Etkinlikler", selectedIndex == 0) { onIndexSelected(0) }
+                PersonnelNavItem(Icons.Default.Explore, "Keşfet", selectedIndex == 1) { onIndexSelected(1) }
+                Spacer(modifier = Modifier.width(80.dp)) // Ortadaki daire için boşluk
+                PersonnelNavItem(Icons.Default.Groups, "Kulüpler", selectedIndex == 2) { onIndexSelected(2) }
+                PersonnelNavItem(Icons.Default.Person, "Profil", selectedIndex == 3) { onIndexSelected(3) }
+            }
+        }
+        // Ortadaki Büyük Lacivert Daire
+        Surface(
+            modifier = Modifier
+                .size(90.dp)
+                .align(Alignment.TopCenter)
+                .border(6.dp, Color.White, CircleShape)
+                .clickable { onCenterClick() },
+            shape = CircleShape,
+            color = DarkBlue,
+            shadowElevation = 8.dp
+        ) {}
+    }
+}
+
+@Composable
+fun PersonnelNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isSelected: Boolean, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = DarkBlue,
+            modifier = Modifier.size(28.dp)
+        )
+        Text(
+            text = label,
+            color = DarkBlue,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+// DİĞER SEKME FONKSİYONLARI (Events, Discover, Clubs vs. aynen korunmuştur)
 @Composable
 fun PersonnelEventsTab(navController: NavController) {
     var selectedCategory by remember { mutableStateOf("Business") }
@@ -219,13 +229,9 @@ fun PersonnelEventsTab(navController: NavController) {
     }
 }
 
-// ----------------------------------------------------
-// SEKME 2: KEŞFET (Discover) - LOGOLU
-// ----------------------------------------------------
 @Composable
 fun PersonnelDiscoverTab(navController: NavController) {
-    var selectedTab by remember { mutableIntStateOf(0) } // 0: Duyurular, 1: Gönderiler
-
+    var selectedTab by remember { mutableIntStateOf(0) }
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.height(16.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
@@ -234,26 +240,15 @@ fun PersonnelDiscoverTab(navController: NavController) {
             Button(onClick = { selectedTab = 1 }, colors = ButtonDefaults.buttonColors(containerColor = if (selectedTab == 1) DarkBlue else Color(0xFFD1C4E9), contentColor = if (selectedTab == 1) Color.White else DarkBlue), shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f).height(40.dp)) { Text("Gönderiler", fontWeight = FontWeight.Bold) }
         }
         Spacer(modifier = Modifier.height(16.dp))
-
         Row(modifier = Modifier.fillMaxSize()) {
             LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 20.dp)) {
-                if (selectedTab == 0) {
-                    items(3) { PersonnelAnnouncementCard() }
-                } else {
-                    items(2) { PersonnelPostCard() }
-                }
+                if (selectedTab == 0) { items(3) { PersonnelAnnouncementCard() } } else { items(2) { PersonnelPostCard() } }
             }
-            // Sadece görsel süs olan bar (Drag özelliği kaldırıldı)
-            Box(modifier = Modifier.padding(start = 8.dp).width(6.dp).fillMaxHeight(0.6f).clip(RoundedCornerShape(4.dp)).background(Color(0xFFD1C4E9)).align(Alignment.CenterVertically)) {
-                Box(modifier = Modifier.fillMaxWidth().height(60.dp).background(DarkBlue, RoundedCornerShape(4.dp)))
-            }
+            Box(modifier = Modifier.padding(start = 8.dp).width(6.dp).fillMaxHeight(0.6f).clip(RoundedCornerShape(4.dp)).background(Color(0xFFD1C4E9)).align(Alignment.CenterVertically)) { Box(modifier = Modifier.fillMaxWidth().height(60.dp).background(DarkBlue, RoundedCornerShape(4.dp))) }
         }
     }
 }
 
-// ----------------------------------------------------
-// SEKME 3: KULÜPLER (Clubs)
-// ----------------------------------------------------
 @Composable
 fun PersonnelClubsTab(navController: NavController) {
     val clubs = listOf(
@@ -263,7 +258,6 @@ fun PersonnelClubsTab(navController: NavController) {
         ClubItem("Müzik Kulübü", R.drawable.muzik_logo),
         ClubItem("Uluslararası Ticaret Kulübü", R.drawable.ticaret_logo)
     )
-
     LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         items(clubs) { club ->
             Card(
@@ -272,9 +266,7 @@ fun PersonnelClubsTab(navController: NavController) {
                 colors = CardDefaults.cardColors(containerColor = VeryLightPurple)
             ) {
                 Row(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(50.dp).clip(CircleShape)) {
-                        Image(painter = painterResource(id = club.logoRes), contentDescription = club.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                    }
+                    Box(modifier = Modifier.size(50.dp).clip(CircleShape)) { Image(painter = painterResource(id = club.logoRes), contentDescription = club.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(text = club.name, fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 14.sp)
                 }
@@ -283,26 +275,12 @@ fun PersonnelClubsTab(navController: NavController) {
     }
 }
 
-data class ClubItem(val name: String, val logoRes: Int)
-
-// ----------------------------------------------------
-// ÖZELLEŞTİRİLMİŞ YARDIMCI BİLEŞENLER
-// ----------------------------------------------------
-
 @Composable
 fun PersonnelAnnouncementCard() {
     Card(modifier = Modifier.fillMaxWidth().height(100.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE7F6))) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // LOGO KONTROLÜ: yukek_logo.png dosyası res/drawable içinde olmalı!
-                Box(modifier = Modifier.size(24.dp).clip(CircleShape)) {
-                    Image(
-                        painter = painterResource(id = R.drawable.yukek_logo),
-                        contentDescription = "Logo",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+                Box(modifier = Modifier.size(24.dp).clip(CircleShape)) { Image(painter = painterResource(id = R.drawable.yukek_logo), contentDescription = "Logo", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Kültür ve Etkinlik Kulübü", fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 12.sp)
             }
@@ -320,48 +298,11 @@ fun PersonnelPostCard() {
         Column {
             Box(modifier = Modifier.fillMaxWidth().height(180.dp).background(Color(0xFFD1C4E9)), contentAlignment = Alignment.Center) { Text("Fotoğraf", color = DarkBlue) }
             Row(modifier = Modifier.fillMaxWidth().background(Color(0xFFD1C4E9).copy(alpha = 0.5f)).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(32.dp).clip(CircleShape)) {
-                    Image(
-                        painter = painterResource(id = R.drawable.yukek_logo),
-                        contentDescription = "Logo",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+                Box(modifier = Modifier.size(32.dp).clip(CircleShape)) { Image(painter = painterResource(id = R.drawable.yukek_logo), contentDescription = "Logo", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text("Açıklama", color = Color.Black, fontSize = 14.sp)
             }
         }
-    }
-}
-
-@Composable
-fun PersonnelMainBottomBar(selectedIndex: Int, onIndexSelected: (Int) -> Unit, onCenterClick: () -> Unit) {
-    Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.BottomCenter) {
-        Surface(modifier = Modifier.fillMaxWidth().height(75.dp).clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)), color = LightPurple) {
-            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { onIndexSelected(0) }) { Icon(Icons.Default.Home, "Etkinlikler", tint = if (selectedIndex == 0) DarkBlue else DarkBlue.copy(alpha = 0.5f), modifier = Modifier.size(30.dp)) }
-                IconButton(onClick = { onIndexSelected(1) }) { Icon(Icons.Default.Explore, "Keşfet", tint = if (selectedIndex == 1) DarkBlue else DarkBlue.copy(alpha = 0.5f), modifier = Modifier.size(30.dp)) }
-                Spacer(modifier = Modifier.width(80.dp))
-                IconButton(onClick = { onIndexSelected(2) }) { Icon(Icons.Default.Groups, "Kulüpler", tint = if (selectedIndex == 2) DarkBlue else DarkBlue.copy(alpha = 0.5f), modifier = Modifier.size(30.dp)) }
-                IconButton(onClick = { onIndexSelected(3) }) {
-
-                    Icon(
-
-                        imageVector = Icons.Default.Person,
-
-                        contentDescription = "Profil",
-
-                        tint = if (selectedIndex == 3) DarkBlue else DarkBlue.copy(alpha = 0.5f),
-
-                        modifier = Modifier.size(30.dp)
-
-                    )
-
-                }
-            }
-        }
-        Surface(modifier = Modifier.size(90.dp).align(Alignment.TopCenter).border(6.dp, Color.White, CircleShape).clickable { onCenterClick() }, shape = CircleShape, color = DarkBlue, shadowElevation = 8.dp) {}
     }
 }
 
@@ -411,9 +352,7 @@ fun PersonnelListItemCard(title: String, clubName: String, status: String, onCli
         Column(modifier = Modifier.padding(20.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
-                Surface(color = Color(0xFFFFCC80), shape = RoundedCornerShape(8.dp)) {
-                    Text(text = status, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFFE65100), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                }
+                Surface(color = Color(0xFFFFCC80), shape = RoundedCornerShape(8.dp)) { Text(text = status, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFFE65100), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = "Kulüp: $clubName", style = MaterialTheme.typography.bodyMedium, color = DarkBlue.copy(alpha = 0.8f))
@@ -422,3 +361,4 @@ fun PersonnelListItemCard(title: String, clubName: String, status: String, onCli
 }
 
 data class PersonnelTaskData(val title: String, val club: String, val status: String)
+data class ClubItem(val name: String, val logoRes: Int)
