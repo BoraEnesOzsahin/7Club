@@ -1,3 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">7Club</string>
+    <string name="english">İngilizce</string>
+    <string name="turkish">Türkçe</string>
+    <string name="settings">Ayarlar</string>
+    <string name="event_calendar">Etkinlik Takvimi</string>
+    <string name="events">Etkinlikler</string>
+    <string name="explore">Keşfet</string>
+    <string name="clubs">Kulüpler</string>
+    <string name="profile">Profil</string>
+    <string name="language_selection">Dil Seçimi</string>
+    <string name="cat_all">TÜMÜ</string>
+    <string name="cat_economy">EKONOMİ</string>
+    <string name="cat_law">HUKUK</string>
+    <string name="cat_it">BİLİŞİM</string>
+    <string name="cat_music">MÜZİK</string>
+    <string name="cat_sports">SPOR</string>
+    <string name="club_label">Kulüp:</string>
 </resources>
