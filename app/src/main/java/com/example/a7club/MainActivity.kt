@@ -12,20 +12,32 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen // EKLENDİ
-import com.example.a7club.ui.navigation.NavGraph
-import com.example.a7club.ui.theme._7ClubTheme
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
+import com.example.a7club.ui.theme._7ClubTheme
+import com.example.a7club.ui.viewmodels.StudentFlowViewModel
+
+// --- KRİTİK IMPORT ---
+// Eğer NavGraph dosyan 'ui/navigation' paketindeyse bu satır şarttır.
+import com.example.a7club.ui.navigation.NavGraph
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Sistem splash ekranını (o beyaz ekranı) yükle ve yönet
-        installSplashScreen() // EKLENDİ
-        
+        // Splash Screen (Başlangıç ekranı) yüklemesi
+        installSplashScreen()
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             _7ClubTheme {
+                // NavController ve ViewModel burada oluşturulur
+                val navController = rememberNavController()
+                val studentViewModel: StudentFlowViewModel = viewModel()
+
+                // Snackbar (alt bilgi çubuğu) durumu
                 val snackbarHostState = remember { SnackbarHostState() }
                 val scope = rememberCoroutineScope()
 
@@ -33,7 +45,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
                 ) { innerPadding ->
+                    // NavGraph çağrısı
                     NavGraph(
+                        navController = navController,
+                        studentViewModel = studentViewModel,
                         modifier = Modifier.padding(innerPadding),
                         showSnackbar = { message ->
                             scope.launch {
