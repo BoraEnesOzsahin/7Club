@@ -43,6 +43,8 @@ sealed class Routes(val route: String) {
     
     // PERSONEL ROTALARI
     object PersonnelHomeScreen : Routes("personnel_home_screen")
+    object PersonnelEventRequests : Routes("personnel_event_requests") // YENİ: Yeni Etkinlik Talepleri Sayfası
+    
     object PersonnelEventDetail : Routes("personnel_event_detail/{eventName}/{clubName}") {
         fun createRoute(eventName: String, clubName: String) = "personnel_event_detail/$eventName/$clubName"
     }

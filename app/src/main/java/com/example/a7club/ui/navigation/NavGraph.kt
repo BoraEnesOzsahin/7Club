@@ -34,14 +34,14 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         composable(Routes.PersonnelLogin.route) { PersonnelLoginScreen(navController, authViewModel, showSnackbar) }
 
         // --- PERSONEL ROLÜ ---
-
-        // DÜZELTME: PersonnelHome yerine Routes dosyasındaki yeni isim PersonnelHomeScreen kullanıldı
         composable(Routes.PersonnelHomeScreen.route) {
             PersonnelHomeScreen(navController, authViewModel)
         }
 
-
-
+        // YENİ: Etkinlik Talepleri Sayfası
+        composable(Routes.PersonnelEventRequests.route) {
+            PersonnelEventRequestsScreen(navController)
+        }
 
         composable(
             route = Routes.PersonnelEventDetail.route,
@@ -141,7 +141,6 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             ClubPostsScreen(navController)
         }
 
-        // YENİ: Etkinlik bazlı formlar navigasyonu
         composable(
             route = Routes.ClubEventForms.route,
             arguments = listOf(navArgument("eventName") { type = NavType.StringType })

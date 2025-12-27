@@ -46,11 +46,13 @@ fun PersonnelEventDetailScreen(
             }
         },
         bottomBar = {
-            // BURADA HATA DÜZELTİLDİ: Artık doğru parametreler girildi.
+            // DÜZELTME: PersonnelMainBottomBar'a navController parametresi eklendi
             PersonnelMainBottomBar(
+                navController = navController,
                 selectedIndex = 0,
-                onIndexSelected = { /* Gerekirse aksiyon */ },
-                onCenterClick = { }
+                onIndexSelected = { index ->
+                   if (index == 0) navController.navigate("personnel_home_screen")
+                }
             )
         }
     ) { paddingValues ->

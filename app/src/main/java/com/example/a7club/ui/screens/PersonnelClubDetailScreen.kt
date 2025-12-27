@@ -46,8 +46,16 @@ fun PersonnelClubDetailScreen(
             )
         },
         bottomBar = {
-            // Alt bar burada da görünsün ama sadece görsel olarak (Aktif sekme kulüpler)
-            PersonnelMainBottomBar(selectedIndex = 2, onIndexSelected = {}, onCenterClick = {})
+            // DÜZELTME: navController parametresi eklendi
+            PersonnelMainBottomBar(
+                navController = navController,
+                selectedIndex = 2,
+                onIndexSelected = { index ->
+                    if (index == 0) navController.navigate("personnel_home_screen")
+                    // Diğer yönlendirmeler buraya eklenebilir
+                },
+                onCenterClick = {}
+            )
         }
     ) { paddingValues ->
         Column(
@@ -57,15 +65,13 @@ fun PersonnelClubDetailScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Üst Kısım: Geri Oku ve Logo + İsim
+            // Üst Kısım: Logo + İsim
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                // Kulüp Logosu
                 Box(modifier = Modifier.size(40.dp).clip(CircleShape)) {
-                    // Logoyu isme göre dinamik seçebiliriz veya varsayılan koyabiliriz
                     val logoRes = when {
                         clubName.contains("Kültür") -> R.drawable.yukek_logo
                         clubName.contains("Bilişim") -> R.drawable.bilisim_logo
@@ -82,7 +88,6 @@ fun PersonnelClubDetailScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 1. Büyük Kart: Genel Bilgi
             Card(
                 modifier = Modifier.fillMaxWidth().height(120.dp),
                 shape = RoundedCornerShape(16.dp),
@@ -95,11 +100,10 @@ fun PersonnelClubDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 2. Kart: Whatsapp Linki
             Card(
                 modifier = Modifier.fillMaxWidth().height(60.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFD1C4E9)) // Biraz daha koyu mor
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFD1C4E9))
             ) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Whatsapp grup linki", color = DarkBlue)
@@ -108,7 +112,6 @@ fun PersonnelClubDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 3. Kart: Yaklaşan Etkinlik
             Card(
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(16.dp),
@@ -121,7 +124,6 @@ fun PersonnelClubDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 4. Kart: Örnek Etkinlik İsmi
             Card(
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(16.dp),

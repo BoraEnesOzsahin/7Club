@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -107,9 +108,9 @@ fun PersonnelHomeScreen(
             },
             bottomBar = {
                 PersonnelMainBottomBar(
+                    navController = navController,
                     selectedIndex = selectedBottomTabIndex,
-                    onIndexSelected = { index -> selectedBottomTabIndex = index },
-                    onCenterClick = { navController.navigate(Routes.ClubHomeScreen.route) }
+                    onIndexSelected = { index -> selectedBottomTabIndex = index }
                 )
             }
         ) { paddingValues ->
@@ -126,39 +127,63 @@ fun PersonnelHomeScreen(
 }
 
 @Composable
-fun PersonnelMainBottomBar(selectedIndex: Int, onIndexSelected: (Int) -> Unit, onCenterClick: () -> Unit) {
+fun PersonnelMainBottomBar(
+    navController: NavController,
+    selectedIndex: Int,
+    onIndexSelected: (Int) -> Unit,
+    onCenterClick: () -> Unit = {},
+    initialIsExpanded: Boolean = false // Varsayılan durum eklendi
+) {
+    // initialIsExpanded ile sayfa ilk açıldığında durumun ne olacağını belirliyoruz
+    var isMenuExpanded by remember { mutableStateOf(initialIsExpanded) }
+
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
+        modifier = Modifier.fillMaxWidth().height(110.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(75.dp)
+                .height(80.dp)
                 .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
             color = LightPurple
         ) {
             Row(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                PersonnelNavItem(Icons.Default.Home, "Etkinlikler", selectedIndex == 0) { onIndexSelected(0) }
-                PersonnelNavItem(Icons.Default.Explore, "Keşfet", selectedIndex == 1) { onIndexSelected(1) }
-                Spacer(modifier = Modifier.width(80.dp)) // Ortadaki daire için boşluk
-                PersonnelNavItem(Icons.Default.Groups, "Kulüpler", selectedIndex == 2) { onIndexSelected(2) }
-                PersonnelNavItem(Icons.Default.Person, "Profil", selectedIndex == 3) { onIndexSelected(3) }
+                if (!isMenuExpanded) {
+                    PersonnelNavItem(Icons.Default.Home, "Etkinlikler", selectedIndex == 0) { onIndexSelected(0) }
+                    PersonnelNavItem(Icons.Default.Explore, "Keşfet", selectedIndex == 1) { onIndexSelected(1) }
+                    Spacer(modifier = Modifier.width(60.dp))
+                    PersonnelNavItem(Icons.Default.Groups, "Kulüpler", selectedIndex == 2) { onIndexSelected(2) }
+                    PersonnelNavItem(Icons.Default.Person, "Profil", selectedIndex == 3) { onIndexSelected(3) }
+                } else {
+                    // İŞLEM MODU (FOTOĞRAFTAKİ GİBİ)
+                    PersonnelNavItem(Icons.Default.EventNote, "Yeni Etkinlik\nTalepleri", false) { 
+                        navController.navigate(Routes.PersonnelEventRequests.route)
+                    }
+                    PersonnelNavItem(Icons.Default.AllInbox, "Tüm Etkinlik\nTalepleri", false) { }
+                    Spacer(modifier = Modifier.width(60.dp))
+                    PersonnelNavItem(Icons.Default.Diversity3, "Kulüpler", false) { 
+                        isMenuExpanded = false
+                        onIndexSelected(2) 
+                    }
+                    PersonnelNavItem(Icons.Default.History, "Geçmiş\nEtkinlikler", false) { }
+                }
             }
         }
-        // Ortadaki Büyük Lacivert Daire
+        
         Surface(
             modifier = Modifier
-                .size(90.dp)
+                .size(85.dp)
                 .align(Alignment.TopCenter)
                 .border(6.dp, Color.White, CircleShape)
-                .clickable { onCenterClick() },
+                .clickable { 
+                    isMenuExpanded = !isMenuExpanded 
+                    onCenterClick()
+                },
             shape = CircleShape,
             color = DarkBlue,
             shadowElevation = 8.dp
@@ -171,24 +196,28 @@ fun PersonnelNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, labe
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier
+            .width(75.dp)
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp)
     ) {
         Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = DarkBlue,
-            modifier = Modifier.size(28.dp)
+            imageVector = icon, 
+            contentDescription = label, 
+            tint = DarkBlue, 
+            modifier = Modifier.size(26.dp)
         )
         Text(
-            text = label,
-            color = DarkBlue,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold
+            text = label, 
+            color = DarkBlue, 
+            fontSize = 10.sp, 
+            lineHeight = 11.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
         )
     }
 }
 
-// DİĞER SEKME FONKSİYONLARI (Events, Discover, Clubs vs. aynen korunmuştur)
 @Composable
 fun PersonnelEventsTab(navController: NavController) {
     var selectedCategory by remember { mutableStateOf("Business") }
