@@ -2,67 +2,61 @@
 
 package com.example.a7club.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.a7club.R
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
-import com.example.a7club.ui.theme.VeryLightPurple
 
 @Composable
 fun PersonnelClubDetailScreen(
     navController: NavController,
     clubName: String
 ) {
-    // Alt barın açık/kapalı durumunu yönetmek için state ekledik
     var isMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Kulüpler", fontWeight = FontWeight.Bold, color = DarkBlue) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = DarkBlue)
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)
-            )
+            Column(modifier = Modifier.background(LightPurple).padding(top = 32.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { }) { Icon(Icons.Default.Menu, null, tint = DarkBlue) }
+                    Text("Kulüpler", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = DarkBlue)
+                    IconButton(onClick = { }) { Icon(Icons.Default.Notifications, null, tint = DarkBlue) }
+                }
+            }
         },
         bottomBar = {
-            // DÜZELTME: Yeni parametre yapısına (isMenuExpanded, onMenuToggle) uygun hale getirildi
             PersonnelMainBottomBar(
                 navController = navController,
-                selectedIndex = 2,
+                selectedIndex = -1,
                 isMenuExpanded = isMenuExpanded,
                 onMenuToggle = { isMenuExpanded = !isMenuExpanded },
                 onIndexSelected = { index ->
                     isMenuExpanded = false
-                    if (index == 0) navController.navigate(Routes.PersonnelHomeScreen.route)
-                    if (index == 1) { /* Keşfet navigasyonu buraya */ }
-                    if (index == 2) { /* Zaten kulüplerdeyiz */ }
-                    if (index == 3) { /* Profil navigasyonu buraya */ }
+                    navController.navigate(Routes.PersonnelHomeScreen.createRoute(index))
                 }
             )
         }
@@ -71,77 +65,83 @@ fun PersonnelClubDetailScreen(
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Üst Kısım: Logo + İsim
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Box(modifier = Modifier.size(40.dp).clip(CircleShape)) {
-                    val logoRes = when {
-                        clubName.contains("Kültür") -> R.drawable.yukek_logo
-                        clubName.contains("Bilişim") -> R.drawable.bilisim_logo
-                        clubName.contains("Psikoloji") -> R.drawable.psikoloji_logo
-                        clubName.contains("Müzik") -> R.drawable.muzik_logo
-                        clubName.contains("Ticaret") -> R.drawable.ticaret_logo
-                        else -> R.drawable.yukek_logo
-                    }
-                    Image(painter = painterResource(id = logoRes), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(text = clubName, fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 14.sp)
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth().height(120.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = VeryLightPurple)
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Kulüp hakkında genel bilgi", color = DarkBlue)
+            
+            // Geri Butonu
+            Row(modifier = Modifier.fillMaxWidth()) {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = DarkBlue)
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Card(
-                modifier = Modifier.fillMaxWidth().height(60.dp),
+            // Kulüp İsim Kutusu
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)
+                    .height(60.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFD1C4E9))
+                color = Color(0xFFEEEAFF)
             ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Whatsapp grup linki", color = DarkBlue)
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = clubName,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkBlue,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
 
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Üyeler
+            ClubDetailMenuButton("Üyeler") { 
+                navController.navigate(Routes.PersonnelClubMembers.createRoute(clubName))
+            }
             Spacer(modifier = Modifier.height(16.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = VeryLightPurple)
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Yaklaşan Etkinlik", color = DarkBlue)
-                }
+            
+            // DÜZELTME: Geçmiş Etkinlikler navigasyonu eklendi
+            ClubDetailMenuButton("Geçmiş Etkinlikler") { 
+                navController.navigate(Routes.PersonnelClubEvents.createRoute(clubName, true))
             }
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = VeryLightPurple)
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("X kulübü Y etkinliği", color = DarkBlue)
-                }
+            
+            // DÜZELTME: Gelecek Etkinlikler navigasyonu eklendi
+            ClubDetailMenuButton("Gelecek Etkinlikler") { 
+                navController.navigate(Routes.PersonnelClubEvents.createRoute(clubName, false))
             }
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            ClubDetailMenuButton("Etkinlik Değerlendirme Sonuçları") { /* Aksiyon */ }
+        }
+    }
+}
+
+@Composable
+fun ClubDetailMenuButton(text: String, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth(0.85f)
+            .height(55.dp)
+            .shadow(4.dp, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFFEEEAFF)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = text,
+                color = DarkBlue,
+                fontWeight = FontWeight.Medium,
+                fontSize = 17.sp,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

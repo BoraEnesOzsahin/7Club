@@ -35,9 +35,8 @@ fun PersonnelPastEventsScreen(
 ) {
     val pastEvents by viewModel.pastEvents.collectAsState()
     
-    // DÜZELTME: Menü durumunu burada tanımlıyoruz
-    // Bu sayfa açıldığında menü açık (true) başlasın istenmiş
-    var isMenuExpanded by remember { mutableStateOf(true) }
+    // DÜZELTME: Flicker'ı önlemek için menü kapalı (false) başlar.
+    var isMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.White,
@@ -55,14 +54,17 @@ fun PersonnelPastEventsScreen(
             }
         },
         bottomBar = {
-            // DÜZELTME: Yeni parametre yapısı (isMenuExpanded, onMenuToggle) uygulandı
             PersonnelMainBottomBar(
                 navController = navController,
                 selectedIndex = -1,
                 isMenuExpanded = isMenuExpanded,
                 onMenuToggle = { isMenuExpanded = !isMenuExpanded },
                 onIndexSelected = { index ->
-                    if (index == 0) navController.navigate(Routes.PersonnelHomeScreen.route)
+                    if (index == 0) navController.navigate(Routes.PersonnelHomeScreen.createRoute(0))
+                    if (index == 1) navController.navigate(Routes.PersonnelHomeScreen.createRoute(1))
+                    if (index == 2) navController.navigate(Routes.PersonnelHomeScreen.createRoute(2))
+                    if (index == 3) navController.navigate(Routes.PersonnelHomeScreen.createRoute(3))
+                    if (index == 4) navController.navigate(Routes.PersonnelHomeScreen.createRoute(4))
                     isMenuExpanded = false
                 }
             )

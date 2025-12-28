@@ -34,7 +34,6 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         composable(Routes.PersonnelLogin.route) { PersonnelLoginScreen(navController, authViewModel, showSnackbar) }
 
         // --- PERSONEL ROLÜ ---
-        // DÜZELTME: tabIndex parametresini NavGraph'ta yakalıyoruz
         composable(
             route = Routes.PersonnelHomeScreen.route,
             arguments = listOf(
@@ -74,6 +73,27 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         ) { backStackEntry ->
             val clubName = backStackEntry.arguments?.getString("clubName") ?: ""
             PersonnelClubDetailScreen(navController, clubName)
+        }
+
+        composable(
+            route = Routes.PersonnelClubMembers.route,
+            arguments = listOf(navArgument("clubName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val clubName = backStackEntry.arguments?.getString("clubName") ?: ""
+            PersonnelClubMembersScreen(navController, clubName)
+        }
+
+        // YENİ: Kulüp Etkinlikleri (Geçmiş/Gelecek)
+        composable(
+            route = Routes.PersonnelClubEvents.route,
+            arguments = listOf(
+                navArgument("clubName") { type = NavType.StringType },
+                navArgument("isPast") { type = NavType.BoolType }
+            )
+        ) { backStackEntry ->
+            val clubName = backStackEntry.arguments?.getString("clubName") ?: ""
+            val isPast = backStackEntry.arguments?.getBoolean("isPast") ?: false
+            PersonnelClubEventsScreen(navController, clubName, isPast)
         }
 
         composable(Routes.Profile.route) {
@@ -150,6 +170,16 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             ParticipantInfoFormScreen(navController, fromNewForm)
         }
 
-        // ... Diğer rotalar ...
+        composable(Routes.ClubPosts.route) {
+            ClubPostsScreen(navController)
+        }
+
+        composable(
+            route = Routes.ClubEventForms.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            ClubEventFormsScreen(navController, eventName)
+        }
     }
 }

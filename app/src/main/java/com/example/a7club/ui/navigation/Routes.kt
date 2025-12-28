@@ -41,7 +41,7 @@ sealed class Routes(val route: String) {
     object EventRequestForm : Routes("event_request_form")
     object VehicleRequestForm : Routes("vehicle_request_form")
     
-    // PERSONEL ROTALARI - Parametreli Home Screen
+    // PERSONEL ROTALARI
     object PersonnelHomeScreen : Routes("personnel_home_screen?tabIndex={tabIndex}") {
         fun createRoute(tabIndex: Int = 0) = "personnel_home_screen?tabIndex=$tabIndex"
     }
@@ -53,6 +53,13 @@ sealed class Routes(val route: String) {
     }
     object PersonnelClubDetail : Routes("personnel_club_detail/{clubName}") {
         fun createRoute(clubName: String) = "personnel_club_detail/$clubName"
+    }
+    object PersonnelClubMembers : Routes("personnel_club_members/{clubName}") {
+        fun createRoute(clubName: String) = "personnel_club_members/$clubName"
+    }
+    // YENİ: Kulüp bazlı etkinlik rotaları
+    object PersonnelClubEvents : Routes("personnel_club_events/{clubName}/{isPast}") {
+        fun createRoute(clubName: String, isPast: Boolean) = "personnel_club_events/$clubName/$isPast"
     }
 
     object ParticipantInfoForm : Routes("participant_info_form/{fromNewForm}") {
