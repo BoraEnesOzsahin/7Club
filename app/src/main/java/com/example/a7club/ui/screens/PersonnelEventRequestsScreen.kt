@@ -40,6 +40,10 @@ fun PersonnelEventRequestsScreen(
     var searchText by remember { mutableStateOf("") }
     val pendingEvents by viewModel.pendingEvents.collectAsState()
 
+    // DÜZELTME: Menü durumunu burada tanımlıyoruz
+    // Yorum satırına göre bu sayfa açıldığında menü açık (true) başlasın istenmiş
+    var isMenuExpanded by remember { mutableStateOf(true) }
+
     // Arama filtreleme
     val filteredEvents = pendingEvents.filter {
         it.title.contains(searchText, ignoreCase = true) || 
@@ -62,13 +66,15 @@ fun PersonnelEventRequestsScreen(
             }
         },
         bottomBar = {
-            // KRİTİK DÜZELTME: initialIsExpanded = true ekledik
+            // DÜZELTME: Yeni parametre yapısı uygulandı
             PersonnelMainBottomBar(
                 navController = navController,
                 selectedIndex = -1,
-                initialIsExpanded = true, // Bu sayfa açıldığında menü açık başlasın
+                isMenuExpanded = isMenuExpanded,
+                onMenuToggle = { isMenuExpanded = !isMenuExpanded },
                 onIndexSelected = { index ->
                     if (index == 0) navController.navigate(Routes.PersonnelHomeScreen.route)
+                    isMenuExpanded = false
                 }
             )
         }

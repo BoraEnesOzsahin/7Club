@@ -43,6 +43,9 @@ fun PersonnelEventDetailScreen(
     var showResultDialog by remember { mutableStateOf(false) }
     var resultType by remember { mutableStateOf("") } // "Approved" or "Rejected"
     val scrollState = rememberScrollState()
+    
+    // Alt barın durumunu burada da tanımlıyoruz (Detay sayfasında genellikle kapalı başlar)
+    var isMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.White,
@@ -63,9 +66,11 @@ fun PersonnelEventDetailScreen(
             PersonnelMainBottomBar(
                 navController = navController,
                 selectedIndex = -1,
-                initialIsExpanded = true,
+                isMenuExpanded = isMenuExpanded,
+                onMenuToggle = { isMenuExpanded = !isMenuExpanded },
                 onIndexSelected = { index ->
                     if (index == 0) navController.navigate(Routes.PersonnelHomeScreen.route)
+                    isMenuExpanded = false
                 }
             )
         }
@@ -188,8 +193,7 @@ fun PersonnelEventDetailScreen(
                         Column(
                             modifier = Modifier.fillMaxSize().padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.SpaceBetween
-                        ) {
+                            verticalArrangement = Arrangement.SpaceBetween) {
                             Text(
                                 text = if (resultType == "Approved") "$formTitle\nONAYLANDI" else "$formTitle\nREDDEDİLDİ",
                                 textAlign = TextAlign.Center,

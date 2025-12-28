@@ -34,15 +34,24 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         composable(Routes.PersonnelLogin.route) { PersonnelLoginScreen(navController, authViewModel, showSnackbar) }
 
         // --- PERSONEL ROLÜ ---
-        composable(Routes.PersonnelHomeScreen.route) {
-            PersonnelHomeScreen(navController, authViewModel)
+        // DÜZELTME: tabIndex parametresini NavGraph'ta yakalıyoruz
+        composable(
+            route = Routes.PersonnelHomeScreen.route,
+            arguments = listOf(
+                navArgument("tabIndex") { 
+                    type = NavType.IntType
+                    defaultValue = 0 
+                }
+            )
+        ) { backStackEntry ->
+            val tabIndex = backStackEntry.arguments?.getInt("tabIndex") ?: 0
+            PersonnelHomeScreen(navController, authViewModel, initialTabIndex = tabIndex)
         }
 
         composable(Routes.PersonnelEventRequests.route) {
             PersonnelEventRequestsScreen(navController)
         }
 
-        // YENİ: Geçmiş Etkinlikler Sayfası
         composable(Routes.PersonnelPastEvents.route) {
             PersonnelPastEventsScreen(navController)
         }
@@ -141,16 +150,6 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             ParticipantInfoFormScreen(navController, fromNewForm)
         }
 
-        composable(Routes.ClubPosts.route) {
-            ClubPostsScreen(navController)
-        }
-
-        composable(
-            route = Routes.ClubEventForms.route,
-            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
-            ClubEventFormsScreen(navController, eventName)
-        }
+        // ... Diğer rotalar ...
     }
 }

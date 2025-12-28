@@ -34,6 +34,10 @@ fun PersonnelPastEventsScreen(
     viewModel: PersonnelViewModel = viewModel()
 ) {
     val pastEvents by viewModel.pastEvents.collectAsState()
+    
+    // DÜZELTME: Menü durumunu burada tanımlıyoruz
+    // Bu sayfa açıldığında menü açık (true) başlasın istenmiş
+    var isMenuExpanded by remember { mutableStateOf(true) }
 
     Scaffold(
         containerColor = Color.White,
@@ -51,12 +55,15 @@ fun PersonnelPastEventsScreen(
             }
         },
         bottomBar = {
+            // DÜZELTME: Yeni parametre yapısı (isMenuExpanded, onMenuToggle) uygulandı
             PersonnelMainBottomBar(
                 navController = navController,
                 selectedIndex = -1,
-                initialIsExpanded = true,
+                isMenuExpanded = isMenuExpanded,
+                onMenuToggle = { isMenuExpanded = !isMenuExpanded },
                 onIndexSelected = { index ->
                     if (index == 0) navController.navigate(Routes.PersonnelHomeScreen.route)
+                    isMenuExpanded = false
                 }
             )
         }

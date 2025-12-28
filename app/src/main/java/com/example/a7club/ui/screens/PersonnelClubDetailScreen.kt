@@ -11,7 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.a7club.R
+import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
 import com.example.a7club.ui.theme.VeryLightPurple
@@ -32,6 +34,9 @@ fun PersonnelClubDetailScreen(
     navController: NavController,
     clubName: String
 ) {
+    // Alt barın açık/kapalı durumunu yönetmek için state ekledik
+    var isMenuExpanded by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         containerColor = Color.White,
         topBar = {
@@ -46,15 +51,19 @@ fun PersonnelClubDetailScreen(
             )
         },
         bottomBar = {
-            // DÜZELTME: navController parametresi eklendi
+            // DÜZELTME: Yeni parametre yapısına (isMenuExpanded, onMenuToggle) uygun hale getirildi
             PersonnelMainBottomBar(
                 navController = navController,
                 selectedIndex = 2,
+                isMenuExpanded = isMenuExpanded,
+                onMenuToggle = { isMenuExpanded = !isMenuExpanded },
                 onIndexSelected = { index ->
-                    if (index == 0) navController.navigate("personnel_home_screen")
-                    // Diğer yönlendirmeler buraya eklenebilir
-                },
-                onCenterClick = {}
+                    isMenuExpanded = false
+                    if (index == 0) navController.navigate(Routes.PersonnelHomeScreen.route)
+                    if (index == 1) { /* Keşfet navigasyonu buraya */ }
+                    if (index == 2) { /* Zaten kulüplerdeyiz */ }
+                    if (index == 3) { /* Profil navigasyonu buraya */ }
+                }
             )
         }
     ) { paddingValues ->
