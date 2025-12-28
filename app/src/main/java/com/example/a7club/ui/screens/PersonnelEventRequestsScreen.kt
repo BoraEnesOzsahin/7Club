@@ -40,9 +40,8 @@ fun PersonnelEventRequestsScreen(
     var searchText by remember { mutableStateOf("") }
     val pendingEvents by viewModel.pendingEvents.collectAsState()
 
-    // DÜZELTME: Flicker'ı önlemek için menü kapalı (false) başlar. 
-    // Sadece orta tuşa basınca açılır.
-    var isMenuExpanded by remember { mutableStateOf(false) }
+    // DÜZELTME: Bu ekran bir yönetim ekranı olduğu için bar hep genişlemiş (true) kalmalı
+    var isMenuExpanded by remember { mutableStateOf(true) }
 
     val filteredEvents = pendingEvents.filter {
         it.title.contains(searchText, ignoreCase = true) || 
@@ -76,7 +75,6 @@ fun PersonnelEventRequestsScreen(
                     if (index == 2) navController.navigate(Routes.PersonnelHomeScreen.createRoute(2))
                     if (index == 3) navController.navigate(Routes.PersonnelHomeScreen.createRoute(3))
                     if (index == 4) navController.navigate(Routes.PersonnelHomeScreen.createRoute(4))
-                    isMenuExpanded = false
                 }
             )
         }

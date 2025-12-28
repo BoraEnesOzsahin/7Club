@@ -34,7 +34,8 @@ fun PersonnelClubMembersScreen(
     clubName: String,
     viewModel: PersonnelViewModel = viewModel()
 ) {
-    var isMenuExpanded by rememberSaveable { mutableStateOf(false) }
+    // DÜZELTME: Personel yönetim ekranı olduğu için bar hep genişlemiş (true) kalmalı
+    var isMenuExpanded by rememberSaveable { mutableStateOf(true) }
     
     val members by viewModel.currentClubMembers.collectAsState()
     val isLoading by viewModel.isLoadingMembers.collectAsState()
@@ -65,17 +66,17 @@ fun PersonnelClubMembersScreen(
                 isMenuExpanded = isMenuExpanded,
                 onMenuToggle = { isMenuExpanded = !isMenuExpanded },
                 onIndexSelected = { index ->
-                    isMenuExpanded = false
-                    navController.navigate(Routes.PersonnelHomeScreen.createRoute(index))
+                    if (index == 0) navController.navigate(Routes.PersonnelHomeScreen.createRoute(0))
+                    if (index == 1) navController.navigate(Routes.PersonnelHomeScreen.createRoute(1))
+                    if (index == 2) navController.navigate(Routes.PersonnelHomeScreen.createRoute(2))
+                    if (index == 3) navController.navigate(Routes.PersonnelHomeScreen.createRoute(3))
+                    if (index == 4) navController.navigate(Routes.PersonnelHomeScreen.createRoute(4))
                 }
             )
         }
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .padding(horizontal = 24.dp),
+            modifier = Modifier.padding(paddingValues).fillMaxSize().padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))
@@ -84,66 +85,24 @@ fun PersonnelClubMembersScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = DarkBlue)
                 }
             }
-
             Spacer(modifier = Modifier.height(8.dp))
-
-            Surface(
-                modifier = Modifier.fillMaxWidth(0.7f).height(55.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFF3EFFF)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(text = "Üyeler", fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 20.sp)
-                }
+            Surface(modifier = Modifier.fillMaxWidth(0.7f).height(55.dp), shape = RoundedCornerShape(16.dp), color = Color(0xFFF3EFFF)) {
+                Box(contentAlignment = Alignment.Center) { Text(text = "Üyeler", fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 20.sp) }
             }
-
             Spacer(modifier = Modifier.height(24.dp))
-
-            Surface(
-                modifier = Modifier.fillMaxSize().padding(bottom = 16.dp),
-                shape = RoundedCornerShape(24.dp),
-                color = Color(0xFFF3EFFF)
-            ) {
+            Surface(modifier = Modifier.fillMaxSize().padding(bottom = 16.dp), shape = RoundedCornerShape(24.dp), color = Color(0xFFF3EFFF)) {
                 Box(modifier = Modifier.fillMaxSize().padding(24.dp)) {
                     if (isLoading) {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = DarkBlue)
                     } else if (members.isEmpty()) {
-                        Text(
-                            text = "Bu kulübe kayıtlı üye bulunamadı.",
-                            modifier = Modifier.align(Alignment.Center),
-                            color = DarkBlue.copy(alpha = 0.6f),
-                            textAlign = TextAlign.Center
-                        )
+                        Text(text = "Bu kulübe kayıtlı üye bulunamadı.", modifier = Modifier.align(Alignment.Center), color = DarkBlue.copy(alpha = 0.6f), textAlign = TextAlign.Center)
                     } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
+                        LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             itemsIndexed(members) { index, member ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "${index + 1}",
-                                        fontWeight = FontWeight.Bold,
-                                        color = DarkBlue,
-                                        fontSize = 16.sp,
-                                        modifier = Modifier.width(32.dp)
-                                    )
-                                    Text(
-                                        text = member.studentNo,
-                                        color = DarkBlue,
-                                        fontSize = 15.sp,
-                                        modifier = Modifier.weight(1.2f)
-                                    )
-                                    Text(
-                                        text = member.fullName,
-                                        color = DarkBlue,
-                                        fontSize = 15.sp,
-                                        modifier = Modifier.weight(2f),
-                                        textAlign = TextAlign.Start
-                                    )
+                                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(text = "${index + 1}", fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 16.sp, modifier = Modifier.width(32.dp))
+                                    Text(text = member.studentNo, color = DarkBlue, fontSize = 15.sp, modifier = Modifier.weight(1.2f))
+                                    Text(text = member.fullName, color = DarkBlue, fontSize = 15.sp, modifier = Modifier.weight(2f), textAlign = TextAlign.Start)
                                 }
                             }
                         }

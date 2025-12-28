@@ -35,8 +35,8 @@ fun PersonnelPastEventsScreen(
 ) {
     val pastEvents by viewModel.pastEvents.collectAsState()
     
-    // DÜZELTME: Flicker'ı önlemek için menü kapalı (false) başlar.
-    var isMenuExpanded by remember { mutableStateOf(false) }
+    // DÜZELTME: Bu ekran bir yönetim ekranı olduğu için bar hep genişlemiş (true) kalmalı
+    var isMenuExpanded by remember { mutableStateOf(true) }
 
     Scaffold(
         containerColor = Color.White,
@@ -65,7 +65,6 @@ fun PersonnelPastEventsScreen(
                     if (index == 2) navController.navigate(Routes.PersonnelHomeScreen.createRoute(2))
                     if (index == 3) navController.navigate(Routes.PersonnelHomeScreen.createRoute(3))
                     if (index == 4) navController.navigate(Routes.PersonnelHomeScreen.createRoute(4))
-                    isMenuExpanded = false
                 }
             )
         }

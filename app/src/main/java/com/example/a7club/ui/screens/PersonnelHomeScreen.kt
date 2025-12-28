@@ -54,14 +54,18 @@ import java.util.Locale
 fun PersonnelHomeScreen(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel(),
-    initialTabIndex: Int = 0 // Navigasyondan gelen tab bilgisini alıyoruz
+    initialTabIndex: Int = 0 
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     
-    // DÜZELTME: Sayfa ilk açıldığında direkt parametreden gelen tab'ı göster (Atlamayı engeller)
     var selectedBottomTabIndex by rememberSaveable { mutableIntStateOf(initialTabIndex) }
-    var isMenuExpanded by rememberSaveable { mutableStateOf(false) }
+    
+    // DÜZELTME: Eğer yönetim tablarından biri (Index 4) seçiliyse barı GENİŞLEMİŞ (true) başlat
+    // Böylece geçişlerde o "atlama" (flicker) yaşanmaz.
+    var isMenuExpanded by rememberSaveable { 
+        mutableStateOf(initialTabIndex == 4) 
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -125,7 +129,8 @@ fun PersonnelHomeScreen(
                     onMenuToggle = { isMenuExpanded = !isMenuExpanded },
                     onIndexSelected = { index -> 
                         selectedBottomTabIndex = index
-                        isMenuExpanded = false 
+                        // Eğer ev/keşfet tablarına basıldıysa menüyü kapat, yoksa açık kalsın
+                        if (index in 0..3) isMenuExpanded = false
                     }
                 )
             }
@@ -175,13 +180,11 @@ fun PersonnelMainBottomBar(
                     PersonnelNavItem(Icons.Default.Person, "Profil", selectedIndex == 3) { onIndexSelected(3) }
                 } else {
                     PersonnelNavItem(Icons.Default.EventNote, "Yeni Etkinlik Talepleri", false) { 
-                        onIndexSelected(-1)
                         navController.navigate(Routes.PersonnelEventRequests.route)
                     }
                     PersonnelNavItem(Icons.Default.AllInbox, "Tüm Etkinlik Talepleri", false) { }
                     Spacer(modifier = Modifier.width(60.dp))
                     PersonnelNavItem(Icons.Default.Diversity3, "Kulüpler", selectedIndex == 4) { 
-                        // DÜZELTME: Eğer zaten ana sayfadaysak sadece tabı değiştir, değilsek doğru indexle yönlendir
                         if (navController.currentDestination?.route?.contains("personnel_home_screen") == true) {
                             onIndexSelected(4)
                         } else {
@@ -189,7 +192,6 @@ fun PersonnelMainBottomBar(
                         }
                     }
                     PersonnelNavItem(Icons.Default.History, "Geçmiş Etkinlikler", false) { 
-                        onIndexSelected(-1)
                         navController.navigate(Routes.PersonnelPastEvents.route)
                     }
                 }
@@ -210,10 +212,7 @@ fun PersonnelMainBottomBar(
 }
 
 @Composable
-fun PersonnelClubsListTab(
-    navController: NavController,
-    viewModel: PersonnelViewModel = viewModel()
-) {
+fun PersonnelClubsListTab(navController: NavController, viewModel: PersonnelViewModel = viewModel()) {
     val clubs by viewModel.clubs.collectAsState()
     LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         items(clubs) { club ->
@@ -224,12 +223,7 @@ fun PersonnelClubsListTab(
             ) {
                 Row(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(50.dp).clip(CircleShape).background(Color.White)) {
-                        Image(
-                            painter = if (club.logoUrl.isNotEmpty()) rememberAsyncImagePainter(club.logoUrl) else painterResource(id = R.drawable.yukek_logo),
-                            contentDescription = club.name,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        Image(painter = if (club.logoUrl.isNotEmpty()) rememberAsyncImagePainter(club.logoUrl) else painterResource(id = R.drawable.yukek_logo), contentDescription = club.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(text = club.name, fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 14.sp)
@@ -240,56 +234,17 @@ fun PersonnelClubsListTab(
 }
 
 @Composable
-fun PersonnelClubsGridTab(
-    navController: NavController,
-    viewModel: PersonnelViewModel = viewModel()
-) {
+fun PersonnelClubsGridTab(navController: NavController, viewModel: PersonnelViewModel = viewModel()) {
     val clubs by viewModel.clubs.collectAsState()
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         items(clubs) { club ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(0.85f)
-                    .clickable { navController.navigate(Routes.PersonnelClubDetail.createRoute(club.name)) },
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF3EFFF)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                    ) {
-                        Image(
-                            painter = if (club.logoUrl.isNotEmpty()) rememberAsyncImagePainter(club.logoUrl) else painterResource(id = R.drawable.yukek_logo),
-                            contentDescription = club.name,
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.fillMaxSize().padding(8.dp).clip(CircleShape)
-                        )
+            Card(modifier = Modifier.fillMaxWidth().aspectRatio(0.85f).clickable { navController.navigate(Routes.PersonnelClubDetail.createRoute(club.name)) }, shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFF3EFFF)), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+                Column(modifier = Modifier.fillMaxSize().padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Box(modifier = Modifier.size(100.dp).clip(CircleShape).background(Color.White)) {
+                        Image(painter = if (club.logoUrl.isNotEmpty()) rememberAsyncImagePainter(club.logoUrl) else painterResource(id = R.drawable.yukek_logo), contentDescription = club.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(8.dp).clip(CircleShape))
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = club.name,
-                        fontWeight = FontWeight.Bold,
-                        color = DarkBlue,
-                        fontSize = 13.sp,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 16.sp
-                    )
+                    Text(text = club.name, fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 13.sp, textAlign = TextAlign.Center, lineHeight = 16.sp)
                 }
             }
         }
@@ -297,38 +252,17 @@ fun PersonnelClubsGridTab(
 }
 
 @Composable
-fun PersonnelEventsTab(
-    navController: NavController,
-    viewModel: PersonnelViewModel = viewModel()
-) {
+fun PersonnelEventsTab(navController: NavController, viewModel: PersonnelViewModel = viewModel()) {
     val pendingEvents by viewModel.pendingEvents.collectAsState()
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-
     Column {
         PersonnelHeaderDateCard(date = selectedDate, onDateClick = { }, onPreviousDayClick = { selectedDate = selectedDate.minusDays(1) }, onNextDayClick = { selectedDate = selectedDate.plusDays(1) })
         PersonnelHeaderSearchBar(onSearchClick = { }, onFilterClick = { })
-        
         val categories = listOf("Tümü", "Business", "Tech", "Health", "Art")
         LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
-            items(categories) { category ->
-                Button(
-                    onClick = { },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD1C4E9)),
-                    shape = RoundedCornerShape(16.dp)
-                ) { Text(text = category, color = DarkBlue) }
-            }
+            items(categories) { category -> Button(onClick = { }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD1C4E9)), shape = RoundedCornerShape(16.dp)) { Text(text = category, color = DarkBlue) } }
         }
-
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(pendingEvents) { event ->
-                PersonnelListItemCard(
-                    title = event.title,
-                    clubName = event.clubName,
-                    status = "Beklemede",
-                    onClick = { navController.navigate(Routes.PersonnelEventDetail.createRoute(event.title, event.clubName)) }
-                )
-            }
-        }
+        LazyColumn(modifier = Modifier.fillMaxSize()) { items(pendingEvents) { event -> PersonnelListItemCard(title = event.title, clubName = event.clubName, status = "Beklemede", onClick = { navController.navigate(Routes.PersonnelEventDetail.createRoute(event.title, event.clubName)) }) } }
     }
 }
 
@@ -343,9 +277,7 @@ fun PersonnelDiscoverTab(navController: NavController) {
             Button(onClick = { selectedTab = 1 }, colors = ButtonDefaults.buttonColors(containerColor = if (selectedTab == 1) DarkBlue else Color(0xFFD1C4E9), contentColor = if (selectedTab == 1) Color.White else DarkBlue), shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f).height(40.dp)) { Text("Gönderiler", fontWeight = FontWeight.Bold) }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 20.dp)) {
-            if (selectedTab == 0) { items(3) { PersonnelAnnouncementCard() } } else { items(2) { PersonnelPostCard() } }
-        }
+        LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 20.dp)) { if (selectedTab == 0) { items(3) { PersonnelAnnouncementCard() } } else { items(2) { PersonnelPostCard() } } }
     }
 }
 
@@ -382,11 +314,7 @@ fun PersonnelPostCard() {
 
 @Composable
 fun PersonnelNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isSelected: Boolean, onClick: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.width(75.dp).clickable(onClick = onClick).padding(vertical = 4.dp)
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center, modifier = Modifier.width(75.dp).clickable(onClick = onClick).padding(vertical = 4.dp)) {
         Icon(imageVector = icon, contentDescription = label, tint = if(isSelected) Color.White else DarkBlue, modifier = Modifier.size(26.dp))
         Text(text = label, color = DarkBlue, fontSize = 9.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, lineHeight = 10.sp, modifier = Modifier.padding(top = 2.dp))
     }
