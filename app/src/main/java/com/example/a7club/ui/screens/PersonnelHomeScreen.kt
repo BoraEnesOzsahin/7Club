@@ -36,6 +36,7 @@ import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
 import com.example.a7club.ui.theme.VeryLightPurple
 import com.example.a7club.ui.viewmodels.AuthViewModel
+import com.example.a7club.ui.viewmodels.PersonnelViewModel
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -85,7 +86,7 @@ fun PersonnelHomeScreen(
                         ) { Box(contentAlignment = Alignment.Center) { Text("Etkinlik Takvimi", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) } }
                     }
                     Spacer(Modifier.weight(1f))
-                    Box(modifier = Modifier.fillMaxWidth().height(140.dp)) { PersonnelWaveBackground(modifier = Modifier.align(Alignment.BottomCenter)) }
+                    Box(modifier = Modifier.fillMaxWidth().height(140.dp).background(DarkBlue.copy(alpha = 0.1f))) 
                 }
             }
         }
@@ -132,9 +133,8 @@ fun PersonnelMainBottomBar(
     selectedIndex: Int,
     onIndexSelected: (Int) -> Unit,
     onCenterClick: () -> Unit = {},
-    initialIsExpanded: Boolean = false // Varsayılan durum eklendi
+    initialIsExpanded: Boolean = false
 ) {
-    // initialIsExpanded ile sayfa ilk açıldığında durumun ne olacağını belirliyoruz
     var isMenuExpanded by remember { mutableStateOf(initialIsExpanded) }
 
     Box(
@@ -160,7 +160,6 @@ fun PersonnelMainBottomBar(
                     PersonnelNavItem(Icons.Default.Groups, "Kulüpler", selectedIndex == 2) { onIndexSelected(2) }
                     PersonnelNavItem(Icons.Default.Person, "Profil", selectedIndex == 3) { onIndexSelected(3) }
                 } else {
-                    // İŞLEM MODU (FOTOĞRAFTAKİ GİBİ)
                     PersonnelNavItem(Icons.Default.EventNote, "Yeni Etkinlik\nTalepleri", false) { 
                         navController.navigate(Routes.PersonnelEventRequests.route)
                     }
@@ -170,7 +169,9 @@ fun PersonnelMainBottomBar(
                         isMenuExpanded = false
                         onIndexSelected(2) 
                     }
-                    PersonnelNavItem(Icons.Default.History, "Geçmiş\nEtkinlikler", false) { }
+                    PersonnelNavItem(Icons.Default.History, "Geçmiş\nEtkinlikler", false) { 
+                        navController.navigate(Routes.PersonnelPastEvents.route)
+                    }
                 }
             }
         }
@@ -180,10 +181,7 @@ fun PersonnelMainBottomBar(
                 .size(85.dp)
                 .align(Alignment.TopCenter)
                 .border(6.dp, Color.White, CircleShape)
-                .clickable { 
-                    isMenuExpanded = !isMenuExpanded 
-                    onCenterClick()
-                },
+                .clickable { isMenuExpanded = !isMenuExpanded },
             shape = CircleShape,
             color = DarkBlue,
             shadowElevation = 8.dp
@@ -192,145 +190,74 @@ fun PersonnelMainBottomBar(
 }
 
 @Composable
-fun PersonnelNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isSelected: Boolean, onClick: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .width(75.dp)
-            .clickable(onClick = onClick)
-            .padding(vertical = 4.dp)
-    ) {
-        Icon(
-            imageVector = icon, 
-            contentDescription = label, 
-            tint = DarkBlue, 
-            modifier = Modifier.size(26.dp)
-        )
-        Text(
-            text = label, 
-            color = DarkBlue, 
-            fontSize = 10.sp, 
-            lineHeight = 11.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-fun PersonnelEventsTab(navController: NavController) {
-    var selectedCategory by remember { mutableStateOf("Business") }
+fun PersonnelEventsTab(
+    navController: NavController,
+    viewModel: PersonnelViewModel = viewModel()
+) {
+    val pendingEvents by viewModel.pendingEvents.collectAsState()
+    var selectedCategory by remember { mutableStateOf("Tümü") }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    var showDatePicker by remember { mutableStateOf(false) }
-
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = { Button(onClick = { datePickerState.selectedDateMillis?.let { selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate() }; showDatePicker = false }) { Text("Tamam") } },
-            dismissButton = { Button(onClick = { showDatePicker = false }) { Text("İptal") } }
-        ) { DatePicker(state = datePickerState) }
-    }
 
     Column {
-        PersonnelHeaderDateCard(date = selectedDate, onDateClick = { showDatePicker = true }, onPreviousDayClick = { selectedDate = selectedDate.minusDays(1) }, onNextDayClick = { selectedDate = selectedDate.plusDays(1) })
+        PersonnelHeaderDateCard(date = selectedDate, onDateClick = { }, onPreviousDayClick = { selectedDate = selectedDate.minusDays(1) }, onNextDayClick = { selectedDate = selectedDate.plusDays(1) })
         PersonnelHeaderSearchBar(onSearchClick = { }, onFilterClick = { })
-        PersonnelCategorySelector(selectedCategory = selectedCategory, onCategorySelected = { category -> selectedCategory = category })
+        
+        val categories = listOf("Tümü", "Business", "Tech", "Health", "Art")
+        LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
+            items(categories) { category ->
+                val isSelected = selectedCategory == category
+                Button(
+                    onClick = { selectedCategory = category },
+                    colors = ButtonDefaults.buttonColors(containerColor = if(isSelected) DarkBlue else Color(0xFFD1C4E9)),
+                    shape = RoundedCornerShape(16.dp)
+                ) { Text(text = category, color = if(isSelected) Color.White else DarkBlue) }
+            }
+        }
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            val items = when(selectedCategory) {
-                "Business" -> listOf(PersonnelTaskData("Liderlik Zirvesi", "İşletme Kulübü", "Onay Bekliyor"), PersonnelTaskData("Kariyer 101", "Girişimcilik Kulübü", "Onay Bekliyor"))
-                "Tech" -> listOf(PersonnelTaskData("Yapay Zeka Semineri", "Bilişim Kulübü", "Onay Bekliyor"), PersonnelTaskData("Hackathon 2025", "IEEE Kulübü", "Onay Bekliyor"))
-                "Health" -> listOf(PersonnelTaskData("Sağlıklı Yaşam Yürüyüşü", "Spor Kulübü", "Onay Bekliyor"), PersonnelTaskData("Kan Bağışı Kampanyası", "Kızılay Kulübü", "Onay Bekliyor"))
-                "Art" -> listOf(PersonnelTaskData("Modern Sanat Sergisi", "Sanat Kulübü", "Onay Bekliyor"), PersonnelTaskData("Tiyatro Gösterimi", "Tiyatro Kulübü", "Onay Bekliyor"))
-                else -> emptyList()
-            }
-            items(items) { item ->
+            items(pendingEvents) { event ->
                 PersonnelListItemCard(
-                    title = item.title,
-                    clubName = item.club,
-                    status = item.status,
-                    onClick = { navController.navigate(Routes.PersonnelEventDetail.createRoute(item.title, item.club)) }
+                    title = event.title,
+                    clubName = event.clubName,
+                    status = "Beklemede",
+                    onClick = { navController.navigate(Routes.PersonnelEventDetail.createRoute(event.title, event.clubName)) }
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun PersonnelDiscoverTab(navController: NavController) {
-    var selectedTab by remember { mutableIntStateOf(0) }
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            Button(onClick = { selectedTab = 0 }, colors = ButtonDefaults.buttonColors(containerColor = if (selectedTab == 0) DarkBlue else Color(0xFFD1C4E9), contentColor = if (selectedTab == 0) Color.White else DarkBlue), shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f).height(40.dp)) { Text("Duyurular", fontWeight = FontWeight.Bold) }
-            Spacer(modifier = Modifier.width(12.dp))
-            Button(onClick = { selectedTab = 1 }, colors = ButtonDefaults.buttonColors(containerColor = if (selectedTab == 1) DarkBlue else Color(0xFFD1C4E9), contentColor = if (selectedTab == 1) Color.White else DarkBlue), shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f).height(40.dp)) { Text("Gönderiler", fontWeight = FontWeight.Bold) }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 20.dp)) {
-                if (selectedTab == 0) { items(3) { PersonnelAnnouncementCard() } } else { items(2) { PersonnelPostCard() } }
-            }
-            Box(modifier = Modifier.padding(start = 8.dp).width(6.dp).fillMaxHeight(0.6f).clip(RoundedCornerShape(4.dp)).background(Color(0xFFD1C4E9)).align(Alignment.CenterVertically)) { Box(modifier = Modifier.fillMaxWidth().height(60.dp).background(DarkBlue, RoundedCornerShape(4.dp))) }
-        }
-    }
-}
-
-@Composable
-fun PersonnelClubsTab(navController: NavController) {
-    val clubs = listOf(
-        ClubItem("Kültür ve Etkinlik Kulübü", R.drawable.yukek_logo),
-        ClubItem("Bilişim Kulübü", R.drawable.bilisim_logo),
-        ClubItem("Psikoloji Kulübü", R.drawable.psikoloji_logo),
-        ClubItem("Müzik Kulübü", R.drawable.muzik_logo),
-        ClubItem("Uluslararası Ticaret Kulübü", R.drawable.ticaret_logo)
-    )
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        items(clubs) { club ->
-            Card(
-                modifier = Modifier.fillMaxWidth().height(80.dp).clickable { navController.navigate(Routes.PersonnelClubDetail.createRoute(club.name)) },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = VeryLightPurple)
-            ) {
-                Row(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(50.dp).clip(CircleShape)) { Image(painter = painterResource(id = club.logoRes), contentDescription = club.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = club.name, fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 14.sp)
+            if (pendingEvents.isEmpty()) {
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
+                        Text("Onay bekleyen yeni etkinlik yok.", color = Color.Gray)
+                    }
                 }
             }
         }
     }
 }
 
+@Composable fun PersonnelDiscoverTab(navController: NavController) { Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Keşfet Sayfası") } }
+@Composable fun PersonnelClubsTab(navController: NavController) { Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Kulüpler Sayfası") } }
+
 @Composable
-fun PersonnelAnnouncementCard() {
-    Card(modifier = Modifier.fillMaxWidth().height(100.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE7F6))) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(24.dp).clip(CircleShape)) { Image(painter = painterResource(id = R.drawable.yukek_logo), contentDescription = "Logo", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Kültür ve Etkinlik Kulübü", fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 12.sp)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Box(modifier = Modifier.fillMaxWidth(0.9f).height(10.dp).background(Color(0xFFD1C4E9), RoundedCornerShape(4.dp)))
-            Spacer(modifier = Modifier.height(6.dp))
-            Box(modifier = Modifier.fillMaxWidth(0.6f).height(10.dp).background(Color(0xFFD1C4E9), RoundedCornerShape(4.dp)))
-        }
+fun PersonnelNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isSelected: Boolean, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.width(75.dp).clickable(onClick = onClick).padding(vertical = 4.dp)
+    ) {
+        Icon(imageVector = icon, contentDescription = label, tint = if(isSelected) Color.White else DarkBlue, modifier = Modifier.size(26.dp))
+        Text(text = label, color = DarkBlue, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
     }
 }
 
 @Composable
-fun PersonnelPostCard() {
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE7F6))) {
-        Column {
-            Box(modifier = Modifier.fillMaxWidth().height(180.dp).background(Color(0xFFD1C4E9)), contentAlignment = Alignment.Center) { Text("Fotoğraf", color = DarkBlue) }
-            Row(modifier = Modifier.fillMaxWidth().background(Color(0xFFD1C4E9).copy(alpha = 0.5f)).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(32.dp).clip(CircleShape)) { Image(painter = painterResource(id = R.drawable.yukek_logo), contentDescription = "Logo", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("Açıklama", color = Color.Black, fontSize = 14.sp)
+fun PersonnelListItemCard(title: String, clubName: String, status: String, onClick: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clickable(onClick = onClick), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = VeryLightPurple)) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(text = title, fontWeight = FontWeight.Bold, color = DarkBlue)
+                Surface(color = Color(0xFFFFCC80), shape = RoundedCornerShape(8.dp)) { Text(text = status, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFFE65100), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
             }
+            Text(text = "Kulüp: $clubName", color = DarkBlue.copy(alpha = 0.8f))
         }
     }
 }
@@ -343,7 +270,7 @@ fun PersonnelHeaderDateCard(date: LocalDate, onDateClick: () -> Unit, onPrevious
             IconButton(onClick = onPreviousDayClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Önceki Gün") }
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(onClick = onDateClick)) {
                 Text(date.dayOfMonth.toString(), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = DarkBlue)
-                Text(date.format(monthFormatter).replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale("tr")) else it.toString() }, fontSize = 16.sp, color = DarkBlue)
+                Text(date.format(monthFormatter).replaceFirstChar { it.uppercase() }, fontSize = 16.sp, color = DarkBlue)
             }
             IconButton(onClick = onNextDayClick) { Icon(Icons.AutoMirrored.Filled.ArrowForward, "Sonraki Gün") }
         }
@@ -357,37 +284,3 @@ fun PersonnelHeaderSearchBar(onSearchClick: () -> Unit, onFilterClick: () -> Uni
         IconButton(onClick = onFilterClick) { Icon(Icons.Default.Tune, "Filtrele", tint = DarkBlue) }
     }
 }
-
-@Composable
-fun PersonnelCategorySelector(selectedCategory: String, onCategorySelected: (String) -> Unit) {
-    val categories = listOf("Business" to Color(0xFFAED581), "Tech" to Color(0xFFFFF176), "Health" to Color(0xFFFFB74D), "Art" to Color(0xFFF8BBD0))
-    LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
-        items(categories) { (name, color) ->
-            val isSelected = selectedCategory == name
-            Button(
-                onClick = { onCategorySelected(name) },
-                colors = ButtonDefaults.buttonColors(containerColor = color, contentColor = Color.Black),
-                shape = RoundedCornerShape(16.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                modifier = Modifier.height(40.dp).then(if(isSelected) Modifier.border(2.dp, DarkBlue, RoundedCornerShape(16.dp)) else Modifier)
-            ) { Text(text = name, fontWeight = FontWeight.Bold, fontSize = 14.sp) }
-        }
-    }
-}
-
-@Composable
-fun PersonnelListItemCard(title: String, clubName: String, status: String, onClick: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clickable(onClick = onClick), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = VeryLightPurple)) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
-                Surface(color = Color(0xFFFFCC80), shape = RoundedCornerShape(8.dp)) { Text(text = status, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFFE65100), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Kulüp: $clubName", style = MaterialTheme.typography.bodyMedium, color = DarkBlue.copy(alpha = 0.8f))
-        }
-    }
-}
-
-data class PersonnelTaskData(val title: String, val club: String, val status: String)
-data class ClubItem(val name: String, val logoRes: Int)

@@ -38,9 +38,13 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             PersonnelHomeScreen(navController, authViewModel)
         }
 
-        // YENİ: Etkinlik Talepleri Sayfası
         composable(Routes.PersonnelEventRequests.route) {
             PersonnelEventRequestsScreen(navController)
+        }
+
+        // YENİ: Geçmiş Etkinlikler Sayfası
+        composable(Routes.PersonnelPastEvents.route) {
+            PersonnelPastEventsScreen(navController)
         }
 
         composable(
