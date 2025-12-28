@@ -58,7 +58,6 @@ fun FormsScreen(navController: NavController) {
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD1C4E9), contentColor = DarkBlue)
                     ) { Text("Araç Talep Formu") }
 
-                    // DÜZELTİLDİ: Boolean parametre (true) eklenerek yönlendirme yapıldı
                     Button(
                         onClick = { 
                             showSelectionDialog = false
@@ -133,7 +132,6 @@ fun FormsScreen(navController: NavController) {
                 Button(
                     onClick = { 
                         when(selectedCategory) {
-                            // DÜZELTİLDİ: Görüntüleme modunda parametre (false) olarak gidilir
                             "PAST" -> navController.navigate(Routes.PastEventDetail.createRoute(eventName))
                             "PENDING" -> navController.navigate(Routes.PendingEventDetail.createRoute(eventName))
                             "REJECTED" -> navController.navigate(Routes.RejectedEventDetail.createRoute(eventName))
@@ -175,7 +173,8 @@ fun FormsBottomAppBar(navController: NavController) {
                 FormsNavItem(Icons.Default.Groups, "Kulübüm") { navController.navigate(Routes.ClubProfileScreen.route) }
                 FormsNavItem(Icons.Default.Assignment, "Formlar") { /* Zaten buradayız */ }
                 Spacer(modifier = Modifier.width(90.dp))
-                FormsNavItem(Icons.Default.Collections, "Gönderiler") { /* Aksiyon */ }
+                // GÜNCELLENDİ: Navigasyon rotası eklendi
+                FormsNavItem(Icons.Default.Collections, "Gönderiler") { navController.navigate(Routes.ClubPosts.route) }
                 FormsNavItem(Icons.Default.EventAvailable, "Etkinlikler") { navController.navigate(Routes.EventCalendarScreen.route) }
             }
         }
