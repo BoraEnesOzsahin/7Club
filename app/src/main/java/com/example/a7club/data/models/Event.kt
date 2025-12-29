@@ -8,7 +8,7 @@ import com.google.firebase.firestore.DocumentId
  * This data class is Firestore-compliant.
  */
 data class Event(
-    @DocumentId val id: String = "",
+     val id: String = "",
     val title: String = "",
     val description: String = "",
     val clubId: String = "",
@@ -16,11 +16,13 @@ data class Event(
     val location: String = "",
     val startTime: Long = 0L,
     val capacity: Int? = null,
-    val status: EventStatus = EventStatus.PENDING
+    val status: EventStatus = EventStatus.Pending
 )
 
 enum class EventStatus {
-    PENDING,
-    APPROVED,
-    REJECTED
+    Pending,
+    Rejected,
+    Approved,
+    Cancelled
+
 }
