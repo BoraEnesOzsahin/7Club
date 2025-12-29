@@ -15,15 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
-import com.example.a7club.ui.theme._7ClubTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,7 +105,6 @@ fun ClubAdminBottomAppBar(navController: NavController) {
                 AdminNavItem(Icons.Default.Groups, "Kulübüm") { /* Buradayız */ }
                 AdminNavItem(Icons.Default.Assignment, "Formlar") { navController.navigate(Routes.Forms.route) }
                 Spacer(modifier = Modifier.width(90.dp))
-                // GÜNCELLENDİ: "Gönderiler" butonu artık yeni sayfaya gidiyor
                 AdminNavItem(Icons.Default.Collections, "Gönderiler") { navController.navigate(Routes.ClubPosts.route) }
                 AdminNavItem(Icons.Default.EventAvailable, "Etkinlikler") { navController.navigate(Routes.EventCalendarScreen.route) }
             }
@@ -119,8 +115,10 @@ fun ClubAdminBottomAppBar(navController: NavController) {
                 .align(Alignment.TopCenter)
                 .border(6.dp, Color.White, CircleShape)
                 .clickable { 
-                    // Orta tuş: Ana Sayfaya (Öğrenci Görünümüne) geri döner
-                    navController.navigate(Routes.ClubHomeScreen.route) 
+                    // DÜZELTME: Doğrudan öğrenci ana sayfası olan EventsScreen'e yönlendiriyoruz
+                    navController.navigate(Routes.Events.route) {
+                        popUpTo(Routes.Events.route) { inclusive = true }
+                    }
                 },
             shape = CircleShape,
             color = DarkBlue,

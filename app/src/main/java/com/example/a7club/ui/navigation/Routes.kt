@@ -46,6 +46,7 @@ sealed class Routes(val route: String) {
         fun createRoute(tabIndex: Int = 0) = "personnel_home_screen?tabIndex=$tabIndex"
     }
     object PersonnelEventRequests : Routes("personnel_event_requests") 
+    object PersonnelOverdueEvents : Routes("personnel_overdue_events") // YENİ: 2 günden eski talepler
     object PersonnelPastEvents : Routes("personnel_past_events")
     
     object PersonnelEventDetail : Routes("personnel_event_detail/{eventName}/{clubName}") {
@@ -57,7 +58,6 @@ sealed class Routes(val route: String) {
     object PersonnelClubMembers : Routes("personnel_club_members/{clubName}") {
         fun createRoute(clubName: String) = "personnel_club_members/$clubName"
     }
-    // YENİ: Kulüp bazlı etkinlik rotaları
     object PersonnelClubEvents : Routes("personnel_club_events/{clubName}/{isPast}") {
         fun createRoute(clubName: String, isPast: Boolean) = "personnel_club_events/$clubName/$isPast"
     }

@@ -25,8 +25,17 @@ data class Member(
 class PersonnelViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
     
+    // TÜM Bekleyen Talepler (Hata almamak için geri eklendi)
     private val _pendingEvents = MutableStateFlow<List<Event>>(emptyList())
     val pendingEvents: StateFlow<List<Event>> = _pendingEvents
+
+    // Yeni Talepler (Son 2 gün)
+    private val _recentPendingEvents = MutableStateFlow<List<Event>>(emptyList())
+    val recentPendingEvents: StateFlow<List<Event>> = _recentPendingEvents
+
+    // Gecikmiş Talepler (2 günden eski)
+    private val _overduePendingEvents = MutableStateFlow<List<Event>>(emptyList())
+    val overduePendingEvents: StateFlow<List<Event>> = _overduePendingEvents
 
     private val _pastEvents = MutableStateFlow<List<Event>>(emptyList())
     val pastEvents: StateFlow<List<Event>> = _pastEvents
@@ -53,14 +62,28 @@ class PersonnelViewModel : ViewModel() {
     }
 
     private fun fetchPendingEvents() {
+        val twoDaysAgo = Timestamp(Timestamp.now().seconds - (2 * 24 * 60 * 60), 0)
+
         db.collection("events")
             .whereEqualTo("status", "Pending")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
-                val events = snapshot?.documents?.mapNotNull { doc ->
+                val allPending = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(Event::class.java)?.copy(id = doc.id)
                 } ?: emptyList()
-                _pendingEvents.value = events
+
+                // Tümünü güncelle
+                _pendingEvents.value = allPending
+
+                // Yeni Talepler
+                _recentPendingEvents.value = allPending.filter { 
+                    it.timestamp != null && it.timestamp!! >= twoDaysAgo 
+                }
+
+                // Gecikmiş Talepler
+                _overduePendingEvents.value = allPending.filter { 
+                    it.timestamp != null && it.timestamp!! < twoDaysAgo 
+                }
             }
     }
 
@@ -88,13 +111,10 @@ class PersonnelViewModel : ViewModel() {
             }
     }
 
-    // YENİ: Belirli bir kulübün geçmiş veya gelecek etkinliklerini çekme
     fun fetchClubEvents(clubName: String, isPast: Boolean) {
         _isLoading.value = true
         val now = Timestamp.now()
-        
-        var query = db.collection("events")
-            .whereEqualTo("clubName", clubName)
+        var query = db.collection("events").whereEqualTo("clubName", clubName)
         
         if (isPast) {
             query = query.whereLessThan("timestamp", now)
@@ -104,10 +124,7 @@ class PersonnelViewModel : ViewModel() {
 
         query.addSnapshotListener { snapshot, error ->
             _isLoading.value = false
-            if (error != null) {
-                Log.e("PersonnelVM", "Fetch club events error: ${error.message}")
-                return@addSnapshotListener
-            }
+            if (error != null) return@addSnapshotListener
             val events = snapshot?.documents?.mapNotNull { doc ->
                 doc.toObject(Event::class.java)?.copy(id = doc.id)
             } ?: emptyList()
