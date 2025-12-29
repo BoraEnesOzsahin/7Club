@@ -51,6 +51,11 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             PersonnelEventRequestsScreen(navController)
         }
 
+        // YENİ: 2 günden eski tüm talepler sayfası
+        composable(Routes.PersonnelOverdueEvents.route) {
+            PersonnelOverdueEventsScreen(navController)
+        }
+
         composable(Routes.PersonnelPastEvents.route) {
             PersonnelPastEventsScreen(navController)
         }
@@ -83,7 +88,6 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
             PersonnelClubMembersScreen(navController, clubName)
         }
 
-        // YENİ: Kulüp Etkinlikleri (Geçmiş/Gelecek)
         composable(
             route = Routes.PersonnelClubEvents.route,
             arguments = listOf(
