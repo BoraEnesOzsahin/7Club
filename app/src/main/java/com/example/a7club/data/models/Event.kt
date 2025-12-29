@@ -23,6 +23,7 @@ enum class EventStatus {
     Pending,
     Rejected,
     Approved,
-    Cancelled
+    Cancelled,
+    Verified
 
 }
