@@ -2,6 +2,9 @@ package com.example.a7club.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import android.app.Activity
+import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,12 +23,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.a7club.R
 import com.example.a7club.data.Resource
 import com.example.a7club.model.Event
 import com.example.a7club.ui.navigation.Routes
@@ -43,12 +50,21 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsScreen(
-    navController: NavController, 
-    viewModel: StudentFlowViewModel, 
-    showSnackbar: (String) -> Unit,
-    authViewModel: AuthViewModel = viewModel()
-) {
+fun getTranslatedClubName(clubName: String): String {
+    val language = Locale.getDefault().language
+    if (language != "en") return clubName
+
+    return when {
+        clubName.contains("EKONOMİ", ignoreCase = true) -> "ECONOMY AND FINANCE"
+        clubName.contains("BİLİŞİM", ignoreCase = true) -> "I.T. CLUB"
+        clubName.contains("HUKUK", ignoreCase = true) -> "LAW CLUB"
+        clubName.contains("SANAT", ignoreCase = true) -> "ART CLUB"
+        else -> clubName.replace("KULÜBÜ", "CLUB").replace("Kulübü", "Club")
+    }
+}
+
+@Composable
+fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel, showSnackbar: (String) -> Unit) {
     val eventsState by viewModel.eventsState
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -120,10 +136,9 @@ fun EventsScreenContent(
 ) {
     var selectedCategory by remember { mutableStateOf("TÜMÜ") }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    var showDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = VeryLightPurple,
+        containerColor = TargetBackground,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(if(selectedTab == 0) "Etkinlikler" else "Keşfet", fontWeight = FontWeight.Bold) },
@@ -295,6 +310,15 @@ fun DateCard(date: LocalDate, onDateClick: () -> Unit, onPreviousDayClick: () ->
             }
             IconButton(onClick = onNextDayClick) { Icon(Icons.AutoMirrored.Filled.ArrowForward, "Sonraki") }
         }
+        // ORTA BUTON (ARTI KALDIRILDI)
+        Box(
+            modifier = Modifier
+                .offset(y = (-35).dp)
+                .size(60.dp)
+                .background(TargetBackground, CircleShape)
+                .padding(5.dp)
+                .background(TargetDarkBlue, CircleShape)
+        )
     }
 }
 
