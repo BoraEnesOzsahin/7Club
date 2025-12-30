@@ -1,14 +1,18 @@
-package com.example.a7club.ui.viewmodels // PACKAGE NAME UPDATED
+package com.example.a7club.ui.viewmodels
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.a7club.data.Resource
-import com.example.a7club.data.models.Event // Correct import path
+import com.example.a7club.data.models.Event
+import com.example.a7club.utils.TranslationHelper // Bu dosyanın utils klasöründe olduğundan emin ol
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
+import java.util.Locale
 
 class StudentFlowViewModel : ViewModel() {
     val email = mutableStateOf("")
@@ -21,24 +25,53 @@ class StudentFlowViewModel : ViewModel() {
     val searchQuery = mutableStateOf("")
 
     init {
+        // ViewModel başlarken çeviri modelini arka planda indir
+        viewModelScope.launch {
+            try {
+                TranslationHelper.downloadModelIfNeeded()
+            } catch (e: Exception) {
+                // Hata olursa sessizce geç
+            }
+        }
         fetchEvents()
     }
 
     fun fetchEvents() {
         _eventsState.value = Resource.Loading()
+
         Firebase.firestore.collection("events")
             .get()
             .addOnSuccessListener { snapshot ->
-                try {
-                    // This ensures Firestore documents are converted to the CORRECT Event data class
-                    val events = snapshot.toObjects<Event>()
-                    _eventsState.value = Resource.Success(events)
-                } catch (e: Exception) {
-                    _eventsState.value = Resource.Error("Veri ayrıştırılırken hata oluştu: ${e.message}")
+                viewModelScope.launch {
+                    try {
+                        val rawEvents = snapshot.toObjects<Event>()
+
+                        // Dil kontrolü
+                        val currentLang = Locale.getDefault().language
+                        val isEnglish = currentLang.startsWith("en")
+
+                        val processedEvents = if (isEnglish) {
+                            // İngilizce ise çevir
+                            rawEvents.map { event ->
+                                event.copy(
+                                    title = TranslationHelper.translate(event.title),
+                                    clubName = TranslationHelper.translate(event.clubName),
+                                    location = TranslationHelper.translate(event.location)
+                                )
+                            }
+                        } else {
+                            // Türkçe ise olduğu gibi bırak
+                            rawEvents
+                        }
+
+                        _eventsState.value = Resource.Success(processedEvents)
+                    } catch (e: Exception) {
+                        _eventsState.value = Resource.Error("Hata: ${e.message}")
+                    }
                 }
             }
             .addOnFailureListener { e ->
-                _eventsState.value = Resource.Error("Etkinlikler yüklenemedi: ${e.message}")
+                _eventsState.value = Resource.Error("Yükleme hatası: ${e.message}")
             }
     }
 

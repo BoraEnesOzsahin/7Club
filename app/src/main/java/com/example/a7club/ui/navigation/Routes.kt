@@ -15,6 +15,14 @@ sealed class Route(val route: String) {
     object PersonnelHomeScreen : Route("personnel_home_screen")
 
     object SettingsScreen : Route("settings")
+
+    // --- YENİ EKLENEN PROFİL ROTASI ---
+    object StudentProfileScreen : Route("student_profile_screen")
+
+    companion object {
+        const val StudentNotifications = "student_notifications"
+    }
+
     object NotificationsScreen : Route("notifications")
     object FilterScreen : Route("filter_screen")
 
@@ -55,8 +63,6 @@ sealed class Route(val route: String) {
     object RejectedEventDetail : Route("rejected_event_detail/{eventName}") {
         fun createRoute(eventName: String) = "rejected_event_detail/$eventName"
     }
-
-
     object PersonnelEventDetail : Route("personnel_event_detail/{title}/{club}") {
         fun createRoute(title: String, club: String) = "personnel_event_detail/$title/$club"
     }
@@ -65,6 +71,7 @@ sealed class Route(val route: String) {
     }
 }
 
+// --- NAVGRAPH'IN KULLANDIĞI KISIM ---
 object Routes {
     val Splash = Route.Splash
     val RoleSelection = Route.RoleSelection
@@ -77,6 +84,10 @@ object Routes {
     val PersonnelHomeScreen = Route.PersonnelHomeScreen
 
     val SettingsScreen = Route.SettingsScreen
+
+    // YENİ EKLENEN PROFİL
+    val StudentProfileScreen = Route.StudentProfileScreen
+
     val NotificationsScreen = Route.NotificationsScreen
     val FilterScreen = Route.FilterScreen
     val ClubProfileScreen = Route.ClubProfileScreen
@@ -100,8 +111,8 @@ object Routes {
     val PastEventDetail = Route.PastEventDetail
     val PendingEventDetail = Route.PendingEventDetail
     val RejectedEventDetail = Route.RejectedEventDetail
-
-
     val PersonnelEventDetail = Route.PersonnelEventDetail
     val PersonnelClubDetail = Route.PersonnelClubDetail
+
+    const val StudentNotifications = Route.StudentNotifications
 }

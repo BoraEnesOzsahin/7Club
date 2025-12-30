@@ -34,8 +34,7 @@ fun NavGraph(
         }
         composable(Routes.RoleSelection.route) {
             RoleSelectionScreen(navController = navController, showSnackbar = showSnackbar)
-        } // NOT: Eğer RoleSelection showSnackbar istemiyorsa o parametreyi silebilirsin.
-
+        }
         composable(Routes.StudentLogin.route) {
             StudentLoginScreen(
                 navController = navController,
@@ -70,7 +69,6 @@ fun NavGraph(
         composable(Routes.PersonnelHomeScreen.route) { MainScreen(navController = navController) }
         composable(Routes.MainScreen.route) { MainScreen(navController = navController) }
 
-        // HATA VEREN KISIM İÇİN GARANTİ ÇÖZÜM: Parametre isimlerini açıkça yazdık
         composable(Routes.ClubHomeScreen.route) {
             ClubHomeScreen(
                 navController = navController,
@@ -79,17 +77,21 @@ fun NavGraph(
             )
         }
 
-        // 1. Settings Ekranı (Bloğu kapatıyoruz)
-        composable(Routes.SettingsScreen.route) {
-            SettingsScreen(navController = navController, showSnackbar = showSnackbar)
-        }
-
-// 2. Notifications Ekranı (Artık dışarıda ve bağımsız)
+        // --- PROFİL VE BİLDİRİMLER (GÜNCELLENDİ) ---
         composable(Routes.NotificationsScreen.route) {
             NotificationsScreen(navController = navController)
         }
 
-// 3. Filter Ekranı
+        // Yeni Profil Ekranı
+        composable(Routes.StudentProfileScreen.route) {
+            StudentProfileScreen(navController = navController)
+        }
+
+        // Öğrenci Bildirimleri
+        composable(Routes.StudentNotifications) {
+            StudentNotificationsScreen(navController = navController)
+        }
+
         composable(Routes.FilterScreen.route) {
             FilterScreen(navController = navController)
         }
