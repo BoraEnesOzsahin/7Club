@@ -1,10 +1,8 @@
 package com.example.a7club.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -46,7 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.a7club.R
-import com.example.a7club.data.models.Event
+import com.example.a7club.model.Event
 import com.example.a7club.ui.viewmodels.EventDetailViewModel
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -59,7 +57,7 @@ import java.util.Locale
 @Composable
 fun EventDetailScreen(
     eventId: String,
-    navController: NavController, 
+    navController: NavController,
     showSnackbar: (String) -> Unit,
     eventDetailViewModel: EventDetailViewModel = viewModel()
 ) {
@@ -84,10 +82,11 @@ fun EventDetailScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(event?.clubName ?: "", fontWeight = FontWeight.Bold) },
-                navigationIcon = { 
+                navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
-                    } 
+                        // ArrowBack ikonu yeni sürümlerde AutoMirrored altında
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
+                    }
                 },
                 actions = {
                     IconButton(onClick = { showSnackbar("Bildirimler tıklandı") }) {
@@ -109,11 +108,11 @@ fun EventDetailScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // Club Logo and Name
                     Image(painter = painterResource(id = R.drawable.ic_launcher_foreground), contentDescription = "Kulüp Logosu", modifier = Modifier.size(80.dp))
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // Event Title Card
                     Card(
                         shape = RoundedCornerShape(12.dp),
@@ -128,7 +127,7 @@ fun EventDetailScreen(
                             modifier = Modifier.padding(16.dp).fillMaxWidth()
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Event Details Card
@@ -138,16 +137,21 @@ fun EventDetailScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
+                            // Tarih dönüşümü için güvenli erişim
+                            val eventDate = event!!.timestamp?.toDate() ?: Date()
+
                             Text("Etkinlik Yeri: ${event!!.location}")
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Etkinlik Saati: ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(event!!.startTime))}")
+                            // startTime yerine eventDate kullanıldı
+                            Text("Etkinlik Saati: ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(eventDate)}")
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Etkinlik Tarihi: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(event!!.startTime))}")
+                            // startTime yerine eventDate kullanıldı
+                            Text("Etkinlik Tarihi: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(eventDate)}")
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.weight(1f))
-                    
+
                     // Sign Up Button
                     Button(
                         onClick = { showConfirmationDialog = true },

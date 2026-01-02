@@ -1,15 +1,23 @@
 package com.example.a7club.model
 
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentId
 
 data class Event(
-    val id: String = "",
+    @DocumentId val id: String = "",
     val title: String = "",
-    val location: String = "",
-    val time: String = "",
-    val date: String = "", // "2024-05-20" formatında veya Timestamp
-    val timestamp: Timestamp? = null, // Otomatik sıralama ve kontrol için
+    val description: String = "",
+
+    // --- İŞTE EKSİK OLAN KISIM BURASIYDI ---
+    val eventTime: String = "",      // Bunu eklemezsen hata alırsın
+    // ---------------------------------------
+
     val contactPhone: String = "",
+    val location: String = "",
+    val clubId: String = "",
     val clubName: String = "",
-    val status: String = "Pending" // Pending, Verified, Rejected, Expired
+    val timestamp: Timestamp? = null,
+    val status: String = "PENDING",
+    val category: String = "General",
+    val formUrl: String = ""
 )

@@ -38,8 +38,12 @@ sealed class Routes(val route: String) {
     object RejectedEventDetail : Routes("rejected_event_detail/{eventName}") {
         fun createRoute(eventName: String) = "rejected_event_detail/$eventName"
     }
-    object EventRequestForm : Routes("event_request_form")
-    object VehicleRequestForm : Routes("vehicle_request_form")
+    object EventRequestForm : Routes("event_request_form/{eventName}") {
+        fun createRoute(eventName: String) = "event_request_form/$eventName"
+    }
+    object VehicleRequestForm : Routes("vehicle_request_form/{eventName}") {
+        fun createRoute(eventName: String) = "vehicle_request_form/$eventName"
+    }
     
     // PERSONEL ROTALARI
     object PersonnelHomeScreen : Routes("personnel_home_screen?tabIndex={tabIndex}") {

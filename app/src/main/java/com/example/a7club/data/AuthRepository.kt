@@ -2,15 +2,16 @@ package com.example.a7club.data
 
 import com.example.a7club.model.Personnel
 import com.example.a7club.model.Student
-import com.example.a7club.model.User // Sealed Interface'i import et
+import com.example.a7club.model.User
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 
-enum class UserRole(val collectionName: String) {
-    STUDENT("students"),
-    CLUB_COMMITTEE("club_committees"),
-    PERSONNEL("personnel")
+// Role artık koleksiyon ismi değil, 'users' içindeki 'role' alanının değerini temsil ediyor
+enum class UserRole(val roleName: String) {
+    STUDENT("STUDENT"),
+    CLUB_COMMITTEE("COMMITTEE"),
+    PERSONNEL("STAFF")
 }
 
 class AuthRepository {
@@ -19,24 +20,27 @@ class AuthRepository {
 
     suspend fun signIn(email: String, password: String, role: UserRole): Resource<User> {
         return try {
-            val querySnapshot = db.collection(role.collectionName)
+            // Belirlediğimiz şemaya göre tüm kullanıcılar 'users' koleksiyonunda
+            val querySnapshot = db.collection("users")
                 .whereEqualTo("email", email)
+                .whereEqualTo("role", role.roleName) // Seçilen role göre filtreleme ekledik
                 .limit(1)
                 .get()
                 .await()
 
             if (querySnapshot.isEmpty) {
-                return Resource.Error("Bu email ile kayıtlı kullanıcı bulunamadı.")
+                return Resource.Error("Bu bilgilere uygun kullanıcı bulunamadı.")
             }
 
             val document = querySnapshot.documents.first()
 
+            // Şifre kontrolü (Güvenlik için plaintext önerilmez ancak mevcut mantığı koruyoruz)
             val dbPassword = document.getString("password")
             if (dbPassword == null || dbPassword != password) {
                 return Resource.Error("Şifre yanlış.")
             }
 
-            // Role göre doğru veri sınıfına dönüştür
+            // Role göre doğru veri sınıfına (Student/Personnel) dönüştür
             val userResult: User? = when (role) {
                 UserRole.STUDENT, UserRole.CLUB_COMMITTEE -> {
                     document.toObject(Student::class.java)?.copy(uid = document.id)
@@ -47,13 +51,13 @@ class AuthRepository {
             }
 
             if (userResult == null) {
-                Resource.Error("Kullanıcı verisi okunamadı veya zorunlu alanlar eksik. (Örn: studentId)")
+                Resource.Error("Kullanıcı verisi ayrıştırılamadı.")
             } else {
                 Resource.Success(userResult)
             }
 
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Giriş yapılırken bilinmeyen bir hata oluştu.")
+            Resource.Error(e.message ?: "Giriş yapılırken bir hata oluştu.")
         }
     }
 }

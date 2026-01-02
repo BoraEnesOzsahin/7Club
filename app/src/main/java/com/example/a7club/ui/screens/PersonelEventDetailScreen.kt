@@ -3,20 +3,21 @@
 package com.example.a7club.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,201 +25,294 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.a7club.ui.navigation.Routes
+import com.example.a7club.model.VehicleRequest
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
 import com.example.a7club.ui.viewmodels.PersonnelViewModel
 
 @Composable
-fun PersonnelEventDetailScreen(
+fun PersonelEventDetailScreen(
     navController: NavController,
     eventName: String,
     clubName: String,
     viewModel: PersonnelViewModel = viewModel()
 ) {
-    val event = viewModel.pendingEvents.collectAsState().value.find { it.title == eventName }
-    
-    // UI State'leri
-    var activeForm by remember { mutableStateOf<String?>(null) } // "EVENT" or "VEHICLE"
+    // ViewModel'den gelen event listesini dinle
+    val pendingEvents by viewModel.pendingEvents.collectAsState()
+
+    // Etkinliği isme göre bul
+    val event = pendingEvents.find { it.title == eventName }
+
+    // Araç talebini dinle
+    val vehicleRequest by viewModel.currentVehicleRequest.collectAsState()
+
+    // Hangi formun açık olduğunu tutan state
+    var activeForm by remember { mutableStateOf<String?>(null) }
+
+    // Onay/Red dialog kontrolleri
     var showResultDialog by remember { mutableStateOf(false) }
-    var resultType by remember { mutableStateOf("") } // "Approved" or "Rejected"
-    val scrollState = rememberScrollState()
-    
-    // Alt barın durumunu burada da tanımlıyoruz (Detay sayfasında genellikle kapalı başlar)
-    var isMenuExpanded by remember { mutableStateOf(false) }
+    var resultType by remember { mutableStateOf("") }
+
+    // Link açmak için handler
+    val uriHandler = LocalUriHandler.current
+
+    // Sayfa açılınca veya event değişince araç talebini çek
+    LaunchedEffect(event) {
+        if (event != null) {
+            viewModel.fetchVehicleRequest(event.id)
+        }
+    }
 
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            Column(modifier = Modifier.background(LightPurple).padding(top = 32.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = { }) { Icon(Icons.Default.Menu, null, tint = DarkBlue) }
-                    Text("Etkinlik Talepleri", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = DarkBlue)
-                    IconButton(onClick = { }) { Icon(Icons.Default.Notifications, null, tint = DarkBlue) }
-                }
-            }
-        },
-        bottomBar = {
-            PersonnelMainBottomBar(
-                navController = navController,
-                selectedIndex = -1,
-                isMenuExpanded = isMenuExpanded,
-                onMenuToggle = { isMenuExpanded = !isMenuExpanded },
-                onIndexSelected = { index ->
-                    if (index == 0) navController.navigate(Routes.PersonnelHomeScreen.route)
-                    isMenuExpanded = false
-                }
+            CenterAlignedTopAppBar(
+                title = { Text("Etkinlik Detayı", fontWeight = FontWeight.Bold, color = DarkBlue) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri", tint = DarkBlue)
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+        if (event == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Etkinlik verisi yükleniyor...", color = Color.Gray)
+            }
+        } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp)
-                    .verticalScroll(scrollState),
+                    .padding(paddingValues)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    IconButton(onClick = { 
-                        if (activeForm != null) activeForm = null else navController.popBackStack() 
-                    }, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = DarkBlue)
+                // --- ETKİNLİK KARTI ---
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = LightPurple.copy(alpha = 0.3f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(event.title, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = DarkBlue)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Kulüp: $clubName", fontSize = 16.sp, color = DarkBlue.copy(alpha = 0.7f))
+
+                        // Saat ve Telefon Bilgileri
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Schedule, null, tint = DarkBlue, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Saat: ${event.eventTime.ifEmpty { "Belirtilmedi" }}",
+                                fontWeight = FontWeight.Bold,
+                                color = DarkBlue
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Phone, null, tint = DarkBlue, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "İletişim: ${event.contactPhone.ifEmpty { "Belirtilmedi" }}",
+                                color = DarkBlue
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(event.description, fontSize = 14.sp, color = DarkBlue)
                     }
                 }
 
-                if (activeForm == null) {
-                    // --- ANA DETAY GÖRÜNÜMÜ ---
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Surface(modifier = Modifier.fillMaxWidth(0.85f).height(65.dp), shape = RoundedCornerShape(16.dp), color = Color(0xFFEEEAFF)) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(text = eventName, color = DarkBlue, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(32.dp))
-                    Surface(modifier = Modifier.fillMaxWidth().height(220.dp), shape = RoundedCornerShape(24.dp), color = Color(0xFFF1EDFF)) {
-                        Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.Center) {
-                            Text(text = "Etkinlik Yeri: ${event?.location ?: "Belirtilmemiş"}", color = DarkBlue, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = "Etkinlik Saati: ${event?.time ?: "Belirtilmemiş"}", color = DarkBlue, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = "İletişim Tel No: ${event?.contactPhone ?: "Belirtilmemiş"}", color = DarkBlue, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(40.dp))
-                    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Button(onClick = { activeForm = "EVENT" }, modifier = Modifier.fillMaxWidth(0.85f).height(55.dp).shadow(4.dp, RoundedCornerShape(16.dp)), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD1C4E9))) {
-                            Text("Etkinlik Talep Formu", color = DarkBlue, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                        }
-                        Button(onClick = { activeForm = "VEHICLE" }, modifier = Modifier.fillMaxWidth(0.85f).height(55.dp).shadow(4.dp, RoundedCornerShape(16.dp)), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD1C4E9))) {
-                            Text("Araç Talep Formu", color = DarkBlue, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                } else {
-                    // --- FORM GÖRÜNÜMÜ (ETKİNLİK VEYA ARAÇ) ---
-                    val formTitle = if (activeForm == "EVENT") "Etkinlik Talep Formu" else "Araç Talep Formu"
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Surface(modifier = Modifier.fillMaxWidth(0.85f).height(65.dp), shape = RoundedCornerShape(16.dp), color = Color(0xFFEEEAFF)) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(text = formTitle, color = DarkBlue, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    // Form Görseli Alanı
-                    Box(modifier = Modifier.fillMaxWidth().height(400.dp).background(Color.White, RoundedCornerShape(12.dp)).shadow(2.dp, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(120.dp), tint = DarkBlue.copy(alpha = 0.2f))
-                        Text(if (activeForm == "EVENT") "ETKİNLİK FORMU" else "ARAÇ FORMU", color = DarkBlue.copy(alpha = 0.4f), modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 20.dp))
-                    }
+                Spacer(modifier = Modifier.height(24.dp))
+                Text("Talep Formları", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkBlue, modifier = Modifier.align(Alignment.Start))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                // --- BUTONLAR ---
 
-                    // ONAY - RET BUTONLARI
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 30.dp), 
-                        horizontalArrangement = Arrangement.Center, 
-                        verticalAlignment = Alignment.CenterVertically
+                // 1. Etkinlik Talep Formu (PDF)
+                FormButton("Etkinlik Talep Formu (PDF)", Icons.Default.Description) {
+                    activeForm = "EventRequest"
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 2. Araç Talep Formu
+                FormButton("Araç Talep Formu", Icons.Default.DirectionsBus) {
+                    activeForm = "Vehicle"
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // ONAY / RED BUTONLARI
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Button(
+                        onClick = { viewModel.rejectEvent(event.id) { resultType = "Rejected"; showResultDialog = true } },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEBEE)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f).height(50.dp)
+                    ) { Text("Reddet", color = Color.Red, fontWeight = FontWeight.Bold) }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Button(
+                        onClick = { viewModel.verifyEvent(event.id) { resultType = "Approved"; showResultDialog = true } },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE8F5E9)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f).height(50.dp)
+                    ) { Text("Onayla", color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold) }
+                }
+            }
+
+            // AÇILIR PENCERELER (DIALOGS)
+            if (activeForm != null) {
+                Dialog(onDismissRequest = { activeForm = null }) {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        modifier = Modifier.fillMaxWidth().padding(16.dp)
                     ) {
-                        Text(
-                            text = "Reddet", 
-                            color = Color(0xFF5E5CE6), 
-                            fontSize = 18.sp, 
-                            fontWeight = FontWeight.Bold, 
-                            modifier = Modifier.clickable {
-                                event?.let { e ->
-                                    viewModel.rejectEvent(e.id) {
-                                        resultType = "Rejected"
-                                        showResultDialog = true
+                        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+
+                            // Dialog Başlığı
+                            Text(
+                                text = if(activeForm == "EventRequest") "Etkinlik Talep Formu" else "Araç Talep Formu",
+                                fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkBlue
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // DİALOG İÇERİĞİ
+                            if (activeForm == "EventRequest") {
+                                // PDF GÖSTERİMİ
+                                if (event.formUrl.isNotEmpty()) {
+                                    Text(
+                                        "Bu etkinlik için yüklenen formu görüntülemek için butona tıklayın:",
+                                        textAlign = TextAlign.Center,
+                                        fontSize = 14.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Button(
+                                        onClick = { uriHandler.openUri(event.formUrl) },
+                                        colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        // Eğer Download ikonu yoksa varsayılan başka bir ikon kullanıyoruz
+                                        Icon(Icons.Default.Description, null)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("PDF Dosyasını Aç")
+                                    }
+                                } else {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(Icons.Default.ErrorOutline, null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("Bu etkinlik için PDF formu yüklenmemiş.", color = Color.Gray, textAlign = TextAlign.Center)
                                     }
                                 }
-                            }.padding(horizontal = 20.dp, vertical = 10.dp)
-                        )
-                        
-                        Spacer(modifier = Modifier.width(40.dp))
-                        
-                        Text(
-                            text = "Onayla", 
-                            color = Color(0xFF5E5CE6), 
-                            fontSize = 18.sp, 
-                            fontWeight = FontWeight.Bold, 
-                            modifier = Modifier.clickable {
-                                event?.let { e ->
-                                    viewModel.verifyEvent(e.id) {
-                                        resultType = "Approved"
-                                        showResultDialog = true
+                            } else if (activeForm == "Vehicle") {
+                                // ARAÇ KARTI GÖSTERİMİ
+                                if (vehicleRequest != null) {
+                                    VehicleRequestCard(vehicleRequest!!)
+                                } else {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(Icons.Default.DirectionsBus, null, tint = Color.Gray, modifier = Modifier.size(40.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("Bu etkinlik için araç talebi bulunmamaktadır.", color = Color.Gray)
                                     }
                                 }
-                            }.padding(horizontal = 20.dp, vertical = 10.dp)
-                        )
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // Kapat Butonu
+                            Button(
+                                onClick = { activeForm = null },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Kapat", color = Color.Black)
+                            }
+                        }
                     }
                 }
             }
 
-            // --- SONUÇ DİYALOĞU ---
+            // İşlem Sonucu Dialog'u (Onaylandı/Reddedildi)
             if (showResultDialog) {
-                val formTitle = if (activeForm == "EVENT") "Etkinlik Talep Formu" else "Araç Talep Formu"
-                Dialog(onDismissRequest = { }) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(0.9f).height(220.dp),
-                        shape = RoundedCornerShape(28.dp),
-                        color = Color(0xFFB3E5FC)
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.SpaceBetween) {
+                Dialog(onDismissRequest = { showResultDialog = false; navController.popBackStack() }) {
+                    Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            val icon = if(resultType == "Approved") Icons.Default.CheckCircle else Icons.Default.Cancel
+                            val color = if(resultType == "Approved") Color(0xFF2E7D32) else Color.Red
+
+                            Icon(icon, null, tint = color, modifier = Modifier.size(50.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
+
                             Text(
-                                text = if (resultType == "Approved") "$formTitle\nONAYLANDI" else "$formTitle\nREDDEDİLDİ",
-                                textAlign = TextAlign.Center,
-                                color = DarkBlue,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                lineHeight = 28.sp
+                                if (resultType == "Approved") "Etkinlik Onaylandı!" else "Etkinlik Reddedildi!",
+                                fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkBlue
                             )
-                            
+                            Spacer(modifier = Modifier.height(24.dp))
+
                             Button(
-                                onClick = { 
-                                    showResultDialog = false
-                                    activeForm = null // Formdan çık, ana detaya dön
-                                    // Eğer her iki form da onaylanmışsa popBackStack yapılabilir
-                                },
+                                onClick = { showResultDialog = false; navController.popBackStack() },
                                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
-                                shape = RoundedCornerShape(20.dp),
-                                modifier = Modifier.fillMaxWidth().height(50.dp)
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Tamam", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Text("Tamam")
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+// --- YARDIMCI BİLEŞENLER ---
+
+@Composable
+fun FormButton(text: String, icon: ImageVector, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFFF3EFFF),
+        modifier = Modifier.fillMaxWidth().height(60.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 16.dp)) {
+            Icon(icon, null, tint = DarkBlue)
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(text, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = DarkBlue)
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = DarkBlue.copy(alpha = 0.5f))
+        }
+    }
+}
+
+@Composable
+fun VehicleRequestCard(request: VehicleRequest) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFFE3F2FD), RoundedCornerShape(8.dp))
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.DirectionsBus, null, tint = Color(0xFF1565C0))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(request.vehicleType, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Kalkış: ${request.pickupLocation}", fontSize = 14.sp)
+        Text("Varış: ${request.destination}", fontSize = 14.sp)
+        Text("Yolcu: ${request.passengerCount}", fontSize = 14.sp)
+        if (request.notes.isNotEmpty()) Text("Not: ${request.notes}", fontSize = 12.sp, color = Color.Gray)
     }
 }

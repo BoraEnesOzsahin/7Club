@@ -104,11 +104,12 @@ fun ClubEventFormsScreen(navController: NavController, eventName: String) {
 
             // Form Butonları
             FormActionButton(text = "Etkinlik Talep Formu") {
-                navController.navigate(Routes.EventRequestForm.route)
+                navController.navigate(Routes.EventRequestForm.createRoute(eventName))
             }
             Spacer(modifier = Modifier.height(16.dp))
             FormActionButton(text = "Araç Talep Formu") {
-                navController.navigate(Routes.VehicleRequestForm.route)
+                // Sadece route değil, createRoute(eventName) kullanıyoruz:
+                navController.navigate(Routes.VehicleRequestForm.createRoute(eventName))
             }
             Spacer(modifier = Modifier.height(16.dp))
             FormActionButton(text = "Katılımcı Bilgileri") {

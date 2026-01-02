@@ -27,7 +27,7 @@ import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
 import com.example.a7club.ui.theme.VeryLightPurple
 import com.example.a7club.ui.viewmodels.PersonnelViewModel
-
+import com.example.a7club.model.Event
 @Composable
 fun PersonnelPastEventsScreen(
     navController: NavController,

@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.a7club.R
 import com.example.a7club.data.Resource
-import com.example.a7club.data.models.Event
+import com.example.a7club.model.Event
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.viewmodels.StudentFlowViewModel
 import kotlinx.coroutines.launch
@@ -156,7 +156,13 @@ fun EventListArea(state: Resource<List<Event>>, cat: String, date: LocalDate, na
         is Resource.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = TargetDarkBlue) }
         is Resource.Success -> {
             val list = state.data?.filter { event ->
-                val matchesDate = Instant.ofEpochMilli(event.startTime).atZone(ZoneId.systemDefault()).toLocalDate() == date
+                // --- DÜZELTME BURADA YAPILDI ---
+                // event.startTime (Long) yerine event.timestamp (Timestamp) kullanıldı
+                val eventDate = event.timestamp?.toDate()?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
+
+                // Tarih null değilse ve seçilen güne eşitse true döner
+                val matchesDate = eventDate != null && eventDate.isEqual(date)
+
                 val matchesCat = if (cat == allLabel) true else event.clubName.contains(cat, ignoreCase = true)
                 matchesDate && matchesCat
             } ?: emptyList()

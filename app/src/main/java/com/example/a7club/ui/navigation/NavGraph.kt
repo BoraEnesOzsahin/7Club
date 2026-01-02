@@ -1,5 +1,5 @@
 package com.example.a7club.ui.navigation
-
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,9 +37,9 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         composable(
             route = Routes.PersonnelHomeScreen.route,
             arguments = listOf(
-                navArgument("tabIndex") { 
+                navArgument("tabIndex") {
                     type = NavType.IntType
-                    defaultValue = 0 
+                    defaultValue = 0
                 }
             )
         ) { backStackEntry ->
@@ -64,7 +64,7 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         ) { backStackEntry ->
             val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
             val clubName = backStackEntry.arguments?.getString("clubName") ?: ""
-            PersonnelEventDetailScreen(navController, eventName, clubName)
+            PersonelEventDetailScreen(navController, eventName, clubName)
         }
 
         composable(
@@ -131,8 +131,27 @@ fun NavGraph(modifier: Modifier = Modifier, showSnackbar: (String) -> Unit) {
         composable(Routes.MembersScreen.route) { MembersScreen(navController) }
         composable(Routes.ContactInfoScreen.route) { ContactInfoScreen(navController) }
         composable(Routes.Forms.route) { FormsScreen(navController) }
-        composable(Routes.EventRequestForm.route) { EventRequestFormScreen(navController) }
-        composable(Routes.VehicleRequestForm.route) { VehicleRequestFormScreen(navController) }
+        composable(
+            route = Routes.EventRequestForm.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            // ViewModel'i burada tanımlayıp içine eventName'i veriyoruz
+            val viewModel: com.example.a7club.ui.viewmodels.EventRequestViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+
+            // Not: EventRequestFormScreen composable'ının da bu parametreleri alacak şekilde güncellenmesi gerekir.
+            // Aşağıda Screen ve ViewModel kodlarını veriyorum.
+            EventRequestFormScreen(navController, eventName, viewModel)
+        }
+        composable(
+            route = Routes.VehicleRequestForm.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            // Not: ViewModel'i burada tanımlayıp içeri atıyoruz
+            val committeeViewModel: com.example.a7club.ui.viewmodels.CommitteeEventViewModel = viewModel()
+            VehicleRequestFormScreen(navController, eventName, committeeViewModel)
+        }
 
         // Form Geçmişi ve Detaylar
         composable(Routes.PastEventForms.route) { PastEventFormsScreen(navController) }

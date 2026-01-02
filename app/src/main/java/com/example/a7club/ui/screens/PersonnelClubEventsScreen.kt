@@ -44,9 +44,9 @@ fun PersonnelClubEventsScreen(
 ) {
     var searchText by remember { mutableStateOf("") }
     var isMenuExpanded by rememberSaveable { mutableStateOf(false) }
-    
+
+    // isLoading değişkeni kaldırıldı çünkü ViewModel'de tanımlı değil.
     val events by viewModel.currentClubEvents.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
 
     LaunchedEffect(clubName, isPast) {
         viewModel.fetchClubEvents(clubName, isPast)
@@ -77,7 +77,9 @@ fun PersonnelClubEventsScreen(
                 onMenuToggle = { isMenuExpanded = !isMenuExpanded },
                 onIndexSelected = { index ->
                     isMenuExpanded = false
-                    navController.navigate(Routes.PersonnelHomeScreen.createRoute(index))
+                    // createRoute yerine doğrudan route string ve parametre kullanımı
+                    // Eğer Routes.PersonnelHomeScreen parametre almıyorsa sadece route kullanılır
+                    navController.navigate("${Routes.PersonnelHomeScreen.route}?tabIndex=$index")
                 }
             )
         }
@@ -89,13 +91,13 @@ fun PersonnelClubEventsScreen(
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Geri Butonu
             IconButton(onClick = { navController.popBackStack() }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = DarkBlue)
             }
 
-            // Arama Çubuğu (Görseldeki gibi)
+            // Arama Çubuğu
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextField(
                     value = searchText,
@@ -123,12 +125,10 @@ fun PersonnelClubEventsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            if (isLoading) {
+            // Loading kontrolü kaldırıldı, direkt liste boş mu dolu mu kontrol ediyoruz
+            if (filteredEvents.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = DarkBlue)
-                }
-            } else if (filteredEvents.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    // Veri henüz gelmemiş veya gerçekten boş olabilir
                     Text("Etkinlik bulunamadı.", color = DarkBlue.copy(alpha = 0.6f))
                 }
             } else {
@@ -143,7 +143,7 @@ fun PersonnelClubEventsScreen(
                                 .fillMaxWidth()
                                 .height(65.dp)
                                 .shadow(4.dp, RoundedCornerShape(16.dp))
-                                .clickable { 
+                                .clickable {
                                     navController.navigate(Routes.PersonnelEventDetail.createRoute(event.title, event.clubName))
                                 },
                             shape = RoundedCornerShape(16.dp),
