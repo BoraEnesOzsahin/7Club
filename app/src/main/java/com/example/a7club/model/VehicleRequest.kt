@@ -4,12 +4,14 @@ import com.google.firebase.Timestamp
 
 data class VehicleRequest(
     val id: String = "",
-    val eventId: String = "",
-    val clubId: String = "",
-    val vehicleType: String = "",      // Örn: Otobüs
-    val pickupLocation: String = "",   // Nereden
-    val destination: String = "",      // Nereye
-    val passengerCount: Int = 0,       // Kaç Kişi
-    val notes: String = "",            // Notlar
-    val requestDate: Timestamp? = null
+    val eventId: String = "",       // Hangi etkinliğe bağlı?
+    val eventName: String = "",     // Personel ekranında kolay okunsun diye
+    val clubName: String = "",
+    val vehicleType: String = "",
+    val pickupLocation: String = "",
+    val destination: String = "",
+    val passengerCount: Int = 0,
+    val notes: String = "",
+    val requestDate: Timestamp? = null,
+    val status: String = "PENDING"
 )

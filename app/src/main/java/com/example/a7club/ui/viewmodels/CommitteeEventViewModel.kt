@@ -5,49 +5,45 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.a7club.model.VehicleRequest
-import com.google.firebase.Timestamp // Timestamp eklendi
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class CommitteeEventViewModel : ViewModel() {
 
-    // UI State değişkenleri kalabilir (Form için gerekli)
     var vehicleType by mutableStateOf("")
     var pickupLocation by mutableStateOf("")
     var dropoffLocation by mutableStateOf("")
     var passengerCount by mutableStateOf("")
     var notes by mutableStateOf("")
 
-    // CommitteeEventViewModel.kt içindeki fonksiyonu bununla değiştir:
-
-    fun submitVehicleRequest(eventName: String, clubId: String) { // eventId yerine eventName alıyoruz
-        // 1. Önce bu isme sahip etkinliğin Gerçek ID'sini bulalım
+    fun submitVehicleRequest(eventName: String, clubId: String) {
+        // 1. İsme göre Etkinlik ID'sini bul
         Firebase.firestore.collection("events")
             .whereEqualTo("title", eventName)
+            .limit(1)
             .get()
             .addOnSuccessListener { snapshot ->
-                // Eğer etkinlik bulunduysa ID'sini al, yoksa rastgele bir ID ata
-                val realEventId = if (!snapshot.isEmpty) snapshot.documents[0].id else "bilinmeyen_id"
+                val realEventId = if (!snapshot.isEmpty) snapshot.documents[0].id else "unknown_event"
 
-                // 2. Şimdi bu GERÇEK ID ile formu kaydedelim
+                // 2. Talebi Kaydet
                 val request = VehicleRequest(
-                    eventId = realEventId, // Artık doğru ID kullanılıyor!
-                    clubId = clubId,
-                    vehicleType = vehicleType, // Formdan gelen veri (Eksikti, eklendi)
-                    pickupLocation = pickupLocation, // Formdan gelen veri
+                    eventId = realEventId,
+                    eventName = eventName,
+                    clubName = "YUKEK Kulübü", // Dinamik yapılabilir
+                    vehicleType = vehicleType,
+                    pickupLocation = pickupLocation,
                     destination = dropoffLocation,
                     passengerCount = passengerCount.toIntOrNull() ?: 0,
-                    notes = notes, // Formdan gelen notlar
-                    requestDate = Timestamp.now()
+                    notes = notes,
+                    requestDate = Timestamp.now(),
+                    status = "PENDING"
                 )
 
                 Firebase.firestore.collection("vehicleRequests").add(request)
-                    .addOnSuccessListener {
-                        println("Araç talebi başarıyla ve DOĞRU ID ile oluşturuldu.")
-                    }
-                    .addOnFailureListener { e ->
-                        println("Hata: ${e.message}")
-                    }
+            }
+            .addOnFailureListener {
+                println("Etkinlik bulunamadı hatası: ${it.message}")
             }
     }
 }

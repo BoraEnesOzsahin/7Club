@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.example.a7club.ui.screens
 
 import android.net.Uri
@@ -12,9 +10,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.AttachFile // Yeni İkon
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,123 +27,171 @@ import androidx.navigation.NavController
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.viewmodels.CreateEventViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateEventScreen(
     navController: NavController,
     showSnackbar: (String) -> Unit,
     viewModel: CreateEventViewModel = viewModel()
 ) {
-    val filePickerLauncher = rememberLauncherForActivityResult(
+    // Görsel Seçici (Galeri)
+    val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        viewModel.selectedFileUri = uri
+        viewModel.selectedFileUri.value = uri
+    }
+
+    // --- YENİ EKLENEN: Belge Seçici (PDF/Word) ---
+    val documentPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        viewModel.selectedDocumentUri.value = uri
+        // Dosya yolundan basitçe ismi almaya çalışalım
+        viewModel.selectedDocumentName.value = uri?.lastPathSegment ?: "Belge Seçildi"
     }
 
     Scaffold(
-        containerColor = Color.White,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Etkinlik Oluştur", fontWeight = FontWeight.Bold, color = DarkBlue) },
+                title = { Text("Yeni Etkinlik", fontWeight = FontWeight.Bold, color = DarkBlue) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri", tint = DarkBlue)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = DarkBlue)
                     }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+                }
             )
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp)
+                .fillMaxSize()
+                .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // --- GEREKLİ ALANLAR ---
-
-            OutlinedTextField(
-                value = viewModel.title,
-                onValueChange = { viewModel.title = it },
-                label = { Text("Etkinlik Adı (Zorunlu)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = viewModel.eventTime,
-                onValueChange = { viewModel.eventTime = it },
-                label = { Text("Etkinlik Saati (Örn: 14:00)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = viewModel.contactPhone,
-                onValueChange = { viewModel.contactPhone = it },
-                label = { Text("İletişim Telefonu") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = viewModel.clubName,
-                onValueChange = { viewModel.clubName = it },
-                label = { Text("Kulüp Adı") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = viewModel.description,
-                onValueChange = { viewModel.description = it },
-                label = { Text("Açıklama (Opsiyonel)") },
-                modifier = Modifier.fillMaxWidth().height(100.dp),
-                maxLines = 4
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // --- PDF YÜKLEME ---
+            // Görsel Yükleme Alanı
             OutlinedButton(
-                onClick = { filePickerLauncher.launch("application/pdf") },
+                onClick = { imagePickerLauncher.launch("image/*") },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(Icons.Default.UploadFile, null)
+                Icon(Icons.Default.AddPhotoAlternate, null)
                 Spacer(modifier = Modifier.width(8.dp))
-                if (viewModel.selectedFileUri != null) {
-                    Text("PDF Seçildi ✅", color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
-                } else {
-                    Text("Etkinlik Formu Yükle (PDF)")
+                Text(if (viewModel.selectedFileUri.value != null) "Görsel Seçildi" else "Etkinlik Afişi Yükle")
+            }
+
+            // --- YENİ EKLENEN BUTON: Islak İmzalı Belge ---
+            // Mevcut tasarımına uygun olarak eklendi
+            OutlinedButton(
+                onClick = {
+                    // PDF, Word vb. dökümanları filtreler
+                    documentPickerLauncher.launch("application/*")
+                },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue)
+            ) {
+                Icon(Icons.Default.AttachFile, null)
+                Spacer(modifier = Modifier.width(8.dp))
+
+                val docName = viewModel.selectedDocumentName.value
+                Text(if (docName.isNotEmpty()) docName else "Başvuru Formu Ekle (PDF/Word)")
+            }
+
+            // Başlık
+            OutlinedTextField(
+                value = viewModel.title.value,
+                onValueChange = { viewModel.title.value = it },
+                label = { Text("Etkinlik Başlığı") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            // Kategori
+            Text("Kategori: ${viewModel.category.value}", color = DarkBlue, fontWeight = FontWeight.Bold)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("Business", "Tech", "Social", "Art").forEach { cat ->
+                    FilterChip(
+                        selected = viewModel.category.value == cat,
+                        onClick = { viewModel.category.value = cat },
+                        label = { Text(cat) }
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            // Tarih
+            OutlinedTextField(
+                value = viewModel.dateString.value,
+                onValueChange = { viewModel.dateString.value = it },
+                label = { Text("Tarih (Örn: 25 Kasım)") },
+                trailingIcon = { Icon(Icons.Default.CalendarToday, null) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
 
-            // --- GÖNDER BUTONU ---
+            // Saat
+            OutlinedTextField(
+                value = viewModel.eventTime.value,
+                onValueChange = { viewModel.eventTime.value = it },
+                label = { Text("Saat (Örn: 14:00)") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            // Konum
+            OutlinedTextField(
+                value = viewModel.location.value,
+                onValueChange = { viewModel.location.value = it },
+                label = { Text("Konum (Örn: İnan Kıraç Salonu)") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            // Telefon
+            OutlinedTextField(
+                value = viewModel.contactPhone.value,
+                onValueChange = { viewModel.contactPhone.value = it },
+                label = { Text("İletişim Numarası") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            // Açıklama
+            OutlinedTextField(
+                value = viewModel.description.value,
+                onValueChange = { viewModel.description.value = it },
+                label = { Text("Etkinlik Açıklaması") },
+                modifier = Modifier.fillMaxWidth().height(120.dp),
+                shape = RoundedCornerShape(12.dp),
+                maxLines = 5
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Kaydet Butonu
             Button(
                 onClick = {
                     viewModel.createEvent(
                         onSuccess = {
-                            showSnackbar("Etkinlik ve PDF başarıyla gönderildi!")
+                            showSnackbar("Etkinlik ve belgeler onaya gönderildi!")
                             navController.popBackStack()
                         },
-                        onError = { showSnackbar(it) }
+                        onError = { error ->
+                            showSnackbar(error)
+                        }
                     )
                 },
-                enabled = !viewModel.isUploading,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                enabled = !viewModel.isUploading.value
             ) {
-                if (viewModel.isUploading) {
+                if (viewModel.isUploading.value) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                    Text(" Yükleniyor...", modifier = Modifier.padding(start = 8.dp))
                 } else {
-                    Text("Etkinliği Oluştur", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("Oluştur ve Onaya Gönder", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

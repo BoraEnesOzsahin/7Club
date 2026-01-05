@@ -1,5 +1,6 @@
 package com.example.a7club.utils
 
+import android.util.Log
 import com.example.a7club.model.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -12,74 +13,105 @@ object FirebaseSeeder {
     fun seedDatabase(onResult: (String) -> Unit) {
         val batch = db.batch()
 
-        // --- 1. KULLANICILAR ---
+        // --- 1. KULLANICILAR (HashMap Kullanarak - En Garantili Yöntem) ---
+
+        // A) ÖĞRENCİ
         val studentRef = db.collection("users").document("student_demo")
-        val studentData = hashMapOf(
+        val studentData = hashMapOf<String, Any>(
             "uid" to "student_demo",
             "fullName" to "Ahmet Öğrenci",
             "email" to "ogrenci@yeditepe.edu.tr",
-            "password" to "123456",
             "role" to "STUDENT",
             "studentId" to "2022001",
-            "department" to "Bilgisayar Müh.",
             "enrolledClubs" to listOf("club_yukek")
         )
         batch.set(studentRef, studentData)
 
-        val staffRef = db.collection("users").document("staff_demo")
-        val staffData = hashMapOf(
-            "uid" to "staff_demo",
+        // B) PERSONEL (SENİN HESABIN - DOĞRU, DOKUNMA)
+        val personnelUid = "kCawCtupLNbfGEkvdJEIHIlbjCJ2"
+
+        val staffRef = db.collection("users").document(personnelUid)
+        val staffData = hashMapOf<String, Any>(
+            "uid" to personnelUid,
             "fullName" to "Mehmet Personel",
             "email" to "personel@yeditepe.edu.tr",
-            "password" to "123456",
-            "role" to "STAFF",
-            "department" to "Kültür Ofisi"
+            "role" to "PERSONNEL"
         )
         batch.set(staffRef, staffData)
 
-        val committeeRef = db.collection("users").document("committee_demo")
-        val committeeData = hashMapOf(
-            "uid" to "committee_demo",
+        // C) KULÜP YÖNETİCİSİ (YÖNETİM)
+        // -----------------------------------------------------------
+        // BURAYA DİKKAT: Firebase'den 'yonetim@yeditepe.edu.tr' için aldığın UID'yi yapıştır.
+        val committeeUid = "JCVei8L0cjYG0WOLifXDXdil7xO2"
+        // -----------------------------------------------------------
+
+        val committeeRef = db.collection("users").document(committeeUid)
+        val committeeData = hashMapOf<String, Any>(
+            "uid" to committeeUid, // Değişkeni buraya atadık
             "fullName" to "Ayşe Başkan",
             "email" to "yonetim@yeditepe.edu.tr",
-            "password" to "123456",
             "role" to "COMMITTEE",
-            "studentId" to "2021005",
-            "department" to "Endüstri Tasarımı",
             "enrolledClubs" to listOf("club_yukek")
         )
         batch.set(committeeRef, committeeData)
 
         // --- 2. KULÜPLER ---
         val clubRef = db.collection("clubs").document("club_yukek")
-        val clubData = hashMapOf(
+        val clubData = hashMapOf<String, Any>(
             "id" to "club_yukek",
-            "name" to "Yükek Kulübü",
+            "name" to "Kültür ve Etkinlik Kulübü",
             "description" to "Yeditepe Kültür ve Etkinlik Kulübü",
-            "contactEmail" to "yukek@yeditepe.edu.tr",
-            "committeeUids" to listOf("committee_demo")
+            // ARTIK BU KULÜBÜN YÖNETİCİSİ SENİN YENİ HESABIN:
+            "committeeUids" to listOf(committeeUid)
         )
         batch.set(clubRef, clubData)
 
+        val clubTechRef = db.collection("clubs").document("club_bilisim")
+        val clubTechData = hashMapOf<String, Any>(
+            "id" to "club_bilisim",
+            "name" to "Bilişim Kulübü",
+            "description" to "Teknoloji ve Yazılım",
+            "committeeUids" to listOf<String>()
+        )
+        batch.set(clubTechRef, clubTechData)
+
         // --- 3. ETKİNLİKLER ---
-        // Gelecek Etkinlik (Onay Bekleyen + PDF Linkli)
+
+        // A) Gelecek Bekleyen Etkinlik
         val eventPendingRef = db.collection("events").document("event_pending")
         val eventPending = Event(
             id = "event_pending",
-            title = "Yazılım Kampı",
-            description = "Android geliştirme üzerine yoğunlaştırılmış kamp.",
-            location = "B Blok Konferans Salonu",
+            title = "Liderlik Zirvesi",
+            description = "İş dünyasının liderleri ile buluşma.",
+            location = "İnan Kıraç Salonu",
             clubId = "club_yukek",
-            clubName = "Yükek Kulübü",
+            clubName = "Kültür ve Etkinlik Kulübü",
+            dateString = "20 Mayıs - 14:00",
             timestamp = Timestamp(getDate(daysFromNow = 5)),
             status = "PENDING",
-            category = "Tech",
-            contactPhone = "05551112233",
+            category = "Business",
             formUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
         )
         batch.set(eventPendingRef, eventPending)
 
-        // Geçmiş Etkinlik
+        // B) Gecikmiş Bekleyen Etkinlik
+        val eventOverdueRef = db.collection("events").document("event_overdue")
+        val eventOverdue = Event(
+            id = "event_overdue",
+            title = "Yapay Zeka Semineri",
+            description = "AI teknolojilerindeki son gelişmeler.",
+            location = "Mavi Salon",
+            clubId = "club_bilisim",
+            clubName = "Bilişim Kulübü",
+            dateString = "1 Ocak - 10:00",
+            timestamp = Timestamp(getDate(daysFromNow = -5)),
+            status = "PENDING",
+            category = "Tech",
+            formUrl = ""
+        )
+        batch.set(eventOverdueRef, eventOverdue)
+
+        // C) Geçmiş Onaylı Etkinlik
         val eventPastRef = db.collection("events").document("event_past")
         val eventPast = Event(
             id = "event_past",
@@ -87,33 +119,40 @@ object FirebaseSeeder {
             description = "Yeni üyelerle tanışma.",
             location = "GSF Çimler",
             clubId = "club_yukek",
-            clubName = "Yükek Kulübü",
-            timestamp = Timestamp(getDate(daysFromNow = -2)),
+            clubName = "Kültür ve Etkinlik Kulübü",
+            dateString = "10 Nisan - 12:00",
+            timestamp = Timestamp(getDate(daysFromNow = -30)),
             status = "APPROVED",
-            category = "General",
-            contactPhone = "05551112233"
+            category = "General"
         )
         batch.set(eventPastRef, eventPast)
 
-        // --- 4. ARAÇ TALEBİ (YENİ EKLENDİ) ---
-        // Yazılım Kampı etkinliğine bağlı bir otobüs isteği
-        val vehicleReqRef = db.collection("vehicleRequests").document("req_demo_1")
-        val vehicleRequest = VehicleRequest(
-            id = "req_demo_1",
-            eventId = "event_pending", // Yazılım Kampı'na bağlıyoruz
-            clubId = "club_yukek",
+        // --- 4. ARAÇ TALEPLERİ ---
+        val vehicleRef = db.collection("vehicleRequests").document("req_001")
+        val vehicleReq = VehicleRequest(
+            id = "req_001",
+            eventId = "event_pending",
+            eventName = "Liderlik Zirvesi",
+            clubName = "Kültür ve Etkinlik Kulübü",
             vehicleType = "Otobüs (45 Kişilik)",
             pickupLocation = "Kadıköy Rıhtım",
-            destination = "Yeditepe Üniversitesi",
+            destination = "Yeditepe Kampüs",
             passengerCount = 40,
-            notes = "Öğrenciler saat 09:00'da hazır olacak.",
+            status = "PENDING",
             requestDate = Timestamp.now()
         )
-        batch.set(vehicleReqRef, vehicleRequest)
+        batch.set(vehicleRef, vehicleReq)
 
+        // --- KAYDET ---
         batch.commit()
-            .addOnSuccessListener { onResult("Veritabanı güncellendi! (Araç talebi eklendi)") }
-            .addOnFailureListener { e -> onResult("Hata: ${e.message}") }
+            .addOnSuccessListener {
+                Log.d("FirebaseSeeder", "Veritabanı başarıyla güncellendi!")
+                onResult("Veritabanı güncellendi! Uygulamayı yeniden başlatabilirsin.")
+            }
+            .addOnFailureListener { e ->
+                Log.e("FirebaseSeeder", "Hata: ${e.message}")
+                onResult("Hata: ${e.message}")
+            }
     }
 
     private fun getDate(daysFromNow: Int): Date {

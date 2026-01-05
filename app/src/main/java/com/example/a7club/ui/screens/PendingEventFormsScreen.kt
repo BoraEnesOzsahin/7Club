@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.a7club.ui.screens
 
 import androidx.compose.foundation.border
@@ -11,7 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,14 +22,48 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.a7club.model.Event // Event modelini import ettik
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PendingEventFormsScreen(navController: NavController) {
-    val pendingEvents = listOf("Quiz Night", "Seramik Atölyesi")
+    // --- VERİTABANI BAĞLANTISI ---
+    val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+    var pendingEvents by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        val uid = auth.currentUser?.uid
+        if (uid != null) {
+            try {
+                // 1. Yöneticinin kulübünü bul
+                val userDoc = db.collection("users").document(uid).get().await()
+                val enrolledClubs = userDoc.get("enrolledClubs") as? List<String>
+                val myClubId = enrolledClubs?.firstOrNull()
+
+                if (myClubId != null) {
+                    // 2. Statüsü "PENDING" olanları çek (Onay Bekleyenler)
+                    val snapshot = db.collection("events")
+                        .whereEqualTo("clubId", myClubId)
+                        .whereEqualTo("status", "PENDING")
+                        .get()
+                        .await()
+
+                    pendingEvents = snapshot.toObjects(Event::class.java)
+                }
+            } catch (e: Exception) {
+                // Hata yönetimi
+            }
+        }
+        isLoading = false
+    }
 
     Scaffold(
         containerColor = Color.White,
@@ -40,13 +76,17 @@ fun PendingEventFormsScreen(navController: NavController) {
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)
             )
         },
-        bottomBar = { 
-            // DÜZELTİLDİ: Sayfaya özel alt bar eklendi
-            PendingFormsBottomAppBar(navController = navController) 
+        bottomBar = {
+            // Mevcut özel alt barın korundu
+            PendingFormsBottomAppBar(navController = navController)
         }
     ) { paddingValues ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 24.dp).verticalScroll(rememberScrollState()),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.align(Alignment.Start).padding(top = 16.dp)) {
@@ -55,22 +95,39 @@ fun PendingEventFormsScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            pendingEvents.forEach { eventName ->
-                Button(
-                    onClick = { navController.navigate(Routes.PendingEventDetail.createRoute(eventName)) },
-                    modifier = Modifier.fillMaxWidth(0.85f).height(60.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF3EFFF), contentColor = DarkBlue),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                ) {
-                    Text(text = eventName, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            if (isLoading) {
+                CircularProgressIndicator(color = DarkBlue, modifier = Modifier.padding(top = 20.dp))
+            } else if (pendingEvents.isEmpty()) {
+                Text(
+                    text = "Onay bekleyen formunuz yok.",
+                    color = Color.Gray,
+                    modifier = Modifier.padding(top = 20.dp)
+                )
+            } else {
+                // Veritabanından gelen listeyi basıyoruz
+                pendingEvents.forEach { event ->
+                    Button(
+                        onClick = {
+                            // Detay sayfasına yönlendirme (Event başlığı ile)
+                            navController.navigate(Routes.PendingEventDetail.createRoute(event.title))
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .height(60.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF3EFFF), contentColor = DarkBlue),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    ) {
+                        Text(text = event.title, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
 }
 
+// --- ALT BAR (TASARIM KORUNDU) ---
 @Composable
 fun PendingFormsBottomAppBar(navController: NavController) {
     Box(

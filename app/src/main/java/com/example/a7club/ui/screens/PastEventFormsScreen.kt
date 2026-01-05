@@ -12,7 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,19 +22,46 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.a7club.model.Event // Event model importu
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PastEventFormsScreen(navController: NavController) {
-    val pastEvents = listOf(
-        "Yaratıcı Yazarlık Atölyesi",
-        "Coffee Talks",
-        "90's Event",
-        "İstiklal Gezisi"
-    )
+    // --- VERİTABANI BAĞLANTISI ---
+    val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+    var pastEvents by remember { mutableStateOf<List<Event>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        val uid = auth.currentUser?.uid
+        if (uid != null) {
+            try {
+                // 1. Kulübü bul
+                val userDoc = db.collection("users").document(uid).get().await()
+                val enrolledClubs = userDoc.get("enrolledClubs") as? List<String>
+                val myClubId = enrolledClubs?.firstOrNull()
+
+                if (myClubId != null) {
+                    // 2. Statüsü "APPROVED" olanları çek (Geçmiş Etkinlikler)
+                    val snapshot = db.collection("events")
+                        .whereEqualTo("clubId", myClubId)
+                        .whereEqualTo("status", "APPROVED")
+                        .get()
+                        .await()
+
+                    pastEvents = snapshot.toObjects(Event::class.java)
+                }
+            } catch (e: Exception) {
+                // Hata yönetimi
+            }
+        }
+    }
 
     Scaffold(
         containerColor = Color.White,
@@ -47,9 +74,9 @@ fun PastEventFormsScreen(navController: NavController) {
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)
             )
         },
-        bottomBar = { 
-            // DÜZELTİLDİ: Bu sayfaya özel alt bar çağırıldı
-            PastEventFormsBottomAppBar(navController = navController) 
+        bottomBar = {
+            // Senin tasarımındaki Alt Bar
+            PastEventFormsBottomAppBar(navController = navController)
         }
     ) { paddingValues ->
         Column(
@@ -69,12 +96,16 @@ fun PastEventFormsScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Geçmiş Etkinlik Butonları
-            pastEvents.forEach { eventName ->
-                PastEventButton(text = eventName) {
-                    navController.navigate(Routes.PastEventDetail.createRoute(eventName))
+            // Geçmiş Etkinlik Butonları (Veritabanından gelen liste)
+            if (pastEvents.isEmpty()) {
+                Text("Henüz onaylanmış geçmiş etkinlik yok.", color = Color.Gray, modifier = Modifier.padding(top = 20.dp))
+            } else {
+                pastEvents.forEach { event ->
+                    PastEventButton(text = event.title) {
+                        navController.navigate(Routes.PastEventDetail.createRoute(event.title))
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

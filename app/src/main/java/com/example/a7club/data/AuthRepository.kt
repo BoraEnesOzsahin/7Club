@@ -1,63 +1,55 @@
 package com.example.a7club.data
 
-import com.example.a7club.model.Personnel
-import com.example.a7club.model.Student
 import com.example.a7club.model.User
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
-// Role artık koleksiyon ismi değil, 'users' içindeki 'role' alanının değerini temsil ediyor
+// Role isimlerini FirebaseSeeder'da kullandığımız stringlerle eşleştirdik
 enum class UserRole(val roleName: String) {
     STUDENT("STUDENT"),
     CLUB_COMMITTEE("COMMITTEE"),
-    PERSONNEL("STAFF")
+    PERSONNEL("PERSONNEL") // Seeder'da 'PERSONNEL' olarak kaydettik
 }
 
 class AuthRepository {
 
-    private val db = Firebase.firestore
+    private val auth = FirebaseAuth.getInstance()
+    private val db = FirebaseFirestore.getInstance()
 
     suspend fun signIn(email: String, password: String, role: UserRole): Resource<User> {
         return try {
-            // Belirlediğimiz şemaya göre tüm kullanıcılar 'users' koleksiyonunda
-            val querySnapshot = db.collection("users")
-                .whereEqualTo("email", email)
-                .whereEqualTo("role", role.roleName) // Seçilen role göre filtreleme ekledik
-                .limit(1)
-                .get()
-                .await()
+            // 1. Firebase Authentication ile şifre ve mail kontrolü yap
+            val authResult = auth.signInWithEmailAndPassword(email, password).await()
+            val uid = authResult.user?.uid
 
-            if (querySnapshot.isEmpty) {
-                return Resource.Error("Bu bilgilere uygun kullanıcı bulunamadı.")
+            if (uid == null) {
+                return Resource.Error("Kullanıcı kimliği alınamadı.")
             }
 
-            val document = querySnapshot.documents.first()
+            // 2. Firestore'dan kullanıcının detaylarını çek
+            val snapshot = db.collection("users").document(uid).get().await()
 
-            // Şifre kontrolü (Güvenlik için plaintext önerilmez ancak mevcut mantığı koruyoruz)
-            val dbPassword = document.getString("password")
-            if (dbPassword == null || dbPassword != password) {
-                return Resource.Error("Şifre yanlış.")
-            }
+            // 3. Gelen veriyi TEK OLAN User modeline çevir
+            // (Artık Student veya Personnel ayrımı yok, hepsi User)
+            val user = snapshot.toObject(User::class.java)
 
-            // Role göre doğru veri sınıfına (Student/Personnel) dönüştür
-            val userResult: User? = when (role) {
-                UserRole.STUDENT, UserRole.CLUB_COMMITTEE -> {
-                    document.toObject(Student::class.java)?.copy(uid = document.id)
+            if (user != null) {
+                // 4. Kullanıcının rolü, seçilen rol ile eşleşiyor mu kontrol et
+                if (user.role == role.roleName) {
+                    Resource.Success(user)
+                } else {
+                    // Örneğin: Öğrenci girişinden personel girmeye çalışırsa engelle
+                    auth.signOut()
+                    Resource.Error("Bu hesaba ${role.roleName} giriş yetkisi verilmemiş. (Rolünüz: ${user.role})")
                 }
-                UserRole.PERSONNEL -> {
-                    document.toObject(Personnel::class.java)?.copy(uid = document.id)
-                }
-            }
-
-            if (userResult == null) {
-                Resource.Error("Kullanıcı verisi ayrıştırılamadı.")
             } else {
-                Resource.Success(userResult)
+                Resource.Error("Kullanıcı verisi veritabanında bulunamadı.")
             }
 
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Giriş yapılırken bir hata oluştu.")
+            // Firebase hatalarını yakala
+            Resource.Error(e.message ?: "Giriş başarısız.")
         }
     }
 }

@@ -1,26 +1,15 @@
 package com.example.a7club.model
 
-sealed interface User {
-    val uid: String
-    val fullName: String
-    val email: String
-    val role: String // STUDENT, COMMITTEE, STAFF
-}
+data class User(
+    val uid: String = "",
+    val fullName: String = "",
+    val email: String = "",
+    val role: String = "", // "STUDENT", "PERSONNEL", "COMMITTEE"
 
-data class Student(
-    override val uid: String = "",
-    override val fullName: String = "",
-    override val email: String = "",
-    override val role: String = "STUDENT",
-    val studentId: String = "",
-    val department: String = "",
+    // Öğrenci olmayanlar (Personel vb.) için bu alanlar boş (null) olabilir:
+    val studentId: String? = null,
+    val department: String? = null,
+
+    // Sadece öğrenci ve komite için dolu olur, personel için boş liste:
     val enrolledClubs: List<String> = emptyList()
-) : User
-
-data class Personnel(
-    override val uid: String = "",
-    override val fullName: String = "",
-    override val email: String = "",
-    override val role: String = "STAFF",
-    val department: String = ""
-) : User
+)
