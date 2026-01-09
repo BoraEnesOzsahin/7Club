@@ -11,6 +11,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Locale
 import java.util.UUID
 
 class CreateEventViewModel : ViewModel() {
@@ -32,7 +34,7 @@ class CreateEventViewModel : ViewModel() {
     // Görsel Yükleme Alanı
     var selectedFileUri = mutableStateOf<Uri?>(null)
 
-    // --- YENİ EKLENEN: Belge (PDF/Word) Yükleme Alanı ---
+    // Belge (PDF/Word) Yükleme Alanı
     var selectedDocumentUri = mutableStateOf<Uri?>(null)
     var selectedDocumentName = mutableStateOf("") // Kullanıcıya dosya adını göstermek için
 
@@ -62,6 +64,7 @@ class CreateEventViewModel : ViewModel() {
     }
 
     fun createEvent(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        // 1. Validasyon Kontrolü
         if (title.value.isEmpty() || description.value.isEmpty() || location.value.isEmpty() || dateString.value.isEmpty()) {
             onError("Lütfen zorunlu alanları doldurun.")
             return
@@ -72,19 +75,39 @@ class CreateEventViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
+                // 2. Kulüp Bilgilerini Al
                 val userSnapshot = db.collection("users").document(uid).get().await()
                 val enrolledClubs = userSnapshot.get("enrolledClubs") as? List<String>
                 val clubId = enrolledClubs?.firstOrNull() ?: ""
 
-                // 1. Görsel URL'si (Şimdilik URI string)
+                // 3. Dosya URL'lerini Hazırla (Şimdilik string olarak)
                 val imageUrlString = selectedFileUri.value?.toString() ?: ""
-
-                // 2. Belge URL'si (Şimdilik URI string) - formUrl alanına kaydedilecek
                 val documentUrlString = selectedDocumentUri.value?.toString() ?: ""
 
                 val newEventId = UUID.randomUUID().toString()
-                val finalDateString = "${dateString.value} - ${eventTime.value}"
 
+                // --- TARİH VE SAAT İŞLEME (Önemli Kısım) ---
+                // Kullanıcının girdiği tarih ve saati birleştiriyoruz.
+                // Örn: dateString="25/11/2023", eventTime="14:00" -> "25/11/2023 14:00"
+                val fullDateString = "${dateString.value} ${eventTime.value}".trim()
+
+                val format = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("tr"))
+                val parsedDate = try {
+                    format.parse(fullDateString)
+                } catch (e: Exception) {
+                    // Saat girilmediyse sadece tarihi dene
+                    try {
+                        SimpleDateFormat("dd/MM/yyyy", Locale("tr")).parse(dateString.value)
+                    } catch (e2: Exception) {
+                        null
+                    }
+                }
+
+                // Eğer tarih başarıyla çevrildiyse onu kullan, yoksa şu anı al (Fallback)
+                // Bu timestamp sayesinde takvimde doğru günde görünecek.
+                val eventTimestamp = if (parsedDate != null) Timestamp(parsedDate) else Timestamp.now()
+
+                // 4. Etkinlik Objesini Oluştur
                 val newEvent = Event(
                     id = newEventId,
                     title = title.value,
@@ -92,17 +115,16 @@ class CreateEventViewModel : ViewModel() {
                     location = location.value,
                     clubId = clubId,
                     clubName = clubName.value.ifEmpty { "Kulüp" },
-                    dateString = finalDateString,
-                    timestamp = Timestamp.now(),
+                    dateString = fullDateString, // Ekranda göstermek için String hali
+                    timestamp = eventTimestamp,  // Sıralama ve takvim filtresi için Timestamp hali
                     status = "PENDING",
                     category = category.value,
                     contactPhone = contactPhone.value,
                     imageUrl = imageUrlString,
-
-                    // Islak imzalı belge buraya kaydediliyor:
                     formUrl = documentUrlString
                 )
 
+                // 5. Veritabanına Kaydet
                 db.collection("events").document(newEventId).set(newEvent).await()
 
                 isUploading.value = false

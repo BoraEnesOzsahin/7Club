@@ -2,9 +2,11 @@
 
 package com.example.a7club.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -14,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.a7club.ui.navigation.Routes
@@ -35,13 +38,13 @@ fun PersonnelClubEventsScreen(
     val events by viewModel.currentClubEvents.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    val title = if (isPast) "Geçmiş Etkinlikler" else "Gelecek Etkinlikler"
+    val titleText = if (isPast) "Geçmiş Etkinlikler" else "Gelecek Etkinlikler"
 
     Scaffold(
         containerColor = Color.White,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(title, fontWeight = FontWeight.Bold, color = DarkBlue) },
+                title = { Text(titleText, fontWeight = FontWeight.Bold, color = DarkBlue) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri", tint = DarkBlue)
@@ -66,11 +69,16 @@ fun PersonnelClubEventsScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(events) { event ->
-                        // Liste eleman kartını kullanıyoruz (Common UI veya Home'daki)
+                        // Liste eleman kartını çağırıyoruz (Aşağıda tanımlandı)
                         PersonnelListItemCard(
                             title = event.title,
                             clubName = event.clubName,
-                            status = if (event.status == "PENDING") "Bekliyor" else if(event.status == "APPROVED") "Onaylandı" else "Reddedildi",
+                            status = when(event.status) {
+                                "PENDING" -> "Bekliyor"
+                                "APPROVED" -> "Onaylandı"
+                                "REJECTED" -> "Reddedildi"
+                                else -> event.status
+                            },
                             onClick = {
                                 navController.navigate(Routes.PersonnelEventDetail.createRoute(event.title, event.clubName))
                             }
@@ -78,6 +86,60 @@ fun PersonnelClubEventsScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+// --- EKSİK OLAN KART TASARIMI (BURAYA EKLENDİ) ---
+@Composable
+fun PersonnelListItemCard(title: String, clubName: String, status: String, onClick: () -> Unit) {
+    // Duruma göre renk seçimi
+    val statusColor = when (status) {
+        "Onaylandı", "APPROVED" -> Color(0xFF4CAF50) // Yeşil
+        "Reddedildi", "REJECTED" -> Color(0xFFF44336) // Kırmızı
+        else -> Color(0xFFFF9800)        // Turuncu (Bekliyor)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        // VeryLightPurple (0xFFEEEBFF) yerine benzer bir ton veya tema rengini kullanıyoruz
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3EFFF))
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkBlue
+                )
+                // Durum Badge'i
+                Surface(
+                    color = statusColor.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = status,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = statusColor,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Kulüp: $clubName",
+                style = MaterialTheme.typography.bodyMedium,
+                color = DarkBlue.copy(alpha = 0.8f)
+            )
         }
     }
 }

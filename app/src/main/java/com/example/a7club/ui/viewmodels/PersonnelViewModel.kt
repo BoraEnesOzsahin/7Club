@@ -31,13 +31,17 @@ class PersonnelViewModel : ViewModel() {
     private val _pastEvents = MutableStateFlow<List<Event>>(emptyList())
     val pastEvents: StateFlow<List<Event>> = _pastEvents.asStateFlow()
 
+    // --- YENİ EKLENEN: Takvim için TÜM etkinlikler ---
+    private val _allEventsForCalendar = MutableStateFlow<List<Event>>(emptyList())
+    val allEventsForCalendar: StateFlow<List<Event>> = _allEventsForCalendar.asStateFlow()
+
     private val _clubs = MutableStateFlow<List<Club>>(emptyList())
     val clubs: StateFlow<List<Club>> = _clubs.asStateFlow()
 
     private val _selectedVehicleRequest = MutableStateFlow<VehicleRequest?>(null)
     val selectedVehicleRequest: StateFlow<VehicleRequest?> = _selectedVehicleRequest.asStateFlow()
 
-    // 2. Kulüp Detay Sayfaları İçin (EKSİK OLANLAR EKLENDİ)
+    // 2. Kulüp Detay Sayfaları İçin
     private val _currentClubEvents = MutableStateFlow<List<Event>>(emptyList())
     val currentClubEvents: StateFlow<List<Event>> = _currentClubEvents.asStateFlow()
 
@@ -50,6 +54,26 @@ class PersonnelViewModel : ViewModel() {
     init {
         fetchEvents()
         fetchClubs()
+        fetchAllEventsForCalendar() // YENİ: Başlangıçta tümünü çek
+    }
+
+    // YENİ FONKSİYON: Takvim için tüm etkinlikleri getirir
+    private fun fetchAllEventsForCalendar() {
+        viewModelScope.launch {
+            try {
+                // Tarihe göre sıralı hepsini çek (Status farketmeksizin)
+                val snapshot = db.collection("events")
+                    .orderBy("timestamp", Query.Direction.ASCENDING)
+                    .get()
+                    .await()
+
+                val events = snapshot.toObjects(Event::class.java)
+                _allEventsForCalendar.value = events
+
+            } catch (e: Exception) {
+                Log.e("PersonnelViewModel", "Takvim verisi çekilemedi: ${e.message}")
+            }
+        }
     }
 
     private fun fetchEvents() {
@@ -64,7 +88,6 @@ class PersonnelViewModel : ViewModel() {
                         val allPending = snapshot?.toObjects(Event::class.java) ?: emptyList()
                         val now = Timestamp.now()
 
-                        // HATA DÜZELTİLDİ: Nullable Timestamp kontrolü
                         _recentPendingEvents.value = allPending.filter {
                             val ts = it.timestamp
                             ts != null && ts >= now
@@ -136,6 +159,8 @@ class PersonnelViewModel : ViewModel() {
                     batch.update(doc.reference, "status", "APPROVED")
                 }
                 batch.commit().await()
+                // Verileri yenile
+                fetchAllEventsForCalendar()
                 onSuccess()
             } catch (e: Exception) {
                 Log.e("PersonnelViewModel", "Onay hatası: ${e.message}")
@@ -155,14 +180,14 @@ class PersonnelViewModel : ViewModel() {
                     batch.update(doc.reference, "status", "REJECTED")
                 }
                 batch.commit().await()
+                // Verileri yenile
+                fetchAllEventsForCalendar()
                 onSuccess()
             } catch (e: Exception) {
                 Log.e("PersonnelViewModel", "Ret hatası: ${e.message}")
             }
         }
     }
-
-    // 3. EKSİK OLAN FONKSİYONLAR (GERİ GELDİ)
 
     fun fetchClubEvents(clubName: String, isPast: Boolean) {
         viewModelScope.launch {
@@ -171,7 +196,6 @@ class PersonnelViewModel : ViewModel() {
                 val query = db.collection("events")
                     .whereEqualTo("clubName", clubName)
 
-                // Basit filtreleme, detaylısı client side yapılabilir veya index gerekir
                 val snapshot = query.get().await()
                 val allEvents = snapshot.toObjects(Event::class.java)
                 val now = Timestamp.now()
@@ -200,11 +224,6 @@ class PersonnelViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Kulübün ID'sini bulmak gerekebilir, burada isimden gidiyoruz
-                // Gerçek senaryoda clubId kullanmak daha sağlıklıdır.
-                // Burada "enrolledClubs" array'inde bu kulübün id'si olan userları çekiyoruz
-
-                // Kulüp ID'sini bulalım
                 val clubSnapshot = db.collection("clubs").whereEqualTo("name", clubName).get().await()
                 if (!clubSnapshot.isEmpty) {
                     val clubId = clubSnapshot.documents[0].getString("id") ?: ""

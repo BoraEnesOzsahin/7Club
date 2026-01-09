@@ -56,7 +56,8 @@ fun PersonnelHomeScreen(
     initialTabIndex: Int = 0,
     personnelViewModel: PersonnelViewModel = viewModel()
 ) {
-    val recentEvents by personnelViewModel.recentPendingEvents.collectAsState()
+    // GÜNCELLEME: Artık sadece 'pending' değil, 'allEventsForCalendar'ı dinliyoruz
+    val allCalendarEvents by personnelViewModel.allEventsForCalendar.collectAsState()
     val clubs by personnelViewModel.clubs.collectAsState()
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -99,7 +100,7 @@ fun PersonnelHomeScreen(
             containerColor = Color.White,
             topBar = {
                 val title = when(selectedBottomTabIndex) {
-                    0 -> "Etkinlikler"
+                    0 -> "Ajanda" // İsim güncellendi
                     1 -> "Keşfet"
                     2 -> "Kulüpler"
                     else -> "Profilim"
@@ -111,7 +112,6 @@ fun PersonnelHomeScreen(
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
                 )
             },
-            // GÜNCEL: 1. Mod (Ana Sayfa) Alt Barı
             bottomBar = {
                 PersonnelHomeBottomBar(
                     navController = navController,
@@ -122,7 +122,8 @@ fun PersonnelHomeScreen(
         ) { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
                 when (selectedBottomTabIndex) {
-                    0 -> PersonnelEventsTab(navController, recentEvents)
+                    // TAB 0 ARTIK AJANDA (Tüm Etkinlikler)
+                    0 -> PersonnelEventsTab(navController, allCalendarEvents)
                     1 -> PersonnelDiscoverTab(navController)
                     2 -> PersonnelClubsTab(navController, clubs)
                     3 -> PersonnelProfileScreen(navController, authViewModel)
@@ -133,18 +134,24 @@ fun PersonnelHomeScreen(
 }
 
 // ----------------------------------------------------
-// SEKME 1: ETKİNLİKLER (Events)
+// SEKME 1: ETKİNLİKLER (GÜNCELLENMİŞ AJANDA)
 // ----------------------------------------------------
 @Composable
-fun PersonnelEventsTab(navController: NavController, events: List<Event>) {
-    var selectedCategory by remember { mutableStateOf("Tümü") }
+fun PersonnelEventsTab(navController: NavController, allEvents: List<Event>) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    val filteredEvents = if (selectedCategory == "Tümü") {
-        events
-    } else {
-        events.filter { it.category == selectedCategory || it.category.isBlank() }
+    // GÜNCELLENMİŞ FİLTRELEME: Seçilen güne göre filtrele
+    val dailyEvents = allEvents.filter { event ->
+        val eventTimestamp = event.timestamp
+        if (eventTimestamp != null) {
+            val eventDate = Instant.ofEpochMilli(eventTimestamp.seconds * 1000)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+            eventDate.isEqual(selectedDate)
+        } else {
+            false
+        }
     }
 
     if (showDatePicker) {
@@ -157,30 +164,41 @@ fun PersonnelEventsTab(navController: NavController, events: List<Event>) {
     }
 
     Column {
+        // Tarih Kartı
         PersonnelHeaderDateCard(
             date = selectedDate,
             onDateClick = { showDatePicker = true },
             onPreviousDayClick = { selectedDate = selectedDate.minusDays(1) },
             onNextDayClick = { selectedDate = selectedDate.plusDays(1) }
         )
-        PersonnelHeaderSearchBar(onSearchClick = { }, onFilterClick = { })
-        PersonnelCategorySelector(selectedCategory = selectedCategory, onCategorySelected = { category -> selectedCategory = category })
 
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            if (events.isEmpty()) {
+        // İstatistik Başlığı
+        if(dailyEvents.isNotEmpty()){
+            Text(
+                text = "Toplam ${dailyEvents.size} Etkinlik",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+        }
+
+        LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 80.dp)) {
+            if (dailyEvents.isEmpty()) {
                 item {
-                    Box(modifier = Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
-                        Text("Bekleyen etkinlik yok.", color = Color.Gray)
+                    Box(modifier = Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.EventBusy, null, tint = Color.LightGray, modifier = Modifier.size(48.dp))
+                            Spacer(Modifier.height(8.dp))
+                            Text("Bu tarihte etkinlik yok.", color = Color.Gray)
+                        }
                     }
                 }
             } else {
-                items(filteredEvents) { event ->
-                    PersonnelListItemCard(
-                        title = event.title,
-                        clubName = event.clubName,
-                        status = "Onay Bekliyor",
-                        onClick = { navController.navigate(Routes.PersonnelEventDetail.createRoute(event.title, event.clubName)) }
-                    )
+                items(dailyEvents) { event ->
+                    // GÜNCELLENMİŞ KART: Durum (Approved/Pending) bilgisini gösterir
+                    PersonnelAgendaCard(event = event) {
+                        navController.navigate(Routes.PersonnelEventDetail.createRoute(event.title, event.clubName))
+                    }
                 }
             }
         }
@@ -278,43 +296,58 @@ fun PersonnelHeaderDateCard(date: LocalDate, onDateClick: () -> Unit, onPrevious
     }
 }
 
+// YENİ KART: Ajanda Görünümü için
 @Composable
-fun PersonnelHeaderSearchBar(onSearchClick: () -> Unit, onFilterClick: () -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-        IconButton(onClick = onSearchClick) { Icon(Icons.Default.Search, "Arama", tint = DarkBlue) }
-        IconButton(onClick = onFilterClick) { Icon(Icons.Default.Tune, "Filtrele", tint = DarkBlue) }
+fun PersonnelAgendaCard(event: Event, onClick: () -> Unit) {
+    val statusColor = when (event.status.uppercase()) {
+        "APPROVED" -> Color(0xFF4CAF50) // Yeşil
+        "PENDING" -> Color(0xFFFF9800)  // Turuncu
+        "REJECTED" -> Color(0xFFF44336) // Kırmızı
+        else -> Color.Gray
     }
-}
 
-@Composable
-fun PersonnelCategorySelector(selectedCategory: String, onCategorySelected: (String) -> Unit) {
-    val categories = listOf("Tümü" to Color(0xFFE0E0E0), "Business" to Color(0xFFAED581), "Tech" to Color(0xFFFFF176), "Health" to Color(0xFFFFB74D), "Art" to Color(0xFFF8BBD0))
-    LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
-        items(categories) { (name, color) ->
-            val isSelected = selectedCategory == name
-            Button(
-                onClick = { onCategorySelected(name) },
-                colors = ButtonDefaults.buttonColors(containerColor = color, contentColor = Color.Black),
-                shape = RoundedCornerShape(16.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                modifier = Modifier.height(40.dp).then(if(isSelected) Modifier.border(2.dp, DarkBlue, RoundedCornerShape(16.dp)) else Modifier)
-            ) { Text(text = name, fontWeight = FontWeight.Bold, fontSize = 14.sp) }
-        }
+    val statusText = when (event.status.uppercase()) {
+        "APPROVED" -> "ONAYLI"
+        "PENDING" -> "BEKLİYOR"
+        "REJECTED" -> "REDDEDİLDİ"
+        else -> event.status
     }
-}
 
-@Composable
-fun PersonnelListItemCard(title: String, clubName: String, status: String, onClick: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clickable(onClick = onClick), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = VeryLightPurple)) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
-                Surface(color = Color(0xFFFFCC80), shape = RoundedCornerShape(8.dp)) {
-                    Text(text = status, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFFE65100), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = VeryLightPurple)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Sol tarafta durum çubuğu
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(8.dp)
+                    .background(statusColor)
+            )
+
+            Column(modifier = Modifier.padding(16.dp).weight(1f)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(text = event.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
+
+                    // Saat
+                    val timePart = event.dateString.split(" ").lastOrNull() ?: ""
+                    Text(text = timePart, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DarkBlue)
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = event.clubName, style = MaterialTheme.typography.bodyMedium, color = DarkBlue.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
+
+                    // Küçük durum badge'i
+                    Surface(color = statusColor.copy(alpha = 0.1f), shape = RoundedCornerShape(6.dp)) {
+                        Text(text = statusText, color = statusColor, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                    }
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Kulüp: $clubName", style = MaterialTheme.typography.bodyMedium, color = DarkBlue.copy(alpha = 0.8f))
         }
     }
 }

@@ -21,7 +21,7 @@ class StudentFlowViewModel : ViewModel() {
 
     val searchQuery = mutableStateOf("")
 
-    // DÜZELTME: Seçili tab bilgisini ViewModel'e taşıdık
+    // Tab durumu
     var selectedTab = mutableIntStateOf(0)
 
     init {
@@ -30,15 +30,17 @@ class StudentFlowViewModel : ViewModel() {
 
     fun fetchEvents() {
         _eventsState.value = Resource.Loading()
+
+        // --- GÜNCELLEME: Sadece 'APPROVED' (Onaylanmış) olanları çek ---
         Firebase.firestore.collection("events")
-            .whereEqualTo("status", "Verified")
+            .whereEqualTo("status", "APPROVED")
             .get()
             .addOnSuccessListener { snapshot ->
                 try {
                     val events = snapshot.toObjects<Event>()
                     _eventsState.value = Resource.Success(events)
                 } catch (e: Exception) {
-                    _eventsState.value = Resource.Error("Hata: ${e.message}")
+                    _eventsState.value = Resource.Error("Veri işlenirken hata: ${e.message}")
                 }
             }
             .addOnFailureListener { e ->

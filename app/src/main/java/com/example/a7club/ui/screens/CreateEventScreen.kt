@@ -3,6 +3,9 @@ package com.example.a7club.ui.screens
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable // Tıklama için
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,12 +13,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime // Saat İkonu
 import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material.icons.filled.AttachFile // Yeni İkon
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -26,6 +29,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.viewmodels.CreateEventViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +40,13 @@ fun CreateEventScreen(
     showSnackbar: (String) -> Unit,
     viewModel: CreateEventViewModel = viewModel()
 ) {
+    // --- TAKVİM VE SAAT İÇİN STATE ---
+    val datePickerState = rememberDatePickerState()
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val timePickerState = rememberTimePickerState(is24Hour = true)
+    var showTimePicker by remember { mutableStateOf(false) }
+
     // Görsel Seçici (Galeri)
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -41,13 +54,54 @@ fun CreateEventScreen(
         viewModel.selectedFileUri.value = uri
     }
 
-    // --- YENİ EKLENEN: Belge Seçici (PDF/Word) ---
+    // Belge Seçici (PDF/Word)
     val documentPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         viewModel.selectedDocumentUri.value = uri
-        // Dosya yolundan basitçe ismi almaya çalışalım
         viewModel.selectedDocumentName.value = uri?.lastPathSegment ?: "Belge Seçildi"
+    }
+
+    // --- TAKVİM DİYALOĞU ---
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val date = Date(millis)
+                        // Formatı veritabanıyla uyumlu hale getiriyoruz: dd/MM/yyyy
+                        val format = SimpleDateFormat("dd/MM/yyyy", Locale("tr"))
+                        viewModel.dateString.value = format.format(date)
+                    }
+                    showDatePicker = false
+                }) { Text("Tamam") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("İptal") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    // --- SAAT DİYALOĞU ---
+    if (showTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    val hour = timePickerState.hour.toString().padStart(2, '0')
+                    val minute = timePickerState.minute.toString().padStart(2, '0')
+                    viewModel.eventTime.value = "$hour:$minute"
+                    showTimePicker = false
+                }) { Text("Tamam") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) { Text("İptal") }
+            },
+            text = { TimePicker(state = timePickerState) }
+        )
     }
 
     Scaffold(
@@ -81,22 +135,17 @@ fun CreateEventScreen(
                 Text(if (viewModel.selectedFileUri.value != null) "Görsel Seçildi" else "Etkinlik Afişi Yükle")
             }
 
-            // --- YENİ EKLENEN BUTON: Islak İmzalı Belge ---
-            // Mevcut tasarımına uygun olarak eklendi
+            // Islak İmzalı Belge Butonu
             OutlinedButton(
-                onClick = {
-                    // PDF, Word vb. dökümanları filtreler
-                    documentPickerLauncher.launch("application/*")
-                },
+                onClick = { documentPickerLauncher.launch("application/*") },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue)
             ) {
                 Icon(Icons.Default.AttachFile, null)
                 Spacer(modifier = Modifier.width(8.dp))
-
                 val docName = viewModel.selectedDocumentName.value
-                Text(if (docName.isNotEmpty()) docName else "Başvuru Formu Ekle (PDF/Word)")
+                Text(if (docName.isNotEmpty()) docName.take(20) + "..." else "Başvuru Formu Ekle (PDF/Word)")
             }
 
             // Başlık
@@ -108,7 +157,7 @@ fun CreateEventScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Kategori
+            // Kategori Seçimi (FilterChips)
             Text("Kategori: ${viewModel.category.value}", color = DarkBlue, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("Business", "Tech", "Social", "Art").forEach { cat ->
@@ -120,23 +169,55 @@ fun CreateEventScreen(
                 }
             }
 
-            // Tarih
+            // --- TARİH ALANI (GÜNCELLENDİ) ---
             OutlinedTextField(
                 value = viewModel.dateString.value,
-                onValueChange = { viewModel.dateString.value = it },
-                label = { Text("Tarih (Örn: 25 Kasım)") },
-                trailingIcon = { Icon(Icons.Default.CalendarToday, null) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                onValueChange = {}, // ReadOnly olduğu için boş
+                readOnly = true,    // Klavye açılmasın
+                label = { Text("Tarih Seçiniz") },
+                placeholder = { Text("GG/AA/YYYY") },
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Default.CalendarToday, null)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // Alanın tamamına tıklanınca takvim açılsın
+                    .clickable { showDatePicker = true },
+                shape = RoundedCornerShape(12.dp),
+                enabled = false, // Tıklanabilirliği clickable ile yönetiyoruz, ama rengi soluk olmasın diye aşağıda text rengini koruyoruz
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             )
 
-            // Saat
+            // --- SAAT ALANI (GÜNCELLENDİ) ---
             OutlinedTextField(
                 value = viewModel.eventTime.value,
-                onValueChange = { viewModel.eventTime.value = it },
-                label = { Text("Saat (Örn: 14:00)") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Saat Seçiniz") },
+                placeholder = { Text("SS:DD") },
+                trailingIcon = {
+                    IconButton(onClick = { showTimePicker = true }) {
+                        Icon(Icons.Default.AccessTime, null)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showTimePicker = true },
+                shape = RoundedCornerShape(12.dp),
+                enabled = false,
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             )
 
             // Konum
