@@ -18,10 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.a7club.data.Resource
 import com.example.a7club.data.models.Event
 import com.example.a7club.ui.navigation.Routes
@@ -69,17 +71,18 @@ fun ClubHomeScreen(
             containerColor = VeryLightPurple,
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("Etkinlikler", fontWeight = FontWeight.Bold, color = DarkBlue) },
-                    navigationIcon = { IconButton(onClick = { scope.launch { drawerState.open() } }) { Icon(Icons.Default.Menu, "Menu", tint = DarkBlue) } },
+                    title = { Text("Etkinlikler", fontWeight = FontWeight.Bold) },
+                    navigationIcon = { IconButton(onClick = { scope.launch { drawerState.open() } }) { Icon(Icons.Default.Menu, "Menu") } },
                     actions = { 
                         IconButton(onClick = { navController.navigate(Routes.NotificationsScreen.route) }) { 
-                            Icon(Icons.Default.Notifications, "Notifications", tint = DarkBlue) 
+                            Icon(Icons.Default.Notifications, "Notifications") 
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)
                 )
             },
             bottomBar = { 
+                // DÜZELTİLDİ: Fonksiyon ismi doğru eşleştirildi
                 MainInitialBottomAppBar(navController = navController) 
             }
         ) { paddingValues ->
@@ -113,12 +116,11 @@ fun MainInitialBottomAppBar(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // GERİ GETİRİLDİ: Orijinal Öğrenci Görünümü butonları
                 ClubMainNavItem(Icons.Default.Home, "Etkinlikler") { /* Zaten buradayız */ }
                 ClubMainNavItem(Icons.Default.Explore, "Keşfet") { /* Keşfet Aksiyon */ }
                 Spacer(modifier = Modifier.width(90.dp))
-                ClubMainNavItem(Icons.Default.Groups, "Kulüpler") { navController.navigate(Routes.Clubs.route) }
-                ClubMainNavItem(Icons.Default.Person, "Profil") { navController.navigate(Routes.Profile.route) }
+                ClubMainNavItem(Icons.Default.Groups, "Kulüpler") { /* Kulüpler Aksiyon */ }
+                ClubMainNavItem(Icons.Default.Person, "Profil") { /* Profil Aksiyon */ }
             }
         }
 
@@ -127,10 +129,7 @@ fun MainInitialBottomAppBar(navController: NavController) {
                 .size(90.dp)
                 .align(Alignment.TopCenter)
                 .border(6.dp, Color.White, CircleShape)
-                .clickable { 
-                    // GERİ GETİRİLDİ: Orta tuş Yönetici Görünümüne geçiş yapar
-                    navController.navigate(Routes.ClubProfileScreen.route) 
-                },
+                .clickable { navController.navigate(Routes.ClubProfileScreen.route) },
             shape = CircleShape,
             color = DarkBlue,
             shadowElevation = 8.dp
@@ -150,6 +149,7 @@ fun ClubMainNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label
     }
 }
 
+// ... (Geri kalan içerik kodu aynı kalıyor)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClubHomeContent(
@@ -183,6 +183,11 @@ fun ClubHomeContent(
             onPreviousDayClick = { selectedDate = selectedDate.minusDays(1) },
             onNextDayClick = { selectedDate = selectedDate.plusDays(1) }
         )
+        Row(Modifier.padding(horizontal = 16.dp)) {
+            Icon(Icons.Default.Search, "Search", tint = Color.Gray)
+            Spacer(Modifier.weight(1f))
+            Icon(Icons.Default.Tune, "Filter", tint = Color.Gray) 
+        }
         
         ClubCategoryChips(selectedCategory = selectedCategory, onCategorySelected = { selectedCategory = it })
 
@@ -196,7 +201,7 @@ fun ClubHomeContent(
 
                 if (filteredEvents.isEmpty()) {
                     Box(Modifier.fillMaxSize().padding(16.dp), Alignment.Center) {
-                        Text("Bu tarihte hiç etkinlik bulunmuyor.", color = DarkBlue)
+                        Text("Bu tarihte hiç etkinlik bulunmuyor.")
                     }
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 8.dp)) {
@@ -208,7 +213,7 @@ fun ClubHomeContent(
             }
             is Resource.Error -> {
                 Column(Modifier.fillMaxSize(), Arrangement.Center, Alignment.CenterHorizontally) {
-                    Text(text = eventsState.message ?: "Bilinmeyen bir hata oluştu.", color = DarkBlue)
+                    Text(text = eventsState.message ?: "Bilinmeyen bir hata oluştu.")
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = onRetry) { Text("Yeniden Dene") }
                 }
@@ -229,10 +234,10 @@ fun ClubDateCard(date: LocalDate, onDateClick: () -> Unit, onPreviousDayClick: (
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = onPreviousDayClick) { Icon(Icons.Default.ArrowBack, "Önceki Gün", tint = DarkBlue) }
+            IconButton(onClick = onPreviousDayClick) { Icon(Icons.Default.ArrowBack, "Önceki Gün") }
             Text(date.dayOfMonth.toString(), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = DarkBlue)
             Text(date.month.getDisplayName(TextStyle.FULL, Locale("tr")), fontSize = 16.sp, color = DarkBlue)
-            IconButton(onClick = onNextDayClick) { Icon(Icons.Default.ArrowForward, "Sonraki Gün", tint = DarkBlue) }
+            IconButton(onClick = { /* Sonraki Gün */ }) { Icon(Icons.Default.ArrowForward, "Sonraki Gün") }
         }
     }
 }
@@ -257,9 +262,10 @@ fun ClubCategoryChips(selectedCategory: String, onCategorySelected: (String) -> 
                 onClick = { onCategorySelected(category) },
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if(selectedCategory == category) DarkBlue else backgroundColor,
+                    containerColor = backgroundColor,
                     contentColor = if(selectedCategory == category) Color.White else Color.Black
-                )
+                ),
+                elevation = if(selectedCategory == category) ButtonDefaults.buttonElevation(4.dp) else ButtonDefaults.buttonElevation(0.dp)
             ) {
                 Text(category)
             }
@@ -275,9 +281,9 @@ fun ClubEventCard(event: Event, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = LightPurple)
     ) {
         Column(modifier = Modifier.padding(20.dp).fillMaxWidth()) {
-            Text(text = event.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
+            Text(text = event.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = event.clubName, style = MaterialTheme.typography.bodyMedium, color = DarkBlue.copy(alpha = 0.7f))
+            Text(text = event.clubName, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

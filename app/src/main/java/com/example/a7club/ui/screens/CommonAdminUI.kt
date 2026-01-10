@@ -21,6 +21,7 @@ import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
 
+// Bu BottomBar tüm KULÜP YÖNETİCİSİ (Committee) ekranlarında kullanılır
 @Composable
 fun ClubAdminBottomAppBar(navController: NavController, currentRoute: String = "") {
     Box(
@@ -37,26 +38,39 @@ fun ClubAdminBottomAppBar(navController: NavController, currentRoute: String = "
             color = LightPurple
         ) {
             Row(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AdminNavItem(Icons.Default.Groups, "Kulübüm", isSelected = currentRoute == Routes.ClubProfileScreen.route) { 
-                    navController.navigate(Routes.ClubProfileScreen.route) 
-                }
-                AdminNavItem(Icons.Default.Assignment, "Formlar", isSelected = currentRoute == Routes.Forms.route) { 
-                    navController.navigate(Routes.Forms.route) 
-                }
-                Spacer(modifier = Modifier.width(90.dp))
-                AdminNavItem(Icons.Default.Collections, "Gönderiler", isSelected = currentRoute == Routes.ClubPosts.route) { 
-                    navController.navigate(Routes.ClubPosts.route) 
-                }
-                AdminNavItem(Icons.Default.EventAvailable, "Etkinlikler", isSelected = currentRoute == Routes.EventCalendarScreen.route) { 
-                    navController.navigate(Routes.EventCalendarScreen.route) 
-                }
+                AdminNavItem(
+                    icon = Icons.Default.Groups,
+                    label = "Kulübüm",
+                    onClick = { navController.navigate(Routes.ClubProfileScreen.route) }
+                )
+                AdminNavItem(
+                    icon = Icons.Default.Assignment,
+                    label = "Formlar",
+                    onClick = { navController.navigate(Routes.Forms.route) }
+                )
+
+                Spacer(modifier = Modifier.width(90.dp)) // Orta buton boşluğu
+
+                AdminNavItem(
+                    icon = Icons.Default.Collections,
+                    label = "Gönderiler",
+                    onClick = { navController.navigate(Routes.ClubPosts.route) }
+                )
+                AdminNavItem(
+                    icon = Icons.Default.EventAvailable,
+                    label = "Etkinlikler",
+                    onClick = { navController.navigate(Routes.EventCalendarScreen.route) }
+                )
             }
         }
 
+        // Orta Buton (Home)
         Surface(
             modifier = Modifier
                 .size(90.dp)
@@ -66,28 +80,21 @@ fun ClubAdminBottomAppBar(navController: NavController, currentRoute: String = "
             shape = CircleShape,
             color = DarkBlue,
             shadowElevation = 8.dp
-        ) {}
+        ) {
+            // İsterseniz buraya ikon ekleyebilirsiniz
+        }
     }
 }
 
+// Ortak NavItem bileşeni
 @Composable
-fun AdminNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isSelected: Boolean = false, onClick: () -> Unit) {
+fun AdminNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.clickable(onClick = onClick)
     ) {
-        Icon(
-            icon, 
-            contentDescription = label, 
-            tint = if (isSelected) Color.White else DarkBlue, 
-            modifier = Modifier.size(28.dp)
-        )
-        Text(
-            text = label, 
-            color = if (isSelected) Color.White else DarkBlue, 
-            fontSize = 11.sp, 
-            fontWeight = FontWeight.Bold
-        )
+        Icon(icon, contentDescription = label, tint = DarkBlue, modifier = Modifier.size(28.dp))
+        Text(text = label, color = DarkBlue, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }

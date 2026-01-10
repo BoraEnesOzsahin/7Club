@@ -2,7 +2,8 @@ package com.example.a7club.ui.viewmodels
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
-
+import com.example.a7club.model.Event
+import com.google.firebase.Timestamp
 data class ClubMember(
     val id: String,
     val schoolNo: String,

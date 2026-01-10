@@ -2,142 +2,246 @@ package com.example.a7club.ui.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.a7club.model.Club
 import com.example.a7club.model.Event
+import com.example.a7club.model.User
+import com.example.a7club.model.VehicleRequest
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-data class Club(
-    val id: String = "",
-    val name: String = "",
-    val logoUrl: String = "",
-    val description: String = ""
-)
-
-data class Member(
-    val id: String = "",
-    val studentNo: String = "",
-    val fullName: String = ""
-)
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class PersonnelViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
-    
-    private val _pendingEvents = MutableStateFlow<List<Event>>(emptyList())
-    val pendingEvents: StateFlow<List<Event>> = _pendingEvents
+
+    // --- STATE FLOWS (Veri Akışları) ---
+
+    // 1. Ana Sayfa ve Talepler İçin
+    private val _recentPendingEvents = MutableStateFlow<List<Event>>(emptyList())
+    val recentPendingEvents: StateFlow<List<Event>> = _recentPendingEvents.asStateFlow()
+
+    private val _overduePendingEvents = MutableStateFlow<List<Event>>(emptyList())
+    val overduePendingEvents: StateFlow<List<Event>> = _overduePendingEvents.asStateFlow()
 
     private val _pastEvents = MutableStateFlow<List<Event>>(emptyList())
-    val pastEvents: StateFlow<List<Event>> = _pastEvents
+    val pastEvents: StateFlow<List<Event>> = _pastEvents.asStateFlow()
+
+    // --- YENİ EKLENEN: Takvim için TÜM etkinlikler ---
+    private val _allEventsForCalendar = MutableStateFlow<List<Event>>(emptyList())
+    val allEventsForCalendar: StateFlow<List<Event>> = _allEventsForCalendar.asStateFlow()
 
     private val _clubs = MutableStateFlow<List<Club>>(emptyList())
-    val clubs: StateFlow<List<Club>> = _clubs
+    val clubs: StateFlow<List<Club>> = _clubs.asStateFlow()
 
-    private val _currentClubMembers = MutableStateFlow<List<Member>>(emptyList())
-    val currentClubMembers: StateFlow<List<Member>> = _currentClubMembers
+    private val _selectedVehicleRequest = MutableStateFlow<VehicleRequest?>(null)
+    val selectedVehicleRequest: StateFlow<VehicleRequest?> = _selectedVehicleRequest.asStateFlow()
 
+    // 2. Kulüp Detay Sayfaları İçin
     private val _currentClubEvents = MutableStateFlow<List<Event>>(emptyList())
-    val currentClubEvents: StateFlow<List<Event>> = _currentClubEvents
+    val currentClubEvents: StateFlow<List<Event>> = _currentClubEvents.asStateFlow()
+
+    private val _currentClubMembers = MutableStateFlow<List<User>>(emptyList())
+    val currentClubMembers: StateFlow<List<User>> = _currentClubMembers.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
-
-    private val _isLoadingMembers = MutableStateFlow(false)
-    val isLoadingMembers: StateFlow<Boolean> = _isLoadingMembers
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
-        fetchPendingEvents()
-        fetchPastEvents()
+        fetchEvents()
         fetchClubs()
+        fetchAllEventsForCalendar() // YENİ: Başlangıçta tümünü çek
     }
 
-    private fun fetchPendingEvents() {
-        db.collection("events")
-            .whereEqualTo("status", "Pending")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) return@addSnapshotListener
-                val events = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Event::class.java)?.copy(id = doc.id)
-                } ?: emptyList()
-                _pendingEvents.value = events
+    // YENİ FONKSİYON: Takvim için tüm etkinlikleri getirir
+    private fun fetchAllEventsForCalendar() {
+        viewModelScope.launch {
+            try {
+                // Tarihe göre sıralı hepsini çek (Status farketmeksizin)
+                val snapshot = db.collection("events")
+                    .orderBy("timestamp", Query.Direction.ASCENDING)
+                    .get()
+                    .await()
+
+                val events = snapshot.toObjects(Event::class.java)
+                _allEventsForCalendar.value = events
+
+            } catch (e: Exception) {
+                Log.e("PersonnelViewModel", "Takvim verisi çekilemedi: ${e.message}")
             }
+        }
     }
 
-    private fun fetchPastEvents() {
-        db.collection("events")
-            .whereIn("status", listOf("Verified", "Rejected"))
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) return@addSnapshotListener
-                val events = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Event::class.java)?.copy(id = doc.id)
-                } ?: emptyList()
-                _pastEvents.value = events
+    private fun fetchEvents() {
+        viewModelScope.launch {
+            try {
+                // BEKLEYENLER (PENDING)
+                db.collection("events")
+                    .whereEqualTo("status", "PENDING")
+                    .addSnapshotListener { snapshot, e ->
+                        if (e != null) return@addSnapshotListener
+
+                        val allPending = snapshot?.toObjects(Event::class.java) ?: emptyList()
+                        val now = Timestamp.now()
+
+                        _recentPendingEvents.value = allPending.filter {
+                            val ts = it.timestamp
+                            ts != null && ts >= now
+                        }
+
+                        _overduePendingEvents.value = allPending.filter {
+                            val ts = it.timestamp
+                            ts != null && ts < now
+                        }
+                    }
+
+                // GEÇMİŞ / ONAYLI
+                db.collection("events")
+                    .whereIn("status", listOf("APPROVED", "REJECTED"))
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                    .addSnapshotListener { snapshot, e ->
+                        if (e != null) return@addSnapshotListener
+                        _pastEvents.value = snapshot?.toObjects(Event::class.java) ?: emptyList()
+                    }
+
+            } catch (e: Exception) {
+                Log.e("PersonnelViewModel", "Veri çekme hatası: ${e.message}")
             }
+        }
     }
 
     private fun fetchClubs() {
-        db.collection("clubs")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) return@addSnapshotListener
-                val clubs = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Club::class.java)?.copy(id = doc.id)
-                } ?: emptyList()
-                _clubs.value = clubs
+        viewModelScope.launch {
+            try {
+                val snapshot = db.collection("clubs").get().await()
+                _clubs.value = snapshot.toObjects(Club::class.java)
+            } catch (e: Exception) {
+                Log.e("PersonnelViewModel", "Kulüp hatası: ${e.message}")
             }
+        }
     }
 
-    // YENİ: Belirli bir kulübün geçmiş veya gelecek etkinliklerini çekme
-    fun fetchClubEvents(clubName: String, isPast: Boolean) {
-        _isLoading.value = true
-        val now = Timestamp.now()
-        
-        var query = db.collection("events")
-            .whereEqualTo("clubName", clubName)
-        
-        if (isPast) {
-            query = query.whereLessThan("timestamp", now)
-        } else {
-            query = query.whereGreaterThanOrEqualTo("timestamp", now)
-        }
+    // --- FONKSİYONLAR ---
 
-        query.addSnapshotListener { snapshot, error ->
-            _isLoading.value = false
-            if (error != null) {
-                Log.e("PersonnelVM", "Fetch club events error: ${error.message}")
-                return@addSnapshotListener
+    // 1. Araç Talebi
+    fun loadVehicleRequest(eventId: String) {
+        viewModelScope.launch {
+            _selectedVehicleRequest.value = null
+            try {
+                val snapshot = db.collection("vehicleRequests")
+                    .whereEqualTo("eventId", eventId)
+                    .get()
+                    .await()
+
+                if (!snapshot.isEmpty) {
+                    _selectedVehicleRequest.value = snapshot.documents[0].toObject(VehicleRequest::class.java)
+                }
+            } catch (e: Exception) {
+                Log.e("PersonnelViewModel", "Araç talep hatası: ${e.message}")
             }
-            val events = snapshot?.documents?.mapNotNull { doc ->
-                doc.toObject(Event::class.java)?.copy(id = doc.id)
-            } ?: emptyList()
-            _currentClubEvents.value = events
+        }
+    }
+
+    // 2. Onaylama / Reddetme
+    fun approveEvent(event: Event, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val batch = db.batch()
+                val eventRef = db.collection("events").document(event.id)
+                batch.update(eventRef, "status", "APPROVED")
+
+                val vehicleSnapshot = db.collection("vehicleRequests").whereEqualTo("eventId", event.id).get().await()
+                for (doc in vehicleSnapshot) {
+                    batch.update(doc.reference, "status", "APPROVED")
+                }
+                batch.commit().await()
+                // Verileri yenile
+                fetchAllEventsForCalendar()
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("PersonnelViewModel", "Onay hatası: ${e.message}")
+            }
+        }
+    }
+
+    fun rejectEvent(event: Event, reason: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val batch = db.batch()
+                val eventRef = db.collection("events").document(event.id)
+                batch.update(eventRef, "status", "REJECTED")
+
+                val vehicleSnapshot = db.collection("vehicleRequests").whereEqualTo("eventId", event.id).get().await()
+                for (doc in vehicleSnapshot) {
+                    batch.update(doc.reference, "status", "REJECTED")
+                }
+                batch.commit().await()
+                // Verileri yenile
+                fetchAllEventsForCalendar()
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("PersonnelViewModel", "Ret hatası: ${e.message}")
+            }
+        }
+    }
+
+    fun fetchClubEvents(clubName: String, isPast: Boolean) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val query = db.collection("events")
+                    .whereEqualTo("clubName", clubName)
+
+                val snapshot = query.get().await()
+                val allEvents = snapshot.toObjects(Event::class.java)
+                val now = Timestamp.now()
+
+                _currentClubEvents.value = if (isPast) {
+                    allEvents.filter {
+                        val ts = it.timestamp
+                        ts != null && ts < now
+                    }
+                } else {
+                    allEvents.filter {
+                        val ts = it.timestamp
+                        ts != null && ts >= now
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("PersonnelViewModel", "Kulüp etkinlikleri hatası: ${e.message}")
+                _currentClubEvents.value = emptyList()
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
     fun fetchClubMembers(clubName: String) {
-        _isLoadingMembers.value = true
-        db.collection("users")
-            .whereArrayContains("enrolledClubs", clubName)
-            .addSnapshotListener { snapshot, error ->
-                _isLoadingMembers.value = false
-                if (error != null) return@addSnapshotListener
-                val members = snapshot?.documents?.mapNotNull { doc ->
-                    Member(
-                        id = doc.id,
-                        studentNo = doc.getString("studentNo") ?: "000000000",
-                        fullName = doc.getString("fullName") ?: "İsimsiz Üye"
-                    )
-                } ?: emptyList()
-                _currentClubMembers.value = members
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val clubSnapshot = db.collection("clubs").whereEqualTo("name", clubName).get().await()
+                if (!clubSnapshot.isEmpty) {
+                    val clubId = clubSnapshot.documents[0].getString("id") ?: ""
+
+                    if (clubId.isNotEmpty()) {
+                        val usersSnapshot = db.collection("users")
+                            .whereArrayContains("enrolledClubs", clubId)
+                            .get()
+                            .await()
+                        _currentClubMembers.value = usersSnapshot.toObjects(User::class.java)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("PersonnelViewModel", "Üye çekme hatası: ${e.message}")
+                _currentClubMembers.value = emptyList()
+            } finally {
+                _isLoading.value = false
             }
-    }
-
-    fun verifyEvent(eventId: String, onSuccess: () -> Unit) {
-        db.collection("events").document(eventId).update("status", "Verified").addOnSuccessListener { onSuccess() }
-    }
-
-    fun rejectEvent(eventId: String, onSuccess: () -> Unit) {
-        db.collection("events").document(eventId).update("status", "Rejected").addOnSuccessListener { onSuccess() }
+        }
     }
 }

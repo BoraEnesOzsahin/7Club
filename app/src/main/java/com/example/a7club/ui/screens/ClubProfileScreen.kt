@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.a7club.ui.screens
 
 import androidx.compose.foundation.background
@@ -15,17 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
-import com.example.a7club.ui.theme._7ClubTheme
+import com.example.a7club.ui.components.AdminNavItem
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Unit) {
     Scaffold(
@@ -50,7 +49,7 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
             )
         },
         bottomBar = {
-             ClubAdminBottomAppBar(navController = navController)
+            ClubAdminBottomAppBar(navController = navController)
         }
     ) { paddingValues ->
         Column(
@@ -87,10 +86,9 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
 
 @Composable
 fun ClubAdminBottomAppBar(navController: NavController) {
+    val LightPurpleBarColor = Color(0xFFD1C4E9)
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
+        modifier = Modifier.fillMaxWidth().height(100.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
         Surface(
@@ -98,18 +96,17 @@ fun ClubAdminBottomAppBar(navController: NavController) {
                 .fillMaxWidth()
                 .height(75.dp)
                 .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
-            color = LightPurple
+            color = LightPurpleBarColor
         ) {
             Row(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AdminNavItem(Icons.Default.Groups, "Kulübüm") { /* Buradayız */ }
+                AdminNavItem(Icons.Default.Groups, "Kulübüm") { }
                 AdminNavItem(Icons.Default.Assignment, "Formlar") { navController.navigate(Routes.Forms.route) }
                 Spacer(modifier = Modifier.width(90.dp))
-                // GÜNCELLENDİ: "Gönderiler" butonu artık yeni sayfaya gidiyor
-                AdminNavItem(Icons.Default.Collections, "Gönderiler") { navController.navigate(Routes.ClubPosts.route) }
+                AdminNavItem(Icons.Default.Collections, "Gönderiler") { }
                 AdminNavItem(Icons.Default.EventAvailable, "Etkinlikler") { navController.navigate(Routes.EventCalendarScreen.route) }
             }
         }
@@ -118,10 +115,7 @@ fun ClubAdminBottomAppBar(navController: NavController) {
                 .size(90.dp)
                 .align(Alignment.TopCenter)
                 .border(6.dp, Color.White, CircleShape)
-                .clickable { 
-                    // Orta tuş: Ana Sayfaya (Öğrenci Görünümüne) geri döner
-                    navController.navigate(Routes.ClubHomeScreen.route) 
-                },
+                .clickable { navController.navigate(Routes.ClubHomeScreen.route) },
             shape = CircleShape,
             color = DarkBlue,
             shadowElevation = 8.dp
@@ -130,29 +124,12 @@ fun ClubAdminBottomAppBar(navController: NavController) {
 }
 
 @Composable
-fun AdminNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.clickable(onClick = onClick)
-    ) {
-        Icon(icon, contentDescription = label, tint = DarkBlue, modifier = Modifier.size(28.dp))
-        Text(text = label, color = DarkBlue, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
 fun ClubAdminButton(text: String, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth(0.8f)
-            .height(56.dp),
+        modifier = Modifier.fillMaxWidth(0.8f).height(56.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFF3EFFF),
-            contentColor = DarkBlue
-        ),
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF3EFFF), contentColor = DarkBlue),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
     ) {
         Text(text = text, fontSize = 18.sp, fontWeight = FontWeight.Medium)

@@ -2,7 +2,8 @@ package com.example.a7club.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.a7club.data.models.EventSignup
+import com.example.a7club.model.EventSignup // YENİ MODEL IMPORT EDİLDİ
+import com.google.firebase.Timestamp        // TIMESTAMP IMPORT EDİLDİ
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
@@ -14,10 +15,12 @@ class EventDetailViewModel : ViewModel() {
 
     fun signUpForEvent(eventId: String, studentId: String) {
         viewModelScope.launch {
+            // ARTIK HATA VERMEYECEK:
             val signup = EventSignup(
                 eventId = eventId,
                 studentId = studentId,
-                timestamp = System.currentTimeMillis()
+                // ESKİSİ: timestamp = System.currentTimeMillis()
+                timestamp = Timestamp.now() // YENİSİ: Firebase Timestamp
             )
 
             try {

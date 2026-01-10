@@ -58,13 +58,15 @@ dependencies {
     androidTestImplementation libs.androidx.compose.ui.test.junit4
     debugImplementation libs.androidx.compose.ui.tooling
     debugImplementation libs.androidx.compose.ui.test.manifest
-    // Firebase BoM
+    // Firebase BoM (Versiyonları otomatik yönetir)
     implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation 'androidx.core:core-splashscreen:1.0.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1'
 
-    // GÜNCELLENDİ: Coil kütüphanesi eklendi
-    implementation(libs.coil.compose)
+    // Firestore Veritabanı (Timestamp ve veritabanı işlemleri için)
+    implementation("com.google.firebase:firebase-firestore")
+    // Firestore Kotlin Extensions (await() gibi fonksiyonlar için)
+    implementation("com.google.firebase:firebase-firestore-ktx")
+// ilk sayfadaki üçgen logo için
+    implementation 'androidx.core:core-splashscreen:1.0.1'
+    // Coroutines Play Services (await() fonksiyonu için)
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1'
 }

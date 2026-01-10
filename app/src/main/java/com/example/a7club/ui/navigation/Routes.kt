@@ -2,22 +2,29 @@ package com.example.a7club.ui.navigation
 
 sealed class Routes(val route: String) {
     object Splash : Routes("splash")
-    object MainScreen : Routes("main_screen")
     object RoleSelection : Routes("role_selection")
     object StudentLogin : Routes("student_login")
-    object ClubLogin : Routes("club_login")
-    object AdminLogin : Routes("admin_login")
-    object InterestQuestion : Routes("interest_question/{index}") {
-        fun createRoute(index: Int) = "interest_question/$index"
+    object ClubCommitteeLogin : Routes("club_committee_login")
+    object PersonnelLogin : Routes("personnel_login")
+
+    // --- PERSONEL ROTALARI ---
+    object PersonnelHomeScreen : Routes("personnel_home")
+
+    object PersonnelEventDetail : Routes("personnel_event_detail/{eventName}/{clubName}") {
+        fun createRoute(eventName: String, clubName: String) = "personnel_event_detail/$eventName/$clubName"
     }
+    object PersonnelClubDetail : Routes("personnel_club_detail/{clubName}") {
+        fun createRoute(clubName: String) = "personnel_club_detail/$clubName"
+    }
+
+    // --- ÖĞRENCİ VE DİĞER ROTALAR ---
+    object MainScreen : Routes("main_screen")
     object Events : Routes("events")
-    object CreateEvent : Routes("create_event")
     object Discover : Routes("discover")
     object Clubs : Routes("clubs")
     object Profile : Routes("profile")
     object CreateVehicleRequest : Routes("create_vehicle_request")
-    object ClubCommitteeLogin : Routes("club_committee_login")
-    object PersonnelLogin : Routes("personnel_login")
+    object CreateEvent : Routes("create_event")
     object ClubHomeScreen : Routes("club_home_screen")
     object SettingsScreen : Routes("settings_screen")
     object EventCalendarScreen : Routes("event_calendar_screen")
@@ -40,37 +47,13 @@ sealed class Routes(val route: String) {
     }
     object EventRequestForm : Routes("event_request_form")
     object VehicleRequestForm : Routes("vehicle_request_form")
-    
-    // PERSONEL ROTALARI
-    object PersonnelHomeScreen : Routes("personnel_home_screen?tabIndex={tabIndex}") {
-        fun createRoute(tabIndex: Int = 0) = "personnel_home_screen?tabIndex=$tabIndex"
-    }
-    object PersonnelEventRequests : Routes("personnel_event_requests") 
-    object PersonnelPastEvents : Routes("personnel_past_events")
-    
-    object PersonnelEventDetail : Routes("personnel_event_detail/{eventName}/{clubName}") {
-        fun createRoute(eventName: String, clubName: String) = "personnel_event_detail/$eventName/$clubName"
-    }
-    object PersonnelClubDetail : Routes("personnel_club_detail/{clubName}") {
-        fun createRoute(clubName: String) = "personnel_club_detail/$clubName"
-    }
-    object PersonnelClubMembers : Routes("personnel_club_members/{clubName}") {
-        fun createRoute(clubName: String) = "personnel_club_members/$clubName"
-    }
-    // YENİ: Kulüp bazlı etkinlik rotaları
-    object PersonnelClubEvents : Routes("personnel_club_events/{clubName}/{isPast}") {
-        fun createRoute(clubName: String, isPast: Boolean) = "personnel_club_events/$clubName/$isPast"
-    }
-
     object ParticipantInfoForm : Routes("participant_info_form/{fromNewForm}") {
         fun createRoute(fromNewForm: Boolean) = "participant_info_form/$fromNewForm"
     }
-    
     object EventDetail : Routes("event_detail/{eventId}") {
         fun createRoute(eventId: String) = "event_detail/$eventId"
     }
-    object ClubPosts : Routes("club_posts")
-    object ClubEventForms : Routes("club_event_forms/{eventName}") {
-        fun createRoute(eventName: String) = "club_event_forms/$eventName"
+    object InterestQuestion : Routes("interest_question/{index}") {
+        fun createRoute(index: Int) = "interest_question/$index"
     }
 }

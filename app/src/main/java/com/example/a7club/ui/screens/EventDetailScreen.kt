@@ -1,165 +1,143 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.a7club.ui.screens
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.a7club.R
-import com.example.a7club.data.models.Event
+import com.example.a7club.data.Resource
+import com.example.a7club.ui.theme.DarkBlue
+import com.example.a7club.ui.theme.LightPurple
 import com.example.a7club.ui.viewmodels.EventDetailViewModel
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.tasks.await
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.a7club.ui.viewmodels.StudentFlowViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+// DÜZELTME: Parametre sırası NavGraph ile eşitlendi.
+// (navController önce, eventId sonra)
 @Composable
 fun EventDetailScreen(
+    navController: NavController,
     eventId: String,
-    navController: NavController, 
     showSnackbar: (String) -> Unit,
+    studentFlowViewModel: StudentFlowViewModel = viewModel(),
     eventDetailViewModel: EventDetailViewModel = viewModel()
 ) {
-    var event by remember { mutableStateOf<Event?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
+    val eventsState = studentFlowViewModel.eventsState.value
+    val event = if (eventsState is Resource.Success) {
+        eventsState.data?.find { it.id == eventId }
+    } else null
+
     var showConfirmationDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(eventId) {
-        isLoading = true
-        val docRef = Firebase.firestore.collection("events").document(eventId)
-        try {
-            val document = docRef.get().await()
-            event = document.toObject(Event::class.java)
-        } catch (e: Exception) {
-            showSnackbar("Etkinlik yüklenemedi: ${e.message}")
-        }
-        isLoading = false
-    }
-
     Scaffold(
-        containerColor = Color(0xFFF3F1FF),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(event?.clubName ?: "", fontWeight = FontWeight.Bold) },
-                navigationIcon = { 
+                title = { Text("Etkinlik Detayı", fontWeight = FontWeight.Bold, color = DarkBlue) },
+                navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
-                    } 
-                },
-                actions = {
-                    IconButton(onClick = { showSnackbar("Bildirimler tıklandı") }) {
-                        Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri", tint = DarkBlue)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFFE8E5FF))
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
+        },
+        bottomBar = {
+            if (event != null) {
+                Button(
+                    onClick = { showConfirmationDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                ) {
+                    Text("Etkinliğe Katıl", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (event != null) {
-                Column(
+        if (event == null) {
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                Text("Etkinlik yükleniyor...", color = Color.Gray)
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .background(LightPurple),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Club Logo and Name
-                    Image(painter = painterResource(id = R.drawable.ic_launcher_foreground), contentDescription = "Kulüp Logosu", modifier = Modifier.size(80.dp))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    // Event Title Card
-                    Card(
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = event!!.title.uppercase(),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(16.dp).fillMaxWidth()
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Event Details Card
-                    Card(
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Etkinlik Yeri: ${event!!.location}")
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Etkinlik Saati: ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(event!!.startTime))}")
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Etkinlik Tarihi: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(event!!.startTime))}")
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.weight(1f))
-                    
-                    // Sign Up Button
-                    Button(
-                        onClick = { showConfirmationDialog = true },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000080)),
-                        modifier = Modifier.fillMaxWidth().height(50.dp)
-                    ) {
-                        Text("Etkinliğe Katıl", fontSize = 16.sp)
-                    }
+                    Text(
+                        text = event.title.take(1).uppercase(),
+                        fontSize = 80.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
-            } else {
-                Text("Etkinlik bulunamadı.", modifier = Modifier.align(Alignment.Center))
+
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = event.title,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkBlue
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = event.clubName,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    EventInfoRow(Icons.Default.CalendarToday, event.dateString.ifEmpty { "Tarih Belirtilmemiş" })
+                    Spacer(modifier = Modifier.height(12.dp))
+                    EventInfoRow(Icons.Default.LocationOn, event.location.ifEmpty { "Konum Belirtilmemiş" })
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = "Etkinlik Hakkında",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkBlue
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = event.description,
+                        fontSize = 15.sp,
+                        lineHeight = 22.sp,
+                        color = Color.Black.copy(alpha = 0.8f)
+                    )
+
+                    Spacer(modifier = Modifier.height(80.dp))
+                }
             }
         }
     }
@@ -167,31 +145,44 @@ fun EventDetailScreen(
     if (showConfirmationDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmationDialog = false },
-            title = {
-                Text("Katılım Onayı")
-            },
-            text = {
-                Text("'${event?.title ?: ""}' etkinliğine katılmak istediğine emin misin?")
-            },
+            title = { Text("Katılım Onayı", color = DarkBlue, fontWeight = FontWeight.Bold) },
+            text = { Text("'${event?.title}' etkinliğine katılmak istediğinize emin misiniz?") },
             confirmButton = {
                 Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000080)),
                     onClick = {
                         eventDetailViewModel.signUpForEvent(eventId, "dummyStudentId")
-                        showSnackbar("Etkinliğe başarıyla kayıt oldun!")
+                        showSnackbar("Kayıt başarılı! İyi eğlenceler.")
                         showConfirmationDialog = false
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
                 ) {
-                    Text("Evet")
+                    Text("Evet, Katıl")
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showConfirmationDialog = false }
-                ) {
-                    Text("Hayır")
+                TextButton(onClick = { showConfirmationDialog = false }) {
+                    Text("Vazgeç", color = Color.Gray)
                 }
-            }
+            },
+            containerColor = Color.White
+        )
+    }
+}
+
+@Composable
+fun EventInfoRow(icon: ImageVector, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = DarkBlue,
+            modifier = Modifier.size(22.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = text,
+            fontSize = 15.sp,
+            color = Color.Black
         )
     }
 }

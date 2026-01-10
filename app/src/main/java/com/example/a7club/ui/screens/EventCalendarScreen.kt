@@ -17,22 +17,48 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.a7club.model.Event // Event Modeli
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventCalendarScreen(navController: NavController, showSnackbar: (String) -> Unit) {
     var searchQuery by remember { mutableStateOf("") }
-    val events = listOf(
-        "Yaratıcı Yazarlık Atölyesi",
-        "Coffee Talks",
-        "90's Event",
-        "İstiklal Gezisi",
-        "Quiz Night",
-        "Seramik Atölyesi"
-    )
+    // Veritabanından gelecek liste
+    var approvedEvents by remember { mutableStateOf<List<Event>>(emptyList()) }
+    val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+
+    // Verileri Çek
+    LaunchedEffect(Unit) {
+        val uid = auth.currentUser?.uid
+        if (uid != null) {
+            try {
+                // 1. Kulübü Bul
+                val userDoc = db.collection("users").document(uid).get().await()
+                val enrolledClubs = userDoc.get("enrolledClubs") as? List<String>
+                val myClubId = enrolledClubs?.firstOrNull()
+
+                if (myClubId != null) {
+                    // 2. Sadece APPROVED (Onaylanmış) etkinlikleri çek
+                    val snapshot = db.collection("events")
+                        .whereEqualTo("clubId", myClubId)
+                        .whereEqualTo("status", "APPROVED")
+                        .get()
+                        .await()
+
+                    approvedEvents = snapshot.toObjects(Event::class.java)
+                }
+            } catch (e: Exception) {
+                // Hata yönetimi
+            }
+        }
+    }
 
     Scaffold(
         containerColor = Color.White,
@@ -56,7 +82,8 @@ fun EventCalendarScreen(navController: NavController, showSnackbar: (String) -> 
             )
         },
         bottomBar = {
-            ClubAdminBottomAppBar(navController = navController, currentRoute = Routes.EventCalendarScreen.route)
+            // Mevcut Alt Barın (ClubAdminBottomAppBar isminde olmalı, yoksa ClubBottomBarContent kullan)
+            ClubAdminBottomAppBar(navController = navController)
         }
     ) { paddingValues ->
         Column(
@@ -69,14 +96,13 @@ fun EventCalendarScreen(navController: NavController, showSnackbar: (String) -> 
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
+            // --- ARAMA KISMI (Dokunulmadı) ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(45.dp),
+                    modifier = Modifier.weight(1f).height(45.dp),
                     shape = RoundedCornerShape(25.dp),
                     color = Color(0xFFF3EFFF)
                 ) {
@@ -100,9 +126,7 @@ fun EventCalendarScreen(navController: NavController, showSnackbar: (String) -> 
                         )
                     }
                 }
-                
                 Spacer(modifier = Modifier.width(12.dp))
-                
                 Icon(
                     Icons.Default.Tune,
                     contentDescription = "Filter",
@@ -113,27 +137,32 @@ fun EventCalendarScreen(navController: NavController, showSnackbar: (String) -> 
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            events.filter { it.contains(searchQuery, ignoreCase = true) }.forEach { eventName ->
-                Button(
-                    onClick = { 
-                        // GÜNCELLEME: Snackbar yerine yeni sayfaya navigasyon eklendi
-                        navController.navigate(Routes.ClubEventForms.createRoute(eventName)) 
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF3EFFF),
-                        contentColor = DarkBlue
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-                ) {
-                    Text(text = eventName, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                }
-                Spacer(modifier = Modifier.height(12.dp))
+            // --- LİSTELEME ---
+            if (approvedEvents.isEmpty()) {
+                Text("Henüz onaylanmış etkinlik yok.", color = Color.Gray, modifier = Modifier.padding(top = 20.dp))
+            } else {
+                approvedEvents
+                    .filter { it.title.contains(searchQuery, ignoreCase = true) }
+                    .forEach { event ->
+                        Button(
+                            onClick = {
+                                // Detay sayfasına git (Event objesi veya ismiyle)
+                                navController.navigate(Routes.ClubEventForms.createRoute(event.title))
+                            },
+                            modifier = Modifier.fillMaxWidth().height(60.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFF3EFFF),
+                                contentColor = DarkBlue
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                        ) {
+                            Text(text = event.title, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
             }
-            
+
             Spacer(modifier = Modifier.height(100.dp))
         }
     }

@@ -1,14 +1,11 @@
-package com.example.a7club.data.models
+package com.example.a7club.model
 
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
 
-/**
- * Represents a student's sign-up for an event.
- * This data class is Firestore-compliant.
- */
 data class EventSignup(
     @DocumentId val id: String = "",
     val eventId: String = "",
     val studentId: String = "",
-    val timestamp: Long = 0L
+    val timestamp: Timestamp? = null // System.currentTimeMillis yerine Firebase Timestamp
 )
