@@ -1,7 +1,5 @@
 package com.example.a7club.ui.screens
-import com.example.a7club.ui.viewmodels.StudentFlowViewModel
-// Bu satırları en üste import kısmına ekle
-import com.example.a7club.data.Resource
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,9 +24,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.a7club.data.Resource
 import com.example.a7club.data.models.Event
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.*
+import com.example.a7club.ui.viewmodels.StudentFlowViewModel
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate

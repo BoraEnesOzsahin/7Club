@@ -2,18 +2,16 @@ package com.example.a7club.model
 
 import com.google.firebase.Timestamp
 
-// Dosya: model/VehicleRequest.kt
-
 data class VehicleRequest(
     val id: String = "",
-    val clubId: String = "",
-    val eventId: String = "",         // Hangi etkinliğe araç lazım?
-
-    val destination: String = "",     // Gidilecek yer
+    val eventId: String = "",       // Hangi etkinliğe bağlı?
+    val eventName: String = "",     // Personel ekranında kolay okunsun diye
+    val clubName: String = "",
+    val vehicleType: String = "",
+    val pickupLocation: String = "",
+    val destination: String = "",
     val passengerCount: Int = 0,
+    val notes: String = "",
     val requestDate: Timestamp? = null,
-
-    // Onay Durumu
-    val status: RequestStatus = RequestStatus.PENDING,
-    val approvedBy: String? = null    // Onaylayan personelin UID'si
+    val status: String = "PENDING"
 )

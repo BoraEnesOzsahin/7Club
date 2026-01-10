@@ -1,16 +1,15 @@
 package com.example.a7club.ui.screens
 
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,200 +21,69 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
-import com.example.a7club.ui.theme.LightPurple
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FormsScreen(navController: NavController) {
-    var selectedCategory by remember { mutableStateOf<String?>(null) }
-    var showSelectionDialog by remember { mutableStateOf(false) }
-
-    val pendingEvents = listOf("Quiz Night", "Seramik Atölyesi")
-    val pastEvents = listOf("Yaratıcı Yazarlık Atölyesi", "Coffee Talks", "90's Event", "İstiklal Gezisi")
-    val rejectedEvents = listOf("Takı Atölyesi", "Oyun Gecesi")
-
-    if (showSelectionDialog) {
-        AlertDialog(
-            onDismissRequest = { showSelectionDialog = false },
-            title = { Text("Form Tipi Seçin", color = DarkBlue, fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(
-                        onClick = { 
-                            showSelectionDialog = false
-                            navController.navigate(Routes.EventRequestForm.route) 
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD1C4E9), contentColor = DarkBlue)
-                    ) { Text("Etkinlik Talep Formu") }
-                    
-                    Button(
-                        onClick = { 
-                            showSelectionDialog = false
-                            navController.navigate(Routes.VehicleRequestForm.route) 
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD1C4E9), contentColor = DarkBlue)
-                    ) { Text("Araç Talep Formu") }
-
-                    // DÜZELTİLDİ: Boolean parametre (true) eklenerek yönlendirme yapıldı
-                    Button(
-                        onClick = { 
-                            showSelectionDialog = false
-                            navController.navigate(Routes.ParticipantInfoForm.createRoute(fromNewForm = true)) 
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD1C4E9), contentColor = DarkBlue)
-                    ) { Text("Katılımcı Bilgileri Formu") }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showSelectionDialog = false }) { Text("İptal", color = Color.Gray) }
-            },
-            containerColor = Color.White
-        )
-    }
+    val HeaderColor = Color(0xFFD1C4E9)
+    val ButtonLightColor = Color(0xFFD1C4E9)
+    val ButtonDarkColor = DarkBlue
 
     Scaffold(
         containerColor = Color.White,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Formlar", fontWeight = FontWeight.Bold, color = DarkBlue) },
-                navigationIcon = { IconButton(onClick = { }) { Icon(Icons.Default.Menu, "Menu", tint = DarkBlue) } },
-                actions = { IconButton(onClick = { }) { Icon(Icons.Default.Notifications, "Notifications", tint = DarkBlue) } },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).clip(RoundedCornerShape(16.dp)),
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)
-            )
-        },
-        bottomBar = { 
-            FormsBottomAppBar(navController = navController) 
+        bottomBar = {
+            // ClubProfileScreen içindeki ortak yapıyı kullanıyoruz
+            ClubAdminBottomAppBar(navController = navController)
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(Color.White)
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                FormMenuButton(text = "Geçmiş Etkinlik\nFormları", isSelected = selectedCategory == "PAST") { 
-                    selectedCategory = if (selectedCategory == "PAST") null else "PAST"
-                }
-                FormMenuButton(text = "Onay Bekleyen\nFormlar", isSelected = selectedCategory == "PENDING") { 
-                    selectedCategory = if (selectedCategory == "PENDING") null else "PENDING"
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                FormMenuButton(text = "Yeni Form Oluştur") { showSelectionDialog = true }
-                FormMenuButton(text = "Reddedilen Etkinlik\nFormları", isSelected = selectedCategory == "REJECTED") { 
-                    selectedCategory = if (selectedCategory == "REJECTED") null else "REJECTED"
-                }
-            }
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            val currentList = when (selectedCategory) {
-                "PAST" -> pastEvents
-                "PENDING" -> pendingEvents
-                "REJECTED" -> rejectedEvents
-                else -> emptyList()
-            }
-
-            currentList.forEach { eventName ->
-                Button(
-                    onClick = { 
-                        when(selectedCategory) {
-                            // DÜZELTİLDİ: Görüntüleme modunda parametre (false) olarak gidilir
-                            "PAST" -> navController.navigate(Routes.PastEventDetail.createRoute(eventName))
-                            "PENDING" -> navController.navigate(Routes.PendingEventDetail.createRoute(eventName))
-                            "REJECTED" -> navController.navigate(Routes.RejectedEventDetail.createRoute(eventName))
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(0.85f).height(60.dp).padding(vertical = 4.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF3EFFF), contentColor = DarkBlue),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                ) {
-                    Text(text = eventName, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun FormsBottomAppBar(navController: NavController) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(75.dp)
-                .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
-            color = LightPurple
-        ) {
-            Row(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .background(HeaderColor, shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+                    .padding(top = 20.dp),
+                contentAlignment = Alignment.Center
             ) {
-                FormsNavItem(Icons.Default.Groups, "Kulübüm") { navController.navigate(Routes.ClubProfileScreen.route) }
-                FormsNavItem(Icons.Default.Assignment, "Formlar") { /* Zaten buradayız */ }
-                Spacer(modifier = Modifier.width(90.dp))
-                FormsNavItem(Icons.Default.Collections, "Gönderiler") { /* Aksiyon */ }
-                FormsNavItem(Icons.Default.EventAvailable, "Etkinlikler") { navController.navigate(Routes.EventCalendarScreen.route) }
+                Icon(Icons.Default.Menu, "Menu", tint = DarkBlue, modifier = Modifier.align(Alignment.CenterStart).padding(start = 20.dp).size(28.dp))
+                Text("Formlar", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = DarkBlue, modifier = Modifier.align(Alignment.Center))
+                Icon(Icons.Default.Notifications, "Bildirim", tint = DarkBlue, modifier = Modifier.align(Alignment.CenterEnd).padding(end = 20.dp).size(28.dp))
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    FormMenuButton("Geçmiş Etkinlik\nFormları", ButtonLightColor, DarkBlue, Modifier.weight(1f)) { navController.navigate(Routes.PastEventForms.route) }
+                    FormMenuButton("Onay Bekleyen\nFormlar", ButtonLightColor, DarkBlue, Modifier.weight(1f)) { navController.navigate(Routes.PendingEventForms.route) }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    FormMenuButton("Yeni Form Oluştur", ButtonDarkColor, Color.White, Modifier.weight(1f)) { navController.navigate(Routes.CreateEvent.route) }
+                    FormMenuButton("Reddedilen Etkinlik\nFormları", ButtonLightColor, DarkBlue, Modifier.weight(1f)) { navController.navigate(Routes.RejectedEventForms.route) }
+                }
             }
         }
-        Surface(
-            modifier = Modifier
-                .size(90.dp)
-                .align(Alignment.TopCenter)
-                .border(6.dp, Color.White, CircleShape)
-                .clickable { navController.navigate(Routes.ClubHomeScreen.route) },
-            shape = CircleShape,
-            color = DarkBlue,
-            shadowElevation = 8.dp
-        ) {}
     }
 }
 
 @Composable
-fun FormsNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.clickable(onClick = onClick)
+fun FormMenuButton(text: String, backgroundColor: Color, textColor: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(
+        modifier = modifier
+            .height(70.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Icon(icon, contentDescription = label, tint = DarkBlue, modifier = Modifier.size(28.dp))
-        Text(text = label, color = DarkBlue, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-fun FormMenuButton(text: String, isSelected: Boolean = false, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.size(width = 150.dp, height = 80.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFF1A0273) else Color(0xFFD1C4E9),
-            contentColor = if (isSelected) Color.White else DarkBlue
-        ),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-    ) {
-        Text(text = text, textAlign = TextAlign.Center, fontSize = 13.sp, fontWeight = FontWeight.Bold, lineHeight = 16.sp)
+        Text(text = text, color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, lineHeight = 18.sp)
     }
 }

@@ -29,10 +29,13 @@ import androidx.navigation.NavController
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
+import com.example.a7club.ui.viewmodels.EventRequestViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventRequestFormScreen(navController: NavController) {
+fun EventRequestFormScreen(navController: NavController,
+                           eventName: String,
+                           viewModel: EventRequestViewModel ) {
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) } // Seçilen dosya adresi

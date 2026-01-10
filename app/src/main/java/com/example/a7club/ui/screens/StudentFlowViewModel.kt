@@ -1,4 +1,4 @@
-package com.example.a7club.ui.viewmodels // PACKAGE NAME UPDATED
+package com.example.a7club.ui.screens
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf

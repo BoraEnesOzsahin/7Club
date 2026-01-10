@@ -1,0 +1,109 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
+package com.example.a7club.ui.screens
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.a7club.ui.navigation.Routes
+import com.example.a7club.ui.theme.DarkBlue
+import com.example.a7club.ui.theme.VeryLightPurple
+import com.example.a7club.ui.viewmodels.PersonnelViewModel
+import com.example.a7club.model.Event
+
+@Composable
+fun PersonnelPastEventsScreen(
+    navController: NavController,
+    viewModel: PersonnelViewModel = viewModel()
+) {
+    val pastEvents by viewModel.pastEvents.collectAsState()
+
+    Scaffold(
+        containerColor = Color.White,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Geçmiş Talepler", fontWeight = FontWeight.Bold, color = DarkBlue) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri", tint = DarkBlue)
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+            )
+        },
+        // GÜNCELLEME: Talepler menüsü (Requests Bar) kullanılıyor
+        bottomBar = {
+            PersonnelRequestsBottomBar(navController, Routes.PersonnelPastEvents.route)
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
+            if (pastEvents.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Geçmiş talep bulunmuyor.", color = Color.Gray)
+                }
+            } else {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 20.dp)) {
+                    items(pastEvents) { event ->
+                        PastEventCard(event)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PastEventCard(event: Event) {
+    val statusColor = when(event.status) {
+        "APPROVED", "Verified" -> Color(0xFF4CAF50)
+        "REJECTED", "Rejected" -> Color(0xFFF44336)
+        else -> Color.Gray
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth().height(90.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = VeryLightPurple)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(event.title, fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 16.sp)
+                Text(event.clubName, color = DarkBlue.copy(alpha = 0.7f), fontSize = 13.sp)
+            }
+            Surface(
+                color = statusColor.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = if (event.status == "APPROVED" || event.status == "Verified") "ONAYLANDI" else "REDDEDİLDİ",
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    color = statusColor,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}

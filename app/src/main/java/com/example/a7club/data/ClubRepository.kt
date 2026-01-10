@@ -1,6 +1,6 @@
 package com.example.a7club.data
 
-import com.example.a7club.data.models.Event
+import com.example.a7club.model.Event
 import com.example.a7club.model.Club
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase

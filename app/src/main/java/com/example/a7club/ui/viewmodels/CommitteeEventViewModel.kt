@@ -4,7 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.example.a7club.data.models.VehicleRequest
+import com.example.a7club.model.VehicleRequest
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -16,20 +17,33 @@ class CommitteeEventViewModel : ViewModel() {
     var passengerCount by mutableStateOf("")
     var notes by mutableStateOf("")
 
-    fun submitVehicleRequest(eventId: String, clubId: String) {
-        val request = VehicleRequest(
-            eventId = eventId,
-            clubId = clubId,
-            vehicleType = vehicleType,
-            pickupLocation = pickupLocation,
-            dropoffLocation = dropoffLocation,
-            // TODO: Implement proper time picker
-            pickupTime = System.currentTimeMillis(),
-            passengerCount = passengerCount.toIntOrNull() ?: 0,
-            notes = notes
-        )
+    fun submitVehicleRequest(eventName: String, clubId: String) {
+        // 1. İsme göre Etkinlik ID'sini bul
+        Firebase.firestore.collection("events")
+            .whereEqualTo("title", eventName)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val realEventId = if (!snapshot.isEmpty) snapshot.documents[0].id else "unknown_event"
 
-        // TODO: Add error handling and success feedback
-        Firebase.firestore.collection("vehicleRequests").add(request)
+                // 2. Talebi Kaydet
+                val request = VehicleRequest(
+                    eventId = realEventId,
+                    eventName = eventName,
+                    clubName = "YUKEK Kulübü", // Dinamik yapılabilir
+                    vehicleType = vehicleType,
+                    pickupLocation = pickupLocation,
+                    destination = dropoffLocation,
+                    passengerCount = passengerCount.toIntOrNull() ?: 0,
+                    notes = notes,
+                    requestDate = Timestamp.now(),
+                    status = "PENDING"
+                )
+
+                Firebase.firestore.collection("vehicleRequests").add(request)
+            }
+            .addOnFailureListener {
+                println("Etkinlik bulunamadı hatası: ${it.message}")
+            }
     }
 }
