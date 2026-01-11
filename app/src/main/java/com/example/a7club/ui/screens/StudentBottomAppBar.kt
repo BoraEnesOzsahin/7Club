@@ -39,36 +39,43 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 
-/**
- * Öğrenci akışı için, diğer kullanıcı rolleriyle tutarlı alt navigasyon barı.
- * Ortada sadece renk içeren bir buton ve yanlarda diğer navigasyon hedeflerini içerir.
- *
- * @param navController Ana navigasyon yöneticisi.
- */
 @Composable
 fun StudentBottomAppBar(navController: NavController) {
     val lightPurpleBarColor = Color(0xFFD1C4E9)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // --- AKILLI ORTA BUTON MANTIĞI ---
     val onMiddleButtonClick = {
-        val destination = if (currentRoute != Routes.MyEvents.route) {
-            Routes.MyEvents.route
-        } else {
-            Routes.Events.route
-        }
-        navController.navigate(destination) {
-            // Pop up to the start destination of the graph to
-            // avoid building up a large stack of destinations
-            // on the back stack as users select items
-            popUpTo(navController.graph.findStartDestination().id) {
-                saveState = true
+        // "Genel" (Public) sayılan rotaların listesi
+        val publicScreens = listOf(
+            Routes.Events.route,          // Ana Etkinlikler
+            Routes.Clubs.route,           // Tüm Kulüpler
+            Routes.Discover.route,        // Keşfet
+            Routes.StudentProfile.route,  // Profil
+            Routes.EventDetail.route      // Etkinlik Detayı (Genelden gelinen)
+        )
+
+        // MANTIK:
+        // Eğer şu an GENEL bir sayfadaysak -> KİŞİSEL Alana (MyEvents) git.
+        if (currentRoute in publicScreens) {
+            navController.navigate(Routes.MyEvents.route) {
+                popUpTo(Routes.Events.route) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
             }
-            // Avoid multiple copies of the same destination when
-            // reselecting the same item
-            launchSingleTop = true
-            // Restore state when reselecting a previously selected item
-            restoreState = true
+        }
+        // Eğer GENEL sayfada DEĞİLSEK (Demek ki MyClubs, MyReviews, PastEvents vb. birindeyiz)
+        // -> Direkt ANA SAYFAYA (Events) dön.
+        else {
+            navController.navigate(Routes.Events.route) {
+                // Stack'i tamamen temizleyip Events'e oturuyoruz.
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
         }
     }
 
@@ -78,7 +85,7 @@ fun StudentBottomAppBar(navController: NavController) {
             .height(100.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
-        // Ana barın kendisi
+        // Arka Plandaki Bar
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -94,15 +101,65 @@ fun StudentBottomAppBar(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StudentMainNavItem(icon = Icons.Default.Event, label = "Etkinlikler") { navController.navigate(Routes.Events.route) }
-                StudentMainNavItem(icon = Icons.Default.Explore, label = "Keşfet") { /* TODO */ }
+                // 1. Etkinlikler (Genel Akış)
+                StudentMainNavItem(
+                    icon = Icons.Default.Event,
+                    label = "Etkinlikler",
+                    isSelected = currentRoute == Routes.Events.route
+                ) {
+                    navController.navigate(Routes.Events.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+
+                // 2. Keşfet
+                StudentMainNavItem(
+                    icon = Icons.Default.Explore,
+                    label = "Keşfet",
+                    isSelected = currentRoute == Routes.Discover.route
+                ) {
+                    navController.navigate(Routes.Discover.route)
+                }
+
                 Spacer(modifier = Modifier.width(90.dp)) // Orta buton için boşluk
-                StudentMainNavItem(icon = Icons.Default.Groups, label = "Kulüplerim") { navController.navigate(Routes.MyClubs.route) }
-                StudentMainNavItem(icon = Icons.Default.Person, label = "Profilim") { /* TODO */ }
+
+                // 3. Kulüpler (TÜM KULÜPLER)
+                StudentMainNavItem(
+                    icon = Icons.Default.Groups,
+                    label = "Kulüpler",
+                    isSelected = currentRoute == Routes.Clubs.route
+                ) {
+                    navController.navigate(Routes.Clubs.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+
+                // 4. Profil
+                StudentMainNavItem(
+                    icon = Icons.Default.Person,
+                    label = "Profilim",
+                    isSelected = currentRoute == Routes.StudentProfile.route
+                ) {
+                    navController.navigate(Routes.StudentProfile.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             }
         }
 
-        // Ortadaki sade buton (İkon kaldırıldı)
+        // ORTA TUŞ (Koyu Lacivert)
         Surface(
             modifier = Modifier
                 .size(90.dp)
@@ -113,24 +170,27 @@ fun StudentBottomAppBar(navController: NavController) {
             shape = CircleShape,
             color = DarkBlue,
             shadowElevation = 8.dp
-        ) { 
-            // İkon kaldırıldığı için içi boş bırakıldı.
+        ) {
+            // İkon yok
         }
     }
 }
 
-/**
- * StudentBottomAppBar içindeki her bir navigasyon öğesi.
- * 'AdminNavItem' referans alınarak tasarlanmıştır.
- */
 @Composable
-private fun StudentMainNavItem(icon: ImageVector, label: String, onClick: () -> Unit) {
+private fun StudentMainNavItem(
+    icon: ImageVector,
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val iconColor = if (isSelected) DarkBlue else DarkBlue.copy(alpha = 0.6f)
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.clickable(onClick = onClick)
     ) {
-        Icon(icon, contentDescription = label, tint = DarkBlue, modifier = Modifier.size(28.dp))
-        Text(text = label, color = DarkBlue, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Icon(icon, contentDescription = label, tint = iconColor, modifier = Modifier.size(28.dp))
+        Text(text = label, color = iconColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }

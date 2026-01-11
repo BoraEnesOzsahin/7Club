@@ -15,6 +15,7 @@ sealed class Routes(val route: String) {
     object Discover : Routes("discover")
     object Clubs : Routes("clubs")
     object Profile : Routes("profile")
+    object StudentProfile : Routes("student_profile")
     object CreateVehicleRequest : Routes("create_vehicle_request")
     object ClubCommitteeLogin : Routes("club_committee_login")
     object PersonnelLogin : Routes("personnel_login")

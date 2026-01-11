@@ -8,9 +8,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.a7club.data.AuthRepository
 import com.example.a7club.data.Resource
 import com.example.a7club.data.UserRole
-import com.example.a7club.model.User // SEALED INTERFACE KULLANILDI
+import com.example.a7club.model.User
+import com.google.firebase.auth.FirebaseAuth // YENİ EKLENDİ
+import com.google.firebase.firestore.FirebaseFirestore // YENİ EKLENDİ
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow // YENİ EKLENDİ
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
@@ -20,6 +23,13 @@ class AuthViewModel : ViewModel() {
     // UI state - Artık sealed User arayüzü ile çalışıyor
     private val _loginState = MutableStateFlow<Resource<User>?>(null)
     val loginState: StateFlow<Resource<User>?> = _loginState
+
+    // -------------------------------------------------------------
+    // --- YENİ EKLENEN BÖLÜM: Profil İsmi İçin State ---
+    // -------------------------------------------------------------
+    private val _currentStudentName = MutableStateFlow("Yükleniyor...")
+    val currentStudentName: StateFlow<String> = _currentStudentName.asStateFlow()
+    // -------------------------------------------------------------
 
     // Form fields
     var email by mutableStateOf("")
@@ -53,4 +63,29 @@ class AuthViewModel : ViewModel() {
         email = ""
         password = ""
     }
+
+    // -------------------------------------------------------------
+    // --- YENİ EKLENEN BÖLÜM: Veritabanından İsim Çekme Fonksiyonu ---
+    // -------------------------------------------------------------
+    fun fetchStudentProfile() {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            FirebaseFirestore.getInstance().collection("users").document(uid).get()
+                .addOnSuccessListener { document ->
+                    if (document != null && document.exists()) {
+                        // Veritabanında "fullName" alanını okuyoruz
+                        val name = document.getString("fullName") ?: "İsimsiz Kullanıcı"
+                        _currentStudentName.value = name
+                    } else {
+                        _currentStudentName.value = "Kullanıcı Bulunamadı"
+                    }
+                }
+                .addOnFailureListener {
+                    _currentStudentName.value = "Hata Oluştu"
+                }
+        } else {
+            _currentStudentName.value = "Giriş Yapılmadı"
+        }
+    }
+    // -------------------------------------------------------------
 }

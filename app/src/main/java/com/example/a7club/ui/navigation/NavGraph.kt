@@ -23,8 +23,17 @@ fun NavGraph(
         composable(Routes.Splash.route) {
             SplashScreen(navController)
         }
+        composable(Routes.StudentProfile.route) {
+            StudentProfileScreen(
+                navController = navController,
+                authViewModel = authViewModel
+            )
+        }
         composable(Routes.RoleSelection.route) {
             RoleSelectionScreen(navController, showSnackbar)
+        }
+        composable(Routes.Clubs.route) {
+            ClubsScreen(navController = navController)
         }
 
         // Login Screens
@@ -34,33 +43,42 @@ fun NavGraph(
 
         // Main user screens
         composable(Routes.Events.route) { EventsScreen(navController) }
+
+        // --- YENİ EKLENEN KISIM: KEŞFET EKRANI ---
+        composable(Routes.Discover.route) {
+            DiscoverScreen(navController = navController)
+        }
+        // ----------------------------------------
+
         composable(Routes.ClubHomeScreen.route) { ClubHomeScreen(navController, showSnackbar) }
         composable(
             route = Routes.PersonnelHomeScreen.route,
-            arguments = listOf(navArgument("tabIndex") { 
+            arguments = listOf(navArgument("tabIndex") {
                 type = NavType.IntType
-                defaultValue = 0 
+                defaultValue = 0
             })
         ) {
-             val initialTabIndex = it.arguments?.getInt("tabIndex") ?: 0
-             PersonnelHomeScreen(navController = navController, authViewModel = authViewModel, initialTabIndex = initialTabIndex)
+            val initialTabIndex = it.arguments?.getInt("tabIndex") ?: 0
+            PersonnelHomeScreen(navController = navController, authViewModel = authViewModel, initialTabIndex = initialTabIndex)
         }
 
         // Additional Screens
         composable(Routes.SettingsScreen.route) { SettingsScreen(navController, showSnackbar) }
         composable(Routes.EventCalendarScreen.route) { EventCalendarScreen(navController, showSnackbar) }
         composable(Routes.ClubProfileScreen.route) { ClubProfileScreen(navController, showSnackbar) }
-        composable(Routes.NotificationsScreen.route) { NotificationsScreen(navController) }
+        composable(Routes.NotificationsScreen.route) {
+            NotificationsScreen(navController = navController)
+        }
         composable(Routes.MembersScreen.route) { MembersScreen(navController) }
         composable(Routes.ContactInfoScreen.route) { ContactInfoScreen(navController) }
         composable(Routes.Forms.route) { FormsScreen(navController) }
         composable(Routes.Profile.route) { PersonnelProfileScreen(navController, authViewModel) }
-        
+
         // Other Navigation
         composable(Routes.MainScreen.route) { MainScreen(navController) }
         composable(Routes.ClubCommitteeLogin.route) { ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar) }
         composable(Routes.PersonnelLogin.route) { PersonnelLoginScreen(navController, authViewModel, showSnackbar) }
-        
+
         // Event Detail with argument
         composable(
             route = Routes.EventDetail.route,
