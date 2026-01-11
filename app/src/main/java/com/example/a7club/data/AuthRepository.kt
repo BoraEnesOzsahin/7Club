@@ -52,4 +52,8 @@ class AuthRepository {
             Resource.Error(e.message ?: "Giriş başarısız.")
         }
     }
+
+    fun signOut() {
+        auth.signOut()
+    }
 }

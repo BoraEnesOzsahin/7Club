@@ -43,6 +43,11 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun signOut() {
+        authRepository.signOut()
+        _loginState.value = null // Reset state on sign out
+    }
+
     fun resetLoginState() {
         _loginState.value = null
         email = ""

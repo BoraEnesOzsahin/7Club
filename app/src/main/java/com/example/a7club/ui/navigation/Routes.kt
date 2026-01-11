@@ -77,4 +77,13 @@ sealed class Routes(val route: String) {
     object ClubEventForms : Routes("club_event_forms/{eventName}") {
         fun createRoute(eventName: String) = "club_event_forms/$eventName"
     }
+
+    // YENİ EKRAN
+    object MyEvents : Routes("my_events")
+    object MyClubs : Routes("my_clubs")
+    object MyReviews : Routes("my_reviews")
+    object EventReview : Routes("event_review/{eventName}/{clubName}") {
+        fun createRoute(eventName: String, clubName: String) = "event_review/$eventName/$clubName"
+    }
+    object PastEvents : Routes("past_events")
 }
