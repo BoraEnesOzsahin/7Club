@@ -89,7 +89,6 @@ fun EventRequestFormScreen(navController: NavController,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Formlar", fontWeight = FontWeight.Bold, color = DarkBlue) },
-                navigationIcon = { IconButton(onClick = { }) { Icon(Icons.Default.Menu, "Menu", tint = DarkBlue) } },
                 actions = { IconButton(onClick = { }) { Icon(Icons.Default.Notifications, "Notifications", tint = DarkBlue) } },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).clip(RoundedCornerShape(16.dp)),
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)

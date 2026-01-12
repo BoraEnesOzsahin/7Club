@@ -122,7 +122,20 @@ fun MyClubsAppBottomBar(navController: NavController) {
                 .align(Alignment.TopCenter)
                 .border(6.dp, veryLightGray, CircleShape)
                 .clip(CircleShape)
-                .clickable { navController.popBackStack() },
+                .clickable { 
+                    val newRoute = if (currentRoute == Routes.Events.route) {
+                        Routes.MyEvents.route
+                    } else {
+                        Routes.Events.route
+                    }
+                    navController.navigate(newRoute) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                 },
             shape = CircleShape,
             color = DarkBlue,
             shadowElevation = 8.dp

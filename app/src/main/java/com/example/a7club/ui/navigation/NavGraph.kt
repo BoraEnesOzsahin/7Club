@@ -93,7 +93,7 @@ fun NavGraph(
         ) { backStackEntry ->
             val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
             val committeeViewModel: CommitteeEventViewModel = viewModel()
-            VehicleRequestFormScreen(navController, eventName, committeeViewModel)
+            VehicleRequestFormScreen(navController, showSnackbar)
         }
 
         composable(Routes.CreateVehicleRequest.route) { CreateVehicleRequestScreen() }
