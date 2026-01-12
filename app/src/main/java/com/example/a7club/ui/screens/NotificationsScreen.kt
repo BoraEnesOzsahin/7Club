@@ -166,7 +166,7 @@ fun NotificationCard(event: Event) {
             ) {
                 // Üst Başlık (Küçük ve silik)
                 Text(
-                    text = "Yeni Etkinlik Onaylandı! 🎉",
+                    text = "",
                     fontSize = 12.sp,
                     color = DarkBlue.copy(alpha = 0.7f),
                     fontWeight = FontWeight.Bold

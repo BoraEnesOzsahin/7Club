@@ -12,6 +12,8 @@ import com.example.a7club.ui.screens.*
 import com.example.a7club.ui.viewmodels.AuthViewModel
 import com.example.a7club.ui.viewmodels.StudentFlowViewModel
 import com.example.a7club.ui.viewmodels.PersonnelViewModel
+import com.example.a7club.ui.viewmodels.CommitteeEventViewModel
+import com.example.a7club.ui.viewmodels.EventRequestViewModel
 
 @Composable
 fun NavGraph(
@@ -53,8 +55,6 @@ fun NavGraph(
         // --- LOGIN SCREENS ---
         composable(Routes.StudentLogin.route) { StudentLoginScreen(navController, authViewModel, showSnackbar) }
 
-        // DÜZELTME BURADA YAPILDI: Hem ClubLogin hem ClubCommitteeLogin eklendi.
-        // Buton hangisini çağırırsa çağırsın artık çökmez.
         composable(Routes.ClubLogin.route) { ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar) }
         composable(Routes.ClubCommitteeLogin.route) { ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar) }
 
@@ -66,13 +66,92 @@ fun NavGraph(
             EventsScreen(navController, viewModel = studentFlowViewModel)
         }
 
+        // --- YENİ EKLENDİ: KEŞFET EKRANI ---
         composable(Routes.Discover.route) {
             DiscoverScreen(navController = navController)
         }
+        // ----------------------------------
 
         composable(Routes.ClubHomeScreen.route) { ClubHomeScreen(navController, showSnackbar) }
 
+        // --- KULÜP YÖNETİM & ETKİNLİK FORMLARI ---
+
+        composable(Routes.CreateEvent.route) { CreateEventScreen(navController, showSnackbar) }
+
+        composable(
+            route = Routes.EventRequestForm.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            val requestViewModel: EventRequestViewModel = viewModel()
+            EventRequestFormScreen(navController, eventName, requestViewModel)
+        }
+
+        composable(
+            route = Routes.VehicleRequestForm.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            val committeeViewModel: CommitteeEventViewModel = viewModel()
+            VehicleRequestFormScreen(navController, eventName, committeeViewModel)
+        }
+
+        composable(Routes.CreateVehicleRequest.route) { CreateVehicleRequestScreen() }
+
+        // Geçmiş Etkinlikler (Yönetim)
+        composable(Routes.PastEventForms.route) { PastEventFormsScreen(navController) }
+
+        composable(
+            route = Routes.PastEventDetail.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            PastEventDetailScreen(navController, eventName)
+        }
+
+        // Bekleyen Etkinlikler (Yönetim)
+        composable(Routes.PendingEventForms.route) { PendingEventFormsScreen(navController) }
+
+        composable(
+            route = Routes.PendingEventDetail.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            PendingEventDetailScreen(navController, eventName)
+        }
+
+        // Reddedilen Etkinlikler (Yönetim)
+        composable(Routes.RejectedEventForms.route) { RejectedEventFormsScreen(navController) }
+
+        composable(
+            route = Routes.RejectedEventDetail.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            RejectedEventDetailScreen(navController, eventName)
+        }
+
+        // Diğer Yönetim Ekranları
+        composable(
+            route = Routes.ClubEventForms.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            ClubEventFormsScreen(navController, eventName)
+        }
+
+        composable(Routes.ClubPosts.route) { ClubPostsScreen(navController) }
+
+        composable(
+            route = Routes.ParticipantInfoForm.route,
+            arguments = listOf(navArgument("fromNewForm") { type = NavType.BoolType })
+        ) { backStackEntry ->
+            val fromNewForm = backStackEntry.arguments?.getBoolean("fromNewForm") ?: false
+            ParticipantInfoFormScreen(navController, fromNewForm)
+        }
+
         // --- PERSONEL EKRANLARI ---
+
         composable(
             route = Routes.PersonnelHomeScreen.route,
             arguments = listOf(navArgument("tabIndex") {
@@ -83,6 +162,10 @@ fun NavGraph(
             val initialTabIndex = it.arguments?.getInt("tabIndex") ?: 0
             PersonnelHomeScreen(navController = navController, authViewModel = authViewModel, initialTabIndex = initialTabIndex)
         }
+
+        composable(Routes.PersonnelEventRequests.route) { PersonnelEventRequestsScreen(navController) }
+        composable(Routes.PersonnelOverdueEvents.route) { PersonnelOverdueEventsScreen(navController) }
+        composable(Routes.PersonnelPastEvents.route) { PersonnelPastEventsScreen(navController) }
 
         composable(
             route = Routes.PersonnelEventDetail.route,
@@ -116,6 +199,18 @@ fun NavGraph(
         ) { backStackEntry ->
             val clubName = backStackEntry.arguments?.getString("clubName") ?: ""
             PersonnelClubMembersScreen(navController, clubName)
+        }
+
+        composable(
+            route = Routes.PersonnelClubEvents.route,
+            arguments = listOf(
+                navArgument("clubName") { type = NavType.StringType },
+                navArgument("isPast") { type = NavType.BoolType }
+            )
+        ) { backStackEntry ->
+            val clubName = backStackEntry.arguments?.getString("clubName") ?: ""
+            val isPast = backStackEntry.arguments?.getBoolean("isPast") ?: false
+            PersonnelClubEventsScreen(navController, clubName, isPast)
         }
 
         // --- ADDITIONAL SCREENS ---
