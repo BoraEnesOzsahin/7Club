@@ -53,8 +53,6 @@ fun NavGraph(
         // --- LOGIN SCREENS ---
         composable(Routes.StudentLogin.route) { StudentLoginScreen(navController, authViewModel, showSnackbar) }
 
-        // DÜZELTME BURADA YAPILDI: Hem ClubLogin hem ClubCommitteeLogin eklendi.
-        // Buton hangisini çağırırsa çağırsın artık çökmez.
         composable(Routes.ClubLogin.route) { ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar) }
         composable(Routes.ClubCommitteeLogin.route) { ClubCommitteeLoginScreen(navController, authViewModel, showSnackbar) }
 
@@ -72,7 +70,9 @@ fun NavGraph(
 
         composable(Routes.ClubHomeScreen.route) { ClubHomeScreen(navController, showSnackbar) }
 
-        // --- PERSONEL EKRANLARI ---
+        // --- PERSONEL EKRANLARI (GÜNCELLENDİ) ---
+
+        // 1. Ana Ekran
         composable(
             route = Routes.PersonnelHomeScreen.route,
             arguments = listOf(navArgument("tabIndex") {
@@ -84,6 +84,12 @@ fun NavGraph(
             PersonnelHomeScreen(navController = navController, authViewModel = authViewModel, initialTabIndex = initialTabIndex)
         }
 
+        // 2. EKSİK OLAN EKRANLAR EKLENDİ (Requests, Overdue, Past)
+        composable(Routes.PersonnelEventRequests.route) { PersonnelEventRequestsScreen(navController) }
+        composable(Routes.PersonnelOverdueEvents.route) { PersonnelOverdueEventsScreen(navController) }
+        composable(Routes.PersonnelPastEvents.route) { PersonnelPastEventsScreen(navController) }
+
+        // 3. Etkinlik Detayı
         composable(
             route = Routes.PersonnelEventDetail.route,
             arguments = listOf(
@@ -96,12 +102,13 @@ fun NavGraph(
 
             PersonnelEventDetailScreen(
                 navController = navController,
-                eventTitle = eventName,
+                eventTitle = eventName, // Parametre ismine dikkat edildi
                 clubName = clubName,
                 viewModel = personnelViewModel
             )
         }
 
+        // 4. Kulüp Detayı
         composable(
             route = Routes.PersonnelClubDetail.route,
             arguments = listOf(navArgument("clubName") { type = NavType.StringType })
@@ -110,12 +117,26 @@ fun NavGraph(
             PersonnelClubDetailScreen(navController, clubName)
         }
 
+        // 5. Kulüp Üyeleri
         composable(
             route = Routes.PersonnelClubMembers.route,
             arguments = listOf(navArgument("clubName") { type = NavType.StringType })
         ) { backStackEntry ->
             val clubName = backStackEntry.arguments?.getString("clubName") ?: ""
             PersonnelClubMembersScreen(navController, clubName)
+        }
+
+        // 6. EKSİK OLAN EKRAN EKLENDİ (Kulüp Etkinlikleri Listesi)
+        composable(
+            route = Routes.PersonnelClubEvents.route,
+            arguments = listOf(
+                navArgument("clubName") { type = NavType.StringType },
+                navArgument("isPast") { type = NavType.BoolType }
+            )
+        ) { backStackEntry ->
+            val clubName = backStackEntry.arguments?.getString("clubName") ?: ""
+            val isPast = backStackEntry.arguments?.getBoolean("isPast") ?: false
+            PersonnelClubEventsScreen(navController, clubName, isPast)
         }
 
         // --- ADDITIONAL SCREENS ---
