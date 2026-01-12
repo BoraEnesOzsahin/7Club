@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.rememberAsyncImagePainter
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
@@ -43,13 +44,16 @@ data class Announcement(
     val clubName: String = "",
     val title: String = "",
     val content: String = "",
-    val date: String = ""
+    val date: String = "",
+    val timestamp: Long = 0
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClubPostsScreen(navController: NavController, viewModel: ClubPostsViewModel = viewModel()) {
     var selectedTab by remember { mutableIntStateOf(0) }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
         viewModel.selectedImageUri = uri
@@ -68,7 +72,7 @@ fun ClubPostsScreen(navController: NavController, viewModel: ClubPostsViewModel 
             }
         },
         bottomBar = {
-            ClubAdminBottomAppBar(navController, Routes.ClubPosts.route)
+            ClubAdminBottomAppBar(navController, currentRoute)
         }
     ) { paddingValues ->
         Column(

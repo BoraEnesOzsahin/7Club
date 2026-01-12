@@ -126,8 +126,46 @@ fun NavGraph(
         composable(Routes.MembersScreen.route) { MembersScreen(navController) }
         composable(Routes.ContactInfoScreen.route) { ContactInfoScreen(navController) }
         composable(Routes.Forms.route) { FormsScreen(navController) }
+        composable(Routes.FormSelection.route) { FormSelectionScreen(navController) } // YENİ
+        composable(Routes.CreateVehicleRequest.route) { VehicleRequestFormScreen(navController, showSnackbar) } // YENİ
+        composable(Routes.CreateEvent.route) { CreateEventScreen(navController, showSnackbar) }
+        composable(Routes.ClubPosts.route) { ClubPostsScreen(navController) }
+        composable(
+            route = Routes.ParticipantInfoForm.route,
+            arguments = listOf(navArgument("fromNewForm") { type = NavType.BoolType })
+        ) { backStackEntry ->
+            val fromNewForm = backStackEntry.arguments?.getBoolean("fromNewForm") ?: false
+            ParticipantInfoFormScreen(navController, fromNewForm)
+        }
         composable(Routes.Profile.route) { PersonnelProfileScreen(navController, authViewModel) }
         composable(Routes.MainScreen.route) { MainScreen(navController) }
+        
+        composable(Routes.PastEventForms.route) { PastEventFormsScreen(navController) }
+        composable(
+            route = Routes.PastEventDetail.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            PastEventDetailScreen(navController, eventName)
+        }
+
+        composable(Routes.PendingEventForms.route) { PendingEventFormsScreen(navController) }
+        composable(
+            route = Routes.PendingEventDetail.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            PendingEventDetailScreen(navController, eventName)
+        }
+
+        composable(Routes.RejectedEventForms.route) { RejectedEventFormsScreen(navController) }
+        composable(
+            route = Routes.RejectedEventDetail.route,
+            arguments = listOf(navArgument("eventName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
+            RejectedEventDetailScreen(navController, eventName)
+        }
 
         // --- EVENT DETAIL (ÖĞRENCİ İÇİN) ---
         composable(

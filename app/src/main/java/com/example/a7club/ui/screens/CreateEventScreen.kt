@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -132,7 +133,7 @@ fun CreateEventScreen(
             ) {
                 Icon(Icons.Default.AddPhotoAlternate, null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(if (viewModel.selectedFileUri.value != null) "Görsel Seçildi" else "Etkinlik Afişi Yükle")
+                Text(if (viewModel.selectedFileUri.value != null) "Görsel Seçildi" else "Etkinlik Afişi Yükle", textAlign = TextAlign.Center)
             }
 
             // Islak İmzalı Belge Butonu
@@ -145,7 +146,7 @@ fun CreateEventScreen(
                 Icon(Icons.Default.AttachFile, null)
                 Spacer(modifier = Modifier.width(8.dp))
                 val docName = viewModel.selectedDocumentName.value
-                Text(if (docName.isNotEmpty()) docName.take(20) + "..." else "Başvuru Formu Ekle (PDF/Word)")
+                Text(if (docName.isNotEmpty()) docName.take(20) + "..." else "Başvuru Formu Ekle (PDF/Word)", textAlign = TextAlign.Center)
             }
 
             // Başlık
@@ -172,8 +173,8 @@ fun CreateEventScreen(
             // --- TARİH ALANI (GÜNCELLENDİ) ---
             OutlinedTextField(
                 value = viewModel.dateString.value,
-                onValueChange = {}, // ReadOnly olduğu için boş
-                readOnly = true,    // Klavye açılmasın
+                onValueChange = {},
+                readOnly = true,
                 label = { Text("Tarih Seçiniz") },
                 placeholder = { Text("GG/AA/YYYY") },
                 trailingIcon = {
@@ -183,10 +184,9 @@ fun CreateEventScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    // Alanın tamamına tıklanınca takvim açılsın
                     .clickable { showDatePicker = true },
                 shape = RoundedCornerShape(12.dp),
-                enabled = false, // Tıklanabilirliği clickable ile yönetiyoruz, ama rengi soluk olmasın diye aşağıda text rengini koruyoruz
+                enabled = false,
                 colors = OutlinedTextFieldDefaults.colors(
                     disabledTextColor = MaterialTheme.colorScheme.onSurface,
                     disabledBorderColor = MaterialTheme.colorScheme.outline,

@@ -41,7 +41,8 @@ class ClubPostsViewModel : ViewModel() {
                         id = doc.id,
                         clubName = doc.getString("clubName") ?: "Bilinmeyen Kulüp",
                         text = doc.getString("text") ?: "",
-                        imageUri = doc.getString("imageUri")?.let { Uri.parse(it) }
+                        imageUri = doc.getString("imageUri")?.let { Uri.parse(it) },
+                        timestamp = doc.getLong("timestamp") ?: 0L
                     )
                 }
                 posts.clear()
@@ -66,7 +67,8 @@ class ClubPostsViewModel : ViewModel() {
                         clubName = doc.getString("clubName") ?: "Bilinmeyen Kulüp",
                         title = doc.getString("title") ?: "",
                         content = doc.getString("content") ?: "",
-                        date = doc.getString("date") ?: ""
+                        date = doc.getString("date") ?: "",
+                        timestamp = doc.getLong("timestamp") ?: 0L
                     )
                 }
                 announcements.clear()

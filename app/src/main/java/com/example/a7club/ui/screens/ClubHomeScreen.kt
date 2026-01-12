@@ -54,11 +54,27 @@ fun ClubHomeScreen(navController: NavController, showSnackbar: (String) -> Unit,
         Scaffold(
             containerColor = VeryLightPurple,
             topBar = {
-                CenterAlignedTopAppBar(title = { Text("Etkinlikler", fontWeight = FontWeight.Bold, color = DarkBlue) }, navigationIcon = { IconButton(onClick = { scope.launch { drawerState.open() } }) { Icon(Icons.Default.Menu, "Menu", tint = DarkBlue) } }, actions = { IconButton(onClick = { navController.navigate(Routes.NotificationsScreen.route) }) { Icon(Icons.Default.Notifications, "Notifications", tint = DarkBlue) } }, colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple))
+                CenterAlignedTopAppBar(
+                    title = { Text("Etkinlikler", fontWeight = FontWeight.Bold, color = DarkBlue) },
+                    navigationIcon = { IconButton(onClick = { scope.launch { drawerState.open() } }) { Icon(Icons.Default.Menu, "Menu", tint = DarkBlue) } },
+                    actions = { 
+                        IconButton(onClick = { navController.navigate(Routes.NotificationsScreen.route) }) { 
+                            Icon(Icons.Default.Notifications, "Notifications", tint = DarkBlue) 
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LightPurple)
+                )
             },
-            bottomBar = { MainInitialBottomAppBar(navController = navController) }
+            bottomBar = { 
+                MainInitialBottomAppBar(navController = navController) 
+            }
         ) { paddingValues ->
-            ClubHomeContent(modifier = Modifier.padding(paddingValues), eventsState = eventsState, onRetry = viewModel::fetchEvents, onEventClick = { /* Aksiyon */ })
+            ClubHomeContent(
+                modifier = Modifier.padding(paddingValues),
+                eventsState = eventsState,
+                onRetry = viewModel::fetchEvents,
+                onEventClick = { /* Aksiyon */ }
+            )
         }
     }
 }
@@ -67,16 +83,38 @@ fun ClubHomeScreen(navController: NavController, showSnackbar: (String) -> Unit,
 fun MainInitialBottomAppBar(navController: NavController) {
     val LightPurpleBarColor = Color(0xFFD1C4E9)
     Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.BottomCenter) {
-        Surface(modifier = Modifier.fillMaxWidth().height(75.dp).clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)), color = LightPurpleBarColor) {
-            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                ClubMainNavItem(Icons.Default.Home, "Etkinlikler") { }
-                ClubMainNavItem(Icons.Default.Explore, "Keşfet") { }
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(75.dp)
+                .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
+            color = LightPurpleBarColor
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ClubMainNavItem(Icons.Default.Home, "Etkinlikler") { /* Zaten buradayız */ }
+                ClubMainNavItem(Icons.Default.Explore, "Keşfet") { /* Keşfet Aksiyon */ }
                 Spacer(modifier = Modifier.width(90.dp))
-                ClubMainNavItem(Icons.Default.Groups, "Kulüpler") { }
-                ClubMainNavItem(Icons.Default.Person, "Profil") { }
+                ClubMainNavItem(Icons.Default.Groups, "Kulüpler") { navController.navigate(Routes.Clubs.route) }
+                ClubMainNavItem(Icons.Default.Person, "Profil") { navController.navigate(Routes.Profile.route) }
             }
         }
-        Surface(modifier = Modifier.size(90.dp).align(Alignment.TopCenter).border(6.dp, Color.White, CircleShape).clickable { navController.navigate(Routes.ClubProfileScreen.route) }, shape = CircleShape, color = DarkBlue, shadowElevation = 8.dp) {
+
+        Surface(
+            modifier = Modifier
+                .size(90.dp)
+                .align(Alignment.TopCenter)
+                .border(6.dp, Color.White, CircleShape)
+                .clickable { 
+                    navController.navigate(Routes.ClubProfileScreen.route) 
+                },
+            shape = CircleShape,
+            color = DarkBlue,
+            shadowElevation = 8.dp
+        ) {
             Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.size(40.dp)) }
         }
     }
@@ -92,40 +130,91 @@ fun ClubMainNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ClubHomeContent(modifier: Modifier = Modifier, eventsState: Resource<List<Event>>, onRetry: () -> Unit, onEventClick: (Event) -> Unit) {
+fun ClubHomeContent(
+    modifier: Modifier = Modifier,
+    eventsState: Resource<List<Event>>,
+    onRetry: () -> Unit,
+    onEventClick: (Event) -> Unit
+) {
     var selectedCategory by remember { mutableStateOf("Business") }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
-        DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = { Button(onClick = { datePickerState.selectedDateMillis?.let { selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate() }; showDatePicker = false }) { Text("Tamam") } }) { DatePicker(state = datePickerState) }
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = { 
+                Button(onClick = { 
+                    datePickerState.selectedDateMillis?.let { selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate() }; 
+                    showDatePicker = false 
+                }) { Text("Tamam") } 
+            }
+        ) { 
+            DatePicker(state = datePickerState) 
+        }
     }
 
     Column(modifier = modifier) {
-        ClubDateCard(date = selectedDate, onDateClick = { showDatePicker = true }, onPreviousDayClick = { selectedDate = selectedDate.minusDays(1) }, onNextDayClick = { selectedDate = selectedDate.plusDays(1) })
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Icon(Icons.Default.Search, "Search", tint = Color.Gray); Spacer(Modifier.weight(1f)); Icon(Icons.Default.Tune, "Filter", tint = Color.Gray) }
+        ClubDateCard(
+            date = selectedDate, 
+            onDateClick = { showDatePicker = true }, 
+            onPreviousDayClick = { selectedDate = selectedDate.minusDays(1) }, 
+            onNextDayClick = { selectedDate = selectedDate.plusDays(1) }
+        )
+        Row(Modifier.padding(horizontal = 16.dp)) {
+            Icon(Icons.Default.Search, "Search", tint = Color.Gray)
+            Spacer(Modifier.weight(1f))
+            Icon(Icons.Default.Tune, "Filter", tint = Color.Gray) 
+        }
+
         ClubCategoryChips(selectedCategory = selectedCategory, onCategorySelected = { selectedCategory = it })
+
         when (eventsState) {
             is Resource.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = DarkBlue) }
             is Resource.Success -> {
-                val filteredEvents = (eventsState.data ?: emptyList()).filter { event -> event.timestamp?.let { Instant.ofEpochMilli(it.seconds * 1000).atZone(ZoneId.systemDefault()).toLocalDate().isEqual(selectedDate) } ?: false }
-                if (filteredEvents.isEmpty()) Box(Modifier.fillMaxSize().padding(16.dp), Alignment.Center) { Text("Bu tarihte hiç etkinlik bulunmuyor.", color = DarkBlue) }
-                else LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 8.dp)) { items(filteredEvents) { event -> ClubEventCard(event = event, onClick = { onEventClick(event) }) } }
+                val filteredEvents = (eventsState.data ?: emptyList()).filter { event -> 
+                    event.timestamp?.let { Instant.ofEpochMilli(it.seconds * 1000).atZone(ZoneId.systemDefault()).toLocalDate().isEqual(selectedDate) } ?: false
+                }
+                if (filteredEvents.isEmpty()) {
+                    Box(Modifier.fillMaxSize().padding(16.dp), Alignment.Center) {
+                        Text("Bu tarihte hiç etkinlik bulunmuyor.", color = DarkBlue)
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 8.dp)) { 
+                        items(filteredEvents) { event -> 
+                            ClubEventCard(event = event, onClick = { onEventClick(event) }) 
+                        } 
+                    }
+                }
             }
-            is Resource.Error -> Column(Modifier.fillMaxSize(), Arrangement.Center, Alignment.CenterHorizontally) { Text(text = eventsState.message ?: "Hata.", color = DarkBlue); Button(onClick = onRetry) { Text("Yeniden Dene") } }
+            is Resource.Error -> {
+                Column(Modifier.fillMaxSize(), Arrangement.Center, Alignment.CenterHorizontally) {
+                    Text(text = eventsState.message ?: "Bilinmeyen bir hata oluştu.", color = DarkBlue)
+                    Spacer(Modifier.height(8.dp))
+                    Button(onClick = onRetry) { Text("Yeniden Dene") }
+                }
+            }
         }
     }
 }
 
 @Composable
 fun ClubDateCard(date: LocalDate, onDateClick: () -> Unit, onPreviousDayClick: () -> Unit, onNextDayClick: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().padding(16.dp).clickable(onClick = onDateClick), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = LightPurple)) {
-        Row(modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            IconButton(onClick = onPreviousDayClick) { Icon(Icons.Default.ArrowBack, "Önceki", tint = DarkBlue) }
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(16.dp).clickable(onClick = onDateClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = LightPurple)
+    ) {
+        Row(
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(onClick = onPreviousDayClick) { Icon(Icons.Default.ArrowBack, "Önceki Gün", tint = DarkBlue) }
             Text(date.dayOfMonth.toString(), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = DarkBlue)
             Text(date.month.getDisplayName(TextStyle.FULL, Locale("tr")), fontSize = 16.sp, color = DarkBlue)
-            IconButton(onClick = onNextDayClick) { Icon(Icons.Default.ArrowForward, "Sonraki", tint = DarkBlue) }
+            IconButton(onClick = onNextDayClick) { Icon(Icons.Default.ArrowForward, "Sonraki Gün", tint = DarkBlue) }
         }
     }
 }
@@ -133,12 +222,38 @@ fun ClubDateCard(date: LocalDate, onDateClick: () -> Unit, onPreviousDayClick: (
 @Composable
 fun ClubCategoryChips(selectedCategory: String, onCategorySelected: (String) -> Unit) {
     val categories = listOf("Business", "Tech", "Health", "Art")
-    LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) { items(categories) { category -> Button(onClick = { onCategorySelected(category) }, shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = if(selectedCategory == category) DarkBlue else Color(0xFFD1C4E9))) { Text(category, color = if(selectedCategory == category) Color.White else Color.Black) } } }
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+    ) { 
+        items(categories) { category -> 
+            Button(
+                onClick = { onCategorySelected(category) },
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if(selectedCategory == category) DarkBlue else Color(0xFFD1C4E9),
+                    contentColor = if(selectedCategory == category) Color.White else Color.Black
+                ),
+                elevation = if(selectedCategory == category) ButtonDefaults.buttonElevation(4.dp) else ButtonDefaults.buttonElevation(0.dp)
+            ) {
+                Text(category)
+            }
+        }
+    }
 }
 
 @Composable
 fun ClubEventCard(event: Event, onClick: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clickable(onClick = onClick), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = LightPurple)) {
-        Column(modifier = Modifier.padding(20.dp).fillMaxWidth()) { Text(text = event.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue); Spacer(modifier = Modifier.height(4.dp)); Text(text = event.clubName, style = MaterialTheme.typography.bodyMedium, color = DarkBlue) }
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = LightPurple)
+    ) {
+        Column(modifier = Modifier.padding(20.dp).fillMaxWidth()) {
+            Text(text = event.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = event.clubName, style = MaterialTheme.typography.bodyMedium, color = DarkBlue.copy(alpha = 0.7f))
+        }
     }
 }

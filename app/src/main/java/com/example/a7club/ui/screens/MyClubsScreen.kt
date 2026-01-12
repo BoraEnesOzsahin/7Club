@@ -142,7 +142,7 @@ fun MyClubsScreen(navController: NavController) {
                     contentPadding = PaddingValues(end = 8.dp, bottom = 16.dp)
                 ) {
                     items(filteredClubs) { club ->
-                        ClubCard(club = club, onClick = { /* TODO: Kulüp detaylarına git */ })
+                        ClubCard(club = club, onClick = { navController.navigate(Routes.PersonnelClubDetail.createRoute(club.name)) })
                     }
                 }
 

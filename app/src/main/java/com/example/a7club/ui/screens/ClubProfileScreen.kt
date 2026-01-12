@@ -12,31 +12,31 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
-import com.example.a7club.ui.components.AdminNavItem
 
 @Composable
 fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Unit) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     Scaffold(
         containerColor = Color.White,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Kulübüm", fontWeight = FontWeight.Bold, color = DarkBlue) },
-                navigationIcon = {
-                    IconButton(onClick = { /* Menu */ }) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menu", tint = DarkBlue)
-                    }
-                },
                 actions = {
                     IconButton(onClick = { showSnackbar("Bildirimler tıklandı") }) {
                         Icon(Icons.Default.Notifications, contentDescription = "Bildirimler", tint = DarkBlue)
@@ -49,7 +49,7 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
             )
         },
         bottomBar = {
-            ClubAdminBottomAppBar(navController = navController)
+            ClubAdminBottomAppBar(navController = navController, currentRoute = currentRoute)
         }
     ) { paddingValues ->
         Column(
@@ -85,7 +85,7 @@ fun ClubProfileScreen(navController: NavController, showSnackbar: (String) -> Un
 }
 
 @Composable
-fun ClubAdminBottomAppBar(navController: NavController) {
+fun ClubAdminBottomAppBar(navController: NavController, currentRoute: String?) {
     val LightPurpleBarColor = Color(0xFFD1C4E9)
     Box(
         modifier = Modifier.fillMaxWidth().height(100.dp),
@@ -103,11 +103,11 @@ fun ClubAdminBottomAppBar(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AdminNavItem(Icons.Default.Groups, "Kulübüm") { }
-                AdminNavItem(Icons.Default.Assignment, "Formlar") { navController.navigate(Routes.Forms.route) }
+                AdminNavItem("Kulübüm", Icons.Default.Groups, currentRoute == Routes.ClubProfileScreen.route) { navController.navigate(Routes.ClubProfileScreen.route) }
+                AdminNavItem("Formlar", Icons.Default.Assignment, currentRoute == Routes.Forms.route) { navController.navigate(Routes.Forms.route) }
                 Spacer(modifier = Modifier.width(90.dp))
-                AdminNavItem(Icons.Default.Collections, "Gönderiler") { }
-                AdminNavItem(Icons.Default.EventAvailable, "Etkinlikler") { navController.navigate(Routes.EventCalendarScreen.route) }
+                AdminNavItem("Gönderiler", Icons.Default.Collections, currentRoute == Routes.ClubPosts.route) { navController.navigate(Routes.ClubPosts.route) }
+                AdminNavItem("Etkinlikler", Icons.Default.EventAvailable, currentRoute == Routes.EventCalendarScreen.route) { navController.navigate(Routes.EventCalendarScreen.route) }
             }
         }
         Surface(
@@ -120,6 +120,34 @@ fun ClubAdminBottomAppBar(navController: NavController) {
             color = DarkBlue,
             shadowElevation = 8.dp
         ) {}
+    }
+}
+
+@Composable
+fun AdminNavItem(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, isSelected: Boolean, onClick: () -> Unit) {
+    val backgroundColor = if (isSelected) DarkBlue else Color.Transparent
+    val contentColor = if (isSelected) Color.White else DarkBlue
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp, horizontal = 4.dp)
+            .width(70.dp) // Genişliği sabitledik
+    ) {
+        Icon(icon, contentDescription = label, tint = contentColor, modifier = Modifier.size(28.dp))
+        Text(
+            text = label,
+            color = contentColor,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            lineHeight = 12.sp,
+            minLines = 2
+        )
     }
 }
 

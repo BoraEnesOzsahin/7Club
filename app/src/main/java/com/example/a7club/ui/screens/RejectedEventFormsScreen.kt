@@ -75,12 +75,7 @@ fun RejectedEventFormsScreen(navController: NavController) {
             )
         },
         bottomBar = {
-            // Senin tasarımındaki BottomBar (Dokunulmadı)
-            BottomAppBar(containerColor = Color(0xFFCCC2FF)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    Text("Kulüp Yönetim Paneli", color = DarkBlue, fontWeight = FontWeight.Bold)
-                }
-            }
+            ClubAdminBottomAppBar(navController = navController)
         }
     ) { paddingValues ->
         Column(

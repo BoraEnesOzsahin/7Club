@@ -36,11 +36,6 @@ fun MembersScreen(navController: NavController) {
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Üyeler", fontWeight = FontWeight.Bold, color = DarkBlue) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri", tint = DarkBlue)
-                    }
-                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
         },

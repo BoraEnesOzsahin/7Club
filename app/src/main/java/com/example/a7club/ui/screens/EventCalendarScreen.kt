@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.a7club.model.Event // Event Modeli
 import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
@@ -33,6 +34,8 @@ fun EventCalendarScreen(navController: NavController, showSnackbar: (String) -> 
     var approvedEvents by remember { mutableStateOf<List<Event>>(emptyList()) }
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     // Verileri Çek
     LaunchedEffect(Unit) {
@@ -65,11 +68,6 @@ fun EventCalendarScreen(navController: NavController, showSnackbar: (String) -> 
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Etkinlikler", fontWeight = FontWeight.Bold, color = DarkBlue) },
-                navigationIcon = {
-                    IconButton(onClick = { /* Menü */ }) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menu", tint = DarkBlue)
-                    }
-                },
                 actions = {
                     IconButton(onClick = { /* Bildirimler */ }) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = DarkBlue)
@@ -82,8 +80,7 @@ fun EventCalendarScreen(navController: NavController, showSnackbar: (String) -> 
             )
         },
         bottomBar = {
-            // Mevcut Alt Barın (ClubAdminBottomAppBar isminde olmalı, yoksa ClubBottomBarContent kullan)
-            ClubAdminBottomAppBar(navController = navController)
+            ClubAdminBottomAppBar(navController = navController, currentRoute = currentRoute)
         }
     ) { paddingValues ->
         Column(
@@ -146,8 +143,7 @@ fun EventCalendarScreen(navController: NavController, showSnackbar: (String) -> 
                     .forEach { event ->
                         Button(
                             onClick = {
-                                // Detay sayfasına git (Event objesi veya ismiyle)
-                                navController.navigate(Routes.ClubEventForms.createRoute(event.title))
+                                navController.navigate(Routes.PersonnelEventDetail.createRoute(event.title, event.clubName))
                             },
                             modifier = Modifier.fillMaxWidth().height(60.dp),
                             shape = RoundedCornerShape(16.dp),
