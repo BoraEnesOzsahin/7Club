@@ -25,23 +25,34 @@ import androidx.navigation.NavController
 import com.example.a7club.data.Resource
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
-import com.example.a7club.ui.viewmodels.EventDetailViewModel
+
+// 👇 EKSİK OLAN VE HATAYI ÇÖZECEK IMPORT BU:
 import com.example.a7club.ui.viewmodels.StudentFlowViewModel
 
-// DÜZELTME: Parametre sırası NavGraph ile eşitlendi.
-// (navController önce, eventId sonra)
+
 @Composable
 fun EventDetailScreen(
     navController: NavController,
     eventId: String,
     showSnackbar: (String) -> Unit,
-    studentFlowViewModel: StudentFlowViewModel = viewModel(),
-    eventDetailViewModel: EventDetailViewModel = viewModel()
+    studentFlowViewModel: StudentFlowViewModel = viewModel()
 ) {
+    // 1. Etkinliği Bul (ViewModel NavGraph'tan geldiği için dolu olacak)
     val eventsState = studentFlowViewModel.eventsState.value
     val event = if (eventsState is Resource.Success) {
         eventsState.data?.find { it.id == eventId }
     } else null
+
+    // 2. ViewModel'den gelen işlem sonucunu dinle
+    val operationStatus by studentFlowViewModel.operationStatus
+
+    // İşlem sonucu geldiğinde Snackbar göster
+    LaunchedEffect(operationStatus) {
+        operationStatus?.let { message ->
+            showSnackbar(message)
+            studentFlowViewModel.clearStatusMessage()
+        }
+    }
 
     var showConfirmationDialog by remember { mutableStateOf(false) }
 
@@ -75,7 +86,12 @@ fun EventDetailScreen(
     ) { paddingValues ->
         if (event == null) {
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-                Text("Etkinlik yükleniyor...", color = Color.Gray)
+                // Eğer etkinlik bulunamazsa veya henüz yüklenmediyse
+                if (eventsState is Resource.Loading) {
+                    CircularProgressIndicator(color = DarkBlue)
+                } else {
+                    Text("Etkinlik bulunamadı.", color = Color.Gray)
+                }
             }
         } else {
             Column(
@@ -142,16 +158,15 @@ fun EventDetailScreen(
         }
     }
 
-    if (showConfirmationDialog) {
+    if (showConfirmationDialog && event != null) {
         AlertDialog(
             onDismissRequest = { showConfirmationDialog = false },
             title = { Text("Katılım Onayı", color = DarkBlue, fontWeight = FontWeight.Bold) },
-            text = { Text("'${event?.title}' etkinliğine katılmak istediğinize emin misiniz?") },
+            text = { Text("'${event.title}' etkinliğine katılmak istediğinize emin misiniz?") },
             confirmButton = {
                 Button(
                     onClick = {
-                        eventDetailViewModel.signUpForEvent(eventId, "dummyStudentId")
-                        showSnackbar("Kayıt başarılı! İyi eğlenceler.")
+                        studentFlowViewModel.joinEvent(event)
                         showConfirmationDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)

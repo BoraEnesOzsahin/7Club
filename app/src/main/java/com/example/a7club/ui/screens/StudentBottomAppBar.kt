@@ -53,20 +53,21 @@ fun StudentBottomAppBar(navController: NavController) {
             Routes.Clubs.route,           // Tüm Kulüpler
             Routes.Discover.route,        // Keşfet
             Routes.StudentProfile.route,  // Profil
-            Routes.EventDetail.route      // Etkinlik Detayı (Genelden gelinen)
+            Routes.EventDetail.route
         )
 
         // MANTIK:
-        // Eğer şu an GENEL bir sayfadaysak -> KİŞİSEL Alana (MyEvents) git.
+        // Eğer şu an GENEL bir sayfadaysak -> KİŞİSEL Alana (SS'teki my_events_screen) git.
         if (currentRoute in publicScreens) {
+            // BURASI: Ekran görüntüsündeki "navController.navigate" işleminin yapıldığı yer.
+            // Routes yapını bozmamak için string yerine Routes objesini kullandık.
             navController.navigate(Routes.MyEvents.route) {
                 popUpTo(Routes.Events.route) { saveState = true }
                 launchSingleTop = true
                 restoreState = true
             }
         }
-        // Eğer GENEL sayfada DEĞİLSEK (Demek ki MyClubs, MyReviews, PastEvents vb. birindeyiz)
-        // -> Direkt ANA SAYFAYA (Events) dön.
+        // Eğer GENEL sayfada DEĞİLSEK (Zaten MyEvents'te isek) -> Direkt ANA SAYFAYA dön.
         else {
             navController.navigate(Routes.Events.route) {
                 // Stack'i tamamen temizleyip Events'e oturuyoruz.
@@ -166,12 +167,12 @@ fun StudentBottomAppBar(navController: NavController) {
                 .align(Alignment.TopCenter)
                 .border(6.dp, Color.White, CircleShape)
                 .clip(CircleShape)
-                .clickable(onClick = onMiddleButtonClick),
+                .clickable(onClick = onMiddleButtonClick), // Tıklama özelliği buraya bağlandı
             shape = CircleShape,
             color = DarkBlue,
             shadowElevation = 8.dp
         ) {
-            // İkon yok
+            // İkon yok (Tasarım tercihi olarak boş bırakıldı)
         }
     }
 }

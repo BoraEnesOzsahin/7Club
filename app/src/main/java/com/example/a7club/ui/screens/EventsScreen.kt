@@ -1,6 +1,7 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.a7club.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.EventBusy
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,8 +27,6 @@ import androidx.navigation.NavController
 import com.example.a7club.data.Resource
 import com.example.a7club.model.Event
 import com.example.a7club.ui.navigation.Routes
-import com.example.a7club.ui.theme.DarkBlue
-import com.example.a7club.ui.theme.LightPurple
 import com.example.a7club.ui.viewmodels.StudentFlowViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -34,15 +34,20 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-// Hedeflenen Kart Rengi (Personel ekranlarında kullanılan özel ton)
-private val CardBackgroundColor = Color(0xFFF3EFFF)
+// --- GÜNCELLENMİŞ TEMA RENKLERİ (SS Analizi) ---
+private val ThemeDarkBlue = Color(0xFF160092)    // Yazılar ve İkonlar
+private val ThemeTopBarColor = Color(0xFFCCC2FF) // Üst Bar Arkaplanı (Lavanta)
+private val ThemeCardColor = Color(0xFFE6E3F6)   // Kart Arkaplanı (Açık Lila)
+private val ThemeBackgroundColor = Color.White   // Ana Arkaplan (Beyaz)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel = viewModel()) {
+fun EventsScreen(
+    navController: NavController,
+    viewModel: StudentFlowViewModel = viewModel()
+) {
     val eventsState by viewModel.eventsState
 
-    // Tarih Seçimi (Varsayılan: Bugün)
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -54,33 +59,86 @@ fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel =
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
-                Button(onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
-                    }
-                    showDatePicker = false
-                }) { Text("Tamam") }
+                Button(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let {
+                            selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                        }
+                        showDatePicker = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ThemeDarkBlue)
+                ) { Text("Tamam") }
             },
             dismissButton = {
-                Button(onClick = { showDatePicker = false }) { Text("İptal") }
-            }
-        ) { DatePicker(state = datePickerState) }
+                TextButton(
+                    onClick = { showDatePicker = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = ThemeDarkBlue)
+                ) { Text("İptal") }
+            },
+            colors = DatePickerDefaults.colors(
+                containerColor = Color.White // Dialog arka planı
+            )
+        ) {
+            DatePicker(
+                state = datePickerState,
+                // --- HATA DÜZELTİLDİ: Geçerli parametreler kullanıldı ---
+                colors = DatePickerDefaults.colors(
+                    containerColor = Color.White,
+                    titleContentColor = ThemeDarkBlue,
+                    headlineContentColor = ThemeDarkBlue,
+                    weekdayContentColor = ThemeDarkBlue,
+                    subheadContentColor = ThemeDarkBlue,
+                    yearContentColor = ThemeDarkBlue,
+                    currentYearContentColor = ThemeDarkBlue,
+                    selectedYearContentColor = Color.White,
+                    selectedYearContainerColor = ThemeDarkBlue,
+                    dayContentColor = ThemeDarkBlue,
+                    selectedDayContentColor = Color.White,
+                    selectedDayContainerColor = ThemeDarkBlue,
+                    todayContentColor = ThemeDarkBlue,
+                    todayDateBorderColor = ThemeDarkBlue
+                )
+            )
+        }
     }
 
     Scaffold(
-        containerColor = Color.White, // Arka plan BEYAZ yapıldı
+        // 1. ANA ARKA PLAN BEYAZ
+        containerColor = ThemeBackgroundColor,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Etkinlikler", fontWeight = FontWeight.Bold, color = DarkBlue) },
-                actions = {
-                    IconButton(onClick = { navController.navigate(Routes.NotificationsScreen.route) }) {
-                        Icon(Icons.Default.Notifications, "Notifications", tint = DarkBlue)
+                title = {
+                    Text(
+                        "Etkinlikler",
+                        fontWeight = FontWeight.Bold,
+                        color = ThemeDarkBlue
+                    )
+                },
+                // SS'te sol tarafta menü ikonu var, ekleyelim (işlevsiz de olsa görsel bütünlük için)
+                navigationIcon = {
+                    IconButton(onClick = { /* Menü işlevi */ }) {
+                        Icon(Icons.Default.Menu, contentDescription = "Menu", tint = ThemeDarkBlue)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+                actions = {
+                    IconButton(onClick = { navController.navigate(Routes.NotificationsScreen.route) }) {
+                        Icon(
+                            Icons.Default.Notifications,
+                            "Notifications",
+                            tint = ThemeDarkBlue
+                        )
+                    }
+                },
+                // 2. ÜST BAR RENGİ (Lavanta)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = ThemeTopBarColor,
+                    scrolledContainerColor = ThemeTopBarColor
+                )
             )
         },
         bottomBar = {
+            // NOT: Alt barın rengini değiştirmek için StudentBottomAppBar dosyasını güncellemelisin.
+            // O dosya ayrı olduğu için buradan müdahale edemiyorum ancak ana yapı bozulmaz.
             StudentBottomAppBar(navController = navController)
         }
     ) { paddingValues ->
@@ -90,9 +148,7 @@ fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel =
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // 3. TARİH KARTI (GÜNLÜK TAKVİM)
-            // Header rengi LightPurple olarak kalabilir veya CardBackground yapılabilir.
-            // Öne çıkması için LightPurple daha iyidir.
+            // TARİH KARTI
             StudentHeaderDateCard(
                 date = selectedDate,
                 onDateClick = { showDatePicker = true },
@@ -100,11 +156,10 @@ fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel =
                 onNextDayClick = { selectedDate = selectedDate.plusDays(1) }
             )
 
-            // --- LİSTELEME MANTIĞI ---
             when (val state = eventsState) {
                 is Resource.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = DarkBlue)
+                        CircularProgressIndicator(color = ThemeDarkBlue)
                     }
                 }
                 is Resource.Error -> {
@@ -115,35 +170,32 @@ fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel =
                 is Resource.Success -> {
                     val allEvents = state.data ?: emptyList()
 
-                    // Filtreleme: Sadece Onaylı + Tarih
                     val filteredEvents = allEvents.filter { event ->
                         val isApproved = event.status == "APPROVED"
-
                         val isSameDay = event.timestamp?.let { ts ->
                             val eventDate = Instant.ofEpochMilli(ts.seconds * 1000)
                                 .atZone(ZoneId.systemDefault())
                                 .toLocalDate()
                             eventDate.isEqual(selectedDate)
                         } ?: false
-
                         isApproved && isSameDay
                     }.sortedBy { it.timestamp }
 
-                    // İstatistik Yazısı
                     if (filteredEvents.isNotEmpty()) {
                         Text(
                             text = "Toplam ${filteredEvents.size} Etkinlik",
-                            color = Color.Gray,
+                            color = ThemeDarkBlue.copy(alpha = 0.7f),
                             fontSize = 14.sp,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).align(Alignment.CenterHorizontally)
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .align(Alignment.CenterHorizontally)
                         )
                     }
 
-                    // Liste
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(bottom = 20.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp) // Kartlar arası boşluk
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         if (filteredEvents.isEmpty()) {
                             item {
@@ -157,13 +209,13 @@ fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel =
                                         Icon(
                                             Icons.Default.EventBusy,
                                             null,
-                                            tint = Color.LightGray,
+                                            tint = ThemeDarkBlue.copy(alpha = 0.5f),
                                             modifier = Modifier.size(48.dp)
                                         )
                                         Spacer(Modifier.height(8.dp))
                                         Text(
                                             "Bu tarihte planlanmış\netkinlik bulunmuyor.",
-                                            color = Color.Gray,
+                                            color = ThemeDarkBlue.copy(alpha = 0.7f),
                                             textAlign = TextAlign.Center
                                         )
                                     }
@@ -171,7 +223,6 @@ fun EventsScreen(navController: NavController, viewModel: StudentFlowViewModel =
                             }
                         } else {
                             items(filteredEvents) { event ->
-                                // GÜNCELLENMİŞ RENKLİ KART
                                 StudentCenteredCard(event) {
                                     navController.navigate(Routes.EventDetail.createRoute(event.id))
                                 }
@@ -199,7 +250,9 @@ fun StudentHeaderDateCard(
             .fillMaxWidth()
             .padding(16.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = LightPurple) // Burası başlık olduğu için biraz daha koyu kalabilir
+        // 3. KART RENGİ (Açık Lila - Beyaz zeminde ayrışması için)
+        colors = CardDefaults.cardColors(containerColor = ThemeCardColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -209,7 +262,7 @@ fun StudentHeaderDateCard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             IconButton(onClick = onPreviousDayClick) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Önceki Gün", tint = DarkBlue)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Önceki Gün", tint = ThemeDarkBlue)
             }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -219,26 +272,23 @@ fun StudentHeaderDateCard(
                     date.dayOfMonth.toString(),
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
-                    color = DarkBlue
+                    color = ThemeDarkBlue
                 )
                 Text(
                     date.format(monthFormatter).replaceFirstChar {
                         if (it.isLowerCase()) it.titlecase(Locale("tr")) else it.toString()
                     },
                     fontSize = 16.sp,
-                    color = DarkBlue
+                    color = ThemeDarkBlue
                 )
             }
             IconButton(onClick = onNextDayClick) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, "Sonraki Gün", tint = DarkBlue)
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, "Sonraki Gün", tint = ThemeDarkBlue)
             }
         }
     }
 }
 
-// --- GÜNCELLENEN KART TASARIMI ---
-// Renk: CardBackgroundColor (0xFFF3EFFF)
-// Düzen: Ortalı ve Alt Alta
 @Composable
 fun StudentCenteredCard(event: Event, onClick: () -> Unit) {
     Card(
@@ -247,33 +297,30 @@ fun StudentCenteredCard(event: Event, onClick: () -> Unit) {
             .padding(horizontal = 16.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackgroundColor), // <-- RENGİ GÜNCELLEDİM
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Flat görünüm için gölgeyi kaldırdım (isteğe bağlı)
+        // 4. LİSTE KART RENGİ (Açık Lila)
+        colors = CardDefaults.cardColors(containerColor = ThemeCardColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 24.dp, horizontal = 16.dp), // İç boşlukları biraz artırdım
+                .padding(vertical = 24.dp, horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // 1. Etkinlik Adı
             Text(
                 text = event.title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = DarkBlue,
+                color = ThemeDarkBlue,
                 fontSize = 18.sp,
                 textAlign = TextAlign.Center
             )
-
             Spacer(modifier = Modifier.height(8.dp))
-
-            // 2. Kulüp Adı
             Text(
                 text = event.clubName,
                 style = MaterialTheme.typography.bodyMedium,
-                color = DarkBlue.copy(alpha = 0.7f), // Biraz daha opak
+                color = ThemeDarkBlue.copy(alpha = 0.7f),
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center
             )

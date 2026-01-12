@@ -2,16 +2,10 @@
 
 package com.example.a7club.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,16 +18,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.a7club.R
 import com.example.a7club.model.Club
 import com.example.a7club.model.Event
 import com.example.a7club.ui.navigation.Routes
@@ -56,7 +46,7 @@ fun PersonnelHomeScreen(
     initialTabIndex: Int = 0,
     personnelViewModel: PersonnelViewModel = viewModel()
 ) {
-    // GÜNCELLEME: Artık sadece 'pending' değil, 'allEventsForCalendar'ı dinliyoruz
+    // Verileri Dinle
     val allCalendarEvents by personnelViewModel.allEventsForCalendar.collectAsState()
     val clubs by personnelViewModel.clubs.collectAsState()
 
@@ -100,15 +90,20 @@ fun PersonnelHomeScreen(
             containerColor = Color.White,
             topBar = {
                 val title = when(selectedBottomTabIndex) {
-                    0 -> "Ajanda" // İsim güncellendi
+                    0 -> "Etkinlikler"
                     1 -> "Keşfet"
                     2 -> "Kulüpler"
                     else -> "Profilim"
                 }
                 CenterAlignedTopAppBar(
                     title = { Text(title, fontWeight = FontWeight.Bold, color = DarkBlue) },
-                    navigationIcon = { IconButton(onClick = { scope.launch { drawerState.open() } }) { Icon(Icons.Default.Menu, "Menu", tint = DarkBlue) } },
-                    actions = { IconButton(onClick = { navController.navigate(Routes.NotificationsScreen.route) }) { Icon(Icons.Default.Notifications, "Notifications", tint = DarkBlue) } },
+                    // --- DEĞİŞİKLİK BURADA: navigationIcon parametresi kaldırıldı ---
+                    // Sol üstteki hamburger menü butonu artık yok.
+                    actions = {
+                        IconButton(onClick = { navController.navigate(Routes.NotificationsScreen.route) }) {
+                            Icon(Icons.Default.Notifications, "Notifications", tint = DarkBlue)
+                        }
+                    },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
                 )
             },
@@ -122,10 +117,13 @@ fun PersonnelHomeScreen(
         ) { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
                 when (selectedBottomTabIndex) {
-                    // TAB 0 ARTIK AJANDA (Tüm Etkinlikler)
+                    // TAB 0: ETKİNLİKLER
                     0 -> PersonnelEventsTab(navController, allCalendarEvents)
+                    // TAB 1: KEŞFET
                     1 -> PersonnelDiscoverTab(navController)
+                    // TAB 2: KULÜPLER
                     2 -> PersonnelClubsTab(navController, clubs)
+                    // TAB 3: PROFİL
                     3 -> PersonnelProfileScreen(navController, authViewModel)
                 }
             }
@@ -134,14 +132,14 @@ fun PersonnelHomeScreen(
 }
 
 // ----------------------------------------------------
-// SEKME 1: ETKİNLİKLER (GÜNCELLENMİŞ AJANDA)
+// SEKME 1: ETKİNLİKLER (AJANDA)
 // ----------------------------------------------------
 @Composable
 fun PersonnelEventsTab(navController: NavController, allEvents: List<Event>) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    // GÜNCELLENMİŞ FİLTRELEME: Seçilen güne göre filtrele
+    // Filtreleme: Seçilen güne göre
     val dailyEvents = allEvents.filter { event ->
         val eventTimestamp = event.timestamp
         if (eventTimestamp != null) {
@@ -195,7 +193,6 @@ fun PersonnelEventsTab(navController: NavController, allEvents: List<Event>) {
                 }
             } else {
                 items(dailyEvents) { event ->
-                    // GÜNCELLENMİŞ KART: Durum (Approved/Pending) bilgisini gösterir
                     PersonnelAgendaCard(event = event) {
                         navController.navigate(Routes.PersonnelEventDetail.createRoute(event.title, event.clubName))
                     }
@@ -296,13 +293,12 @@ fun PersonnelHeaderDateCard(date: LocalDate, onDateClick: () -> Unit, onPrevious
     }
 }
 
-// YENİ KART: Ajanda Görünümü için
 @Composable
 fun PersonnelAgendaCard(event: Event, onClick: () -> Unit) {
     val statusColor = when (event.status.uppercase()) {
-        "APPROVED" -> Color(0xFF4CAF50) // Yeşil
-        "PENDING" -> Color(0xFFFF9800)  // Turuncu
-        "REJECTED" -> Color(0xFFF44336) // Kırmızı
+        "APPROVED" -> Color(0xFF4CAF50)
+        "PENDING" -> Color(0xFFFF9800)
+        "REJECTED" -> Color(0xFFF44336)
         else -> Color.Gray
     }
 
@@ -322,7 +318,6 @@ fun PersonnelAgendaCard(event: Event, onClick: () -> Unit) {
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Sol tarafta durum çubuğu
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -333,16 +328,12 @@ fun PersonnelAgendaCard(event: Event, onClick: () -> Unit) {
             Column(modifier = Modifier.padding(16.dp).weight(1f)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(text = event.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
-
-                    // Saat
                     val timePart = event.dateString.split(" ").lastOrNull() ?: ""
                     Text(text = timePart, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DarkBlue)
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = event.clubName, style = MaterialTheme.typography.bodyMedium, color = DarkBlue.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
-
-                    // Küçük durum badge'i
                     Surface(color = statusColor.copy(alpha = 0.1f), shape = RoundedCornerShape(6.dp)) {
                         Text(text = statusText, color = statusColor, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                     }

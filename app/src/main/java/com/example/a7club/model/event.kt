@@ -13,7 +13,7 @@ data class Event(
     val timestamp: Timestamp? = null,
     val status: String = "PENDING", // PENDING, APPROVED, REJECTED
     val category: String = "General",
-
+    val participants: List<String> = emptyList(),
     // Islak imzalı belge yolu olarak bu alanı kullanacağız:
     val formUrl: String = "",
 

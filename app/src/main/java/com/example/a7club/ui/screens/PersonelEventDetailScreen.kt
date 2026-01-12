@@ -6,11 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -20,7 +17,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -29,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.a7club.model.Event
 import com.example.a7club.model.VehicleRequest
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
@@ -93,7 +88,7 @@ fun PersonnelEventDetailScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // BAŞLIK KARTI
+            // 1. BAŞLIK KARTI
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -114,15 +109,34 @@ fun PersonnelEventDetailScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // BİLGİ KUTUCUKLARI (GRID)
+            // 2. BİLGİ KUTUCUKLARI
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 InfoBox(icon = Icons.Default.Event, title = "Tarih", value = event.dateString, modifier = Modifier.weight(1f))
                 InfoBox(icon = Icons.Default.LocationOn, title = "Konum", value = event.location, modifier = Modifier.weight(1f))
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // --- İŞTE EKSİK OLAN KISIM BURASIYDI ---
+            // Bu kısım sayesinde "Katıl" diyen öğrencilerin sayısını görebileceksin.
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Katılımcı Sayısı
+                val participantCount = event.participants.size
+                InfoBox(
+                    icon = Icons.Default.Person, // İkon
+                    title = "Katılımcı",
+                    value = "$participantCount Kişi",
+                    modifier = Modifier.weight(1f)
+                )
+
+                // Görsel denge için boşluk (İstersen buraya Kontenjan vs. de ekleyebilirsin)
+                Spacer(modifier = Modifier.weight(1f))
+            }
+            // ---------------------------------------
+
             Spacer(modifier = Modifier.height(20.dp))
 
-            // AÇIKLAMA
+            // 3. AÇIKLAMA
             Text("Etkinlik Açıklaması", fontWeight = FontWeight.Bold, color = DarkBlue, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -133,13 +147,13 @@ fun PersonnelEventDetailScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ARAÇ TALEBİ KARTI (EĞER VARSA)
+            // 4. ARAÇ TALEBİ KARTI (EĞER VARSA)
             if (vehicleRequest != null) {
                 VehicleRequestInfoCard(vehicleRequest!!)
                 Spacer(modifier = Modifier.height(20.dp))
             }
 
-            // ETKİNLİK FORMU LİNKİ
+            // 5. ETKİNLİK FORMU LİNKİ
             if (event.formUrl.isNotEmpty()) {
                 Button(
                     onClick = {
@@ -157,7 +171,7 @@ fun PersonnelEventDetailScreen(
                 Spacer(modifier = Modifier.height(20.dp))
             }
 
-            // ONAY / RED BUTONLARI (Sadece BEKLEYEN etkinlikler için)
+            // 6. ONAY / RED BUTONLARI (Sadece BEKLEYEN etkinlikler için)
             if (event.status == "PENDING") {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     // Reddet Butonu
@@ -232,23 +246,41 @@ fun PersonnelEventDetailScreen(
 
 // --- YARDIMCI UI BİLEŞENLERİ ---
 
+// --- YARDIMCI UI BİLEŞENLERİ ---
+
+// GÜNCELLENMİŞ InfoBox Kodu
 @Composable
 fun InfoBox(icon: ImageVector, title: String, value: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
-            .height(60.dp)
+            // .height(60.dp) // <-- BU SATIR SİLİNDİ (Sorun buydu, sığmıyordu)
+            .heightIn(min = 70.dp) // <-- YENİ: En az 70dp olsun ama yazı uzunsa otomatik uzasın
             .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 12.dp, vertical = 8.dp), // İç boşluklar düzenlendi
+        verticalAlignment = Alignment.CenterVertically // İkon ve metinleri dikeyde ortalar
     ) {
         Icon(icon, null, tint = DarkBlue, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(12.dp))
-        Column {
+
+        Column(
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.weight(1f) // Metin alanı kalan boşluğu doldursun
+        ) {
             Text(title, fontSize = 12.sp, color = Color.Gray)
-            Text(value, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkBlue, maxLines = 1)
+            Spacer(modifier = Modifier.height(2.dp)) // Başlık ile değer arasına nefes payı
+            Text(
+                text = value,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkBlue,
+                maxLines = 2, // <-- GÜNCELLENDİ: Uzun konumlar kesilmesin, 2 satıra inebilsin
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
         }
     }
 }
+
+// ... diğer bileşenler (VehicleRequestInfoCard, StatusChip vb.) aynı kalacak ...
 
 @Composable
 fun VehicleRequestInfoCard(request: VehicleRequest) {
