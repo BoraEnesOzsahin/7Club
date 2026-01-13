@@ -75,27 +75,6 @@ fun RoleSelectionScreen(
                 navController.navigate(Routes.PersonnelLogin.route)
             }
 
-            // --- VERİTABANI GÜNCELLEME BUTONU ---
-            Spacer(modifier = Modifier.height(40.dp))
-
-            Button(
-                onClick = {
-                    // Kullanıcıya işlemin başladığını bildirelim
-                    Toast.makeText(context, "İşlem yapılıyor, lütfen bekleyin...", Toast.LENGTH_SHORT).show()
-
-                    FirebaseSeeder.seedDatabase { result ->
-                        // İşlem bitince gelen sonucu ekrana bas (Snackbar yerine Toast)
-                        Toast.makeText(context, result, Toast.LENGTH_LONG).show()
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(50.dp)
-            ) {
-                Text("Veritabanını Güncelle (Test)", color = Color.White, fontWeight = FontWeight.Bold)
-            }
-
             Spacer(modifier = Modifier.height(20.dp))
         }
     }

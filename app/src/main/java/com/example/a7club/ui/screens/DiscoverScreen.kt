@@ -26,7 +26,79 @@ import com.example.a7club.ui.theme.DarkBlue
 // Tasarım Renkleri
 private val InactiveTabColor = Color(0xFFD1C4E9) // Soluk Mor
 private val CardBackgroundColor = Color(0xFFF3EFFF) // Kartlar için açık lila
+@Composable
+fun DiscoverScreenContent(navController: NavController) {
+    var selectedTab by remember { mutableIntStateOf(0) }
+    var searchQuery by remember { mutableStateOf("") }
 
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Arama Çubuğu
+        TextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            placeholder = { Text("Duyuru veya gönderi ara...", color = Color.Gray, fontSize = 14.sp) },
+            leadingIcon = { Icon(Icons.Default.Search, null, tint = DarkBlue) },
+            shape = RoundedCornerShape(32.dp),
+            colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = Color(0xFFF8F8F8),
+                focusedContainerColor = Color(0xFFF8F8F8),
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent
+            ),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // TAB BUTONLARI
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = { selectedTab = 0 },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedTab == 0) DarkBlue else Color(0xFFD1C4E9),
+                    contentColor = if (selectedTab == 0) Color.White else DarkBlue
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.weight(1f).height(45.dp)
+            ) { Text("Duyurular", fontWeight = FontWeight.Bold) }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Button(
+                onClick = { selectedTab = 1 },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedTab == 1) DarkBlue else Color(0xFFD1C4E9),
+                    contentColor = if (selectedTab == 1) Color.White else DarkBlue
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.weight(1f).height(45.dp)
+            ) { Text("Gönderiler", fontWeight = FontWeight.Bold) }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // İÇERİK LİSTESİ
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 20.dp)
+        ) {
+            if (selectedTab == 0) {
+                items(4) { StudentAnnouncementCard() }
+            } else {
+                items(3) { StudentPostCard() }
+            }
+        }
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiscoverScreen(navController: NavController) {

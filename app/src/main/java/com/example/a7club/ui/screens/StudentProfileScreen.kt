@@ -24,7 +24,10 @@ import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.LightPurple
 import com.example.a7club.ui.viewmodels.AuthViewModel
-
+@Composable
+fun ProfileScreenContent(navController: NavController, authViewModel: AuthViewModel) {
+    // Paylaştığın StudentProfileScreen içindeki Column içeriğini buraya koy.
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentProfileScreen(
