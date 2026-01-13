@@ -9,6 +9,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,18 +24,24 @@ import com.example.a7club.ui.navigation.Routes
 import com.example.a7club.ui.theme.DarkBlue
 import com.example.a7club.ui.theme.VeryLightPurple
 import com.example.a7club.ui.viewmodels.AuthViewModel
-import java.util.Locale
 
 @Composable
 fun PersonnelProfileScreen(
     navController: NavController,
     authViewModel: AuthViewModel
 ) {
-    val userEmail = authViewModel.email.ifEmpty { "yagmurdirekci@gmail.com" }
-    val displayName = formatEmailToName(userEmail)
+    // --- YENİ EKLENEN KISIM: Veritabanından İsim Çekme ---
 
-    // ÇÖZÜM: Column'u bir Box içine alıyoruz ve Box'ın Scaffold'un
-    // alt boşluğunu (padding) görmezden gelmesini sağlıyoruz.
+    // 1. Sayfa açıldığında veriyi çekmesi için tetikleyici
+    LaunchedEffect(Unit) {
+        authViewModel.fetchStudentProfile()
+    }
+
+    // 2. ViewModel'daki isim değişkenini dinle (Canlı takip)
+    val personnelName by authViewModel.currentStudentName.collectAsState()
+
+    // -----------------------------------------------------
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -41,15 +50,11 @@ fun PersonnelProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // offset ile column'u biraz aşağı kaydırarak
-                // alttaki morluğu tamamen kapatıyoruz.
                 .offset(y = 50.dp)
                 .background(Color.White)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // offset yukarı kaydırdığı için içeriği
-            // eski yerine çekmek için negatif spacer
             Spacer(modifier = Modifier.height(0.dp))
 
             // Profil Fotoğrafı Alanı
@@ -62,7 +67,7 @@ fun PersonnelProfileScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // İsim-Soyisim Kartı
+            // İsim-Soyisim Kartı (GÜNCELLENDİ)
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -70,7 +75,7 @@ fun PersonnelProfileScreen(
             ) {
                 Box(modifier = Modifier.padding(24.dp), contentAlignment = Alignment.Center) {
                     Text(
-                        text = displayName,
+                        text = personnelName, // <-- ARTIK VERİTABANINDAN GELEN İSİM
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
                         color = DarkBlue
@@ -85,7 +90,7 @@ fun PersonnelProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        authViewModel.resetLoginState()
+                        authViewModel.signOut() // signOut fonksiyonunu kullandık
                         navController.navigate(Routes.RoleSelection.route) {
                             popUpTo(0) { inclusive = true }
                         }
@@ -103,14 +108,5 @@ fun PersonnelProfileScreen(
                 }
             }
         }
-    }
-}
-
-fun formatEmailToName(email: String): String {
-    val prefix = email.split("@").firstOrNull() ?: return "Kullanıcı"
-    return when (prefix.lowercase()) {
-        "yagmurdirekci" -> "Yağmur Direkçi"
-        "samisidar" -> "Sami Sidar"
-        else -> prefix.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
     }
 }
